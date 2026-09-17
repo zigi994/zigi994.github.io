@@ -1,4 +1,4 @@
-# Kelsey 的个人作品集
+# zigi 的个人作品集
 
 使用 Vite + React 制作，并通过 GitHub Pages 发布：
 
