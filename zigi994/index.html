@@ -60,6 +60,7 @@
        Hero
        ============================================================ -->
   <section class="hero" data-accent="#ee5c36" data-accent-zone="#ee5c36">
+    <canvas class="hero__ink" data-hero-gl aria-hidden="true"></canvas>
     <canvas class="hero__field" data-field aria-hidden="true"></canvas>
     <div class="glow hero__glow" aria-hidden="true"></div>
 
@@ -134,7 +135,7 @@
         <li class="scale" data-reveal="rise">
           <div class="scale__num num">01</div>
           <h3 class="scale__title cn">屏幕</h3>
-          <span class="scale__en label">Screen</span>
+          <span class="scale__en">Screen</span>
           <p class="caption cn">最小的尺度，最密的反馈。以 8pt 网格与状态机组织信息，让每一次触摸都被确认。</p>
           <div class="scale__viz scale__viz--screen" aria-hidden="true">
             <span></span><span></span><span></span><span></span>
@@ -143,7 +144,7 @@
         <li class="scale" data-reveal="rise">
           <div class="scale__num num">02</div>
           <h3 class="scale__title cn">角色</h3>
-          <span class="scale__en label">Character</span>
+          <span class="scale__en">Character</span>
           <p class="caption cn">让品牌有一张会笑的脸。从文化母题里长出形象，再用表情与动作建立关系。</p>
           <div class="scale__viz scale__viz--char" aria-hidden="true">
             <i></i><i></i><i></i>
@@ -152,7 +153,7 @@
         <li class="scale" data-reveal="rise">
           <div class="scale__num num">03</div>
           <h3 class="scale__title cn">空间</h3>
-          <span class="scale__en label">Space</span>
+          <span class="scale__en">Space</span>
           <p class="caption cn">最慢的交互。用光、材质与动线安排身体的节奏，人在其中停留、转身、坐下。</p>
           <div class="scale__viz scale__viz--space" aria-hidden="true">
             <u></u><u></u><u></u><u></u><u></u>
@@ -641,5 +642,6 @@
 <script type="module" src="scripts/home.js"></script>
 <script src="scripts/sw-register.js" defer></script>
 <script src="scripts/navigation.js" defer></script>
+<script src="scripts/hero-gl.js" defer></script>
 </body>
 </html>

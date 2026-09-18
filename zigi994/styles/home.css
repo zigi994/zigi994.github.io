@@ -116,6 +116,35 @@ html:not(.scripting) .intro { display: none; }
   opacity: 1;
 }
 
+/* ============================================================
+   Hero ink — WebGL refraction ground
+
+   Sits under both existing hero layers rather than replacing either.
+   The dot field above it is the page's first proof that things here
+   respond to the pointer, and the ruled grid above that is the
+   printed-sheet device used site-wide — a rigid 2D grid laid over a
+   moving refraction is what makes the shader read as a material seen
+   through gridded glass instead of as a screensaver.
+   ============================================================ */
+.hero__ink {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Zero until a frame has actually been rendered, so this element can
+     never contribute an undrawn panel over the hero — with scripting off
+     it simply stays invisible. Opacity rather than display because the
+     canvas has to be measurable before the first draw. */
+  opacity: 0;
+  transition: opacity 1400ms var(--ease-out-expo);
+}
+
+.hero__ink.is-live { opacity: 1; }
+
 .hero__inner {
   position: relative;
   z-index: 1;
@@ -311,7 +340,23 @@ html:not(.scripting) .intro { display: none; }
   line-height: 1;
 }
 
-.scale__en { color: var(--accent); }
+/* The English standfirst under each Chinese scale name — the one run of latin
+   on this page long enough and large enough to carry the italic serif. The
+   .label class it used to wear is deliberately gone rather than overridden:
+   mono, uppercase and tracking are that tier's whole identity, and keeping
+   them while swapping the family would read as a broken label, not a second
+   voice. Everything still set in mono — project numbers, section kickers,
+   footer headings — stays there on purpose; at 11px an italic serif is a
+   texture nobody can resolve, and the machine voice is doing real work. */
+.scale__en {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  font-size: 1.0625rem;
+  letter-spacing: 0;
+  color: var(--accent);
+}
 
 .scale p { margin-top: var(--s-2); }
 

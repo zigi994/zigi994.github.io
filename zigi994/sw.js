@@ -67,15 +67,20 @@ const PRECACHE = [
 
   at('scripts/motion.js'),
   at('scripts/home.js'),
+  at('scripts/hero-gl.js'),
   at('scripts/case.js'),
   at('scripts/concept.js'),
   at('scripts/navigation.js'),
   at('scripts/sw-register.js'),
 
-  /* Only the two faces the stylesheets actually declare. The Inter
-     files in the same directory are unreferenced leftovers. */
+  /* Only the faces the stylesheets actually declare. The Inter files in
+     the same directory are unreferenced leftovers. Fraunces ships italic
+     as a separate family, so the roman file cannot serve it: without the
+     italic here, an offline visitor gets a mechanical slant on exactly
+     the runs the subset exists to render properly. */
   at('assets/fonts/bricolage-var.woff2'),
   at('assets/fonts/fraunces-var.woff2'),
+  at('assets/fonts/fraunces-italic-var.woff2'),
 
   at('favicon.svg'),
   at('manifest.webmanifest'),
