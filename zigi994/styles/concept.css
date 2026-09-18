@@ -871,6 +871,18 @@
    what makes a node read as a ring on the line rather than a blob. */
 :root[data-theme="light"] .vtree .vt-dot { fill: var(--ink-1); }
 
+/* Which has to be re-stated for the chosen version, or that rule takes it
+   too: the active node also carries .vt-dot, and an attribute selector plus
+   two classes outweighs the .vt-dot--on it is overriding regardless of
+   order. On the light theme the one filled node went paper-coloured like
+   the other nine, so nothing marked the current version and the caption
+   pointed at a distinction that was not being drawn.
+   --accent-text, not --accent: this dot is the figure's only piece of
+   meaning-bearing colour, and celadon on bone measures 2.13:1, under even
+   the 3:1 that non-text needs. 5.69:1 here, and it matches the stroke the
+   rings already use, so the node reads as one of them filled in. */
+:root[data-theme="light"] .vtree .vt-dot--on { fill: var(--accent-text); }
+
 /* The border is the only thing marking the chosen brew preset. */
 :root[data-theme="light"] .preset:hover,
 :root[data-theme="light"] .preset.is-on {
