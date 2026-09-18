@@ -837,3 +837,32 @@
 @media (max-width: 860px) {
   .duo { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   Light scope
+
+   Almost nothing, and that is the point. The OOH scene, the cup studio,
+   the social cards, the kettle and the node editor are all objects shot
+   in a dark room; tokens.css re-declares the dark ramp at each of those
+   five boundaries, so every hardcoded colour inside them — bezels,
+   screens, poster stock, lightbox glow — stays exactly as mixed.
+
+   Only the version tree is not an object. It is a *diagram*, drawn on a
+   panel that belongs to the page, so it re-lights with the page and the
+   three colours below have to come with it.
+   ============================================================ */
+
+/* Stroke and glyph. The strokes are currentColor off .vtree svg, and at
+   the raw accent a 1.2–1.5px line on a pale panel disappears. */
+:root[data-theme="light"] .vtree svg { color: var(--accent-text); }
+:root[data-theme="light"] .vtree text { fill: var(--fg-2); }
+
+/* #0b0d10 was never "black": it is the panel showing through, which is
+   what makes a node read as a ring on the line rather than a blob. */
+:root[data-theme="light"] .vtree .vt-dot { fill: var(--ink-1); }
+
+/* The border is the only thing marking the chosen brew preset. */
+:root[data-theme="light"] .preset:hover,
+:root[data-theme="light"] .preset.is-on {
+  border-color: var(--accent-text);
+}

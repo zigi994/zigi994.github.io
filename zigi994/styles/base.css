@@ -27,6 +27,22 @@
     U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Fraunces ships italic as a separate family, so the roman file above cannot
+   supply it — asking for italic without this would get a mechanical browser
+   slant, which is exactly what a display serif must not have. Subset hard:
+   ASCII only and the weight axis collapsed to 400, which is 28KB against
+   146KB for the full latin italic. opsz stays variable because these labels
+   run from 11px captions up to large figures and a serif needs its optical
+   sizes across that range. */
+@font-face {
+  font-family: "Fraunces";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/fraunces-italic-var.woff2") format("woff2-variations");
+  unicode-range: U+20-23, U+25-29, U+2B-3B, U+3F-5A, U+61-7A;
+}
+
 *,
 *::before,
 *::after {
@@ -186,6 +202,23 @@ a {
 }
 
 .serif--plain { font-variation-settings: "SOFT" 0, "WONK" 0; }
+
+/* The second voice: a flowing italic serif set against the heavy sans, used on
+   latin subtitles and figures so the two scripts play different roles instead
+   of competing at the same weight.
+
+   Latin runs only. The italic face is subset to ASCII, so any CJK inside this
+   class falls through to the system Chinese font and gets slanted mechanically
+   — the exact artefact the separate italic file exists to avoid. SOFT and WONK
+   are absent from the subset axes, so they go unset rather than inherited from
+   .serif, where they would be silently ignored anyway. */
+.ital {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  letter-spacing: 0;
+}
 
 /* Oversized figures: opsz is driven manually because the browser only
    infers it from font-size, and these are set far above their optical

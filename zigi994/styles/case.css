@@ -54,11 +54,23 @@
 
 .chero__fact { display: grid; gap: 5px; align-content: start; }
 
+/* The one place English gets to be a voice rather than a system label.
+   These five words are the only latin prose in the hero, so they carry
+   the italic serif while the Chinese values under them stay heavy sans —
+   two scripts doing two jobs instead of competing at the same weight.
+   Set in title case, not caps: tracking and uppercase are what make a
+   mono label read as machine output, and both fight an italic.
+   14px because Fraunces' italic letterforms simply do not register at
+   the 11px this used to be, which would buy the font's weight for a
+   texture nobody can see. Still a third smaller than the dd below it,
+   so the hierarchy is unchanged. */
 .chero__fact dt {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  font-size: 0.875rem;
+  letter-spacing: 0;
   color: var(--fg-3);
 }
 
@@ -324,6 +336,12 @@
 }
 
 .showcase__step.is-active { opacity: 1; }
+
+/* Only case.js promotes a step, so without scripting every one of them
+   stays dimmed and 23 text runs fall under 4.5:1 — the dimming is a
+   focus device, not a way to hide anything. Matches the .js gating in
+   base.css: nothing that reduces legibility may outlive its script. */
+html:not(.js) .showcase__step { opacity: 1; }
 
 .showcase__step h3 {
   font-family: var(--font-cn);
@@ -604,3 +622,47 @@
 }
 
 .notice svg { flex: none; width: 16px; height: 16px; color: var(--accent); margin-top: 3px; }
+
+/* ============================================================
+   Light scope
+
+   Two jobs only. Everything else in this file is already expressed in
+   tokens and re-lights for free.
+   ============================================================ */
+
+/* 1. The accent, wherever it is read rather than felt. See the note in
+      components.css for why the material colour cannot do this job on
+      bone. .flow__node:hover is here because the accent border is the
+      only thing marking the hovered node, and .notice svg because a 16px
+      icon carrying the meaning of the sentence next to it is content. */
+:root[data-theme="light"] .chero__crumbs a:hover,
+:root[data-theme="light"] .chapter__idx b,
+:root[data-theme="light"] .fig figcaption b,
+:root[data-theme="light"] .showcase__step > .label,
+:root[data-theme="light"] .flow__node b,
+:root[data-theme="light"] .next__link:hover .next__title,
+:root[data-theme="light"] .notice svg {
+  color: var(--accent-text);
+}
+
+:root[data-theme="light"] .showcase__step li::before {
+  background: var(--accent-text);
+}
+
+:root[data-theme="light"] .flow__node:hover {
+  border-color: var(--accent-text);
+}
+
+/* 2. Two hairlines that were white because they were drawn on a black
+      page. Both sit on the *edge* of an object rather than on the object,
+      and their job is to separate it from the sheet — which on bone means
+      they have to go dark or stop existing. The values follow --line
+      rather than being reinvented: an artboard's own screenshot is usually
+      pale, and a swatch chip can be anything from oak to 2700K light. */
+:root[data-theme="light"] .hero-screens img {
+  outline-color: rgba(27, 23, 18, 0.16);
+}
+
+:root[data-theme="light"] .swatch__chip {
+  box-shadow: inset 0 0 0 1px rgba(27, 23, 18, 0.18);
+}

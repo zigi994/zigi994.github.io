@@ -14,10 +14,12 @@
 
 /* ------------------------------------------------------------
    Persistent chrome
-   The nav renders identically on every page, so it is lifted
-   out of the root snapshot and frozen: no fade, no geometry
-   morph, not even when the outgoing page had it retracted
-   (.nav.is-hidden translates it off the top).
+   The nav sits in the same place on every page, so it is lifted
+   out of the root snapshot: its geometry never morphs, not even
+   when the outgoing page had it retracted (.nav.is-hidden
+   translates it off the top). Its colour is not frozen, though —
+   the homepage is dark and the case pages are light, so the
+   glyphs have to travel with their own ground. See below.
    ------------------------------------------------------------ */
 .nav {
   view-transition-name: site-nav;
@@ -27,16 +29,25 @@
   animation-duration: 0s;
 }
 
-::view-transition-old(site-nav),
-::view-transition-new(site-nav) {
-  animation: none;
-}
-
 /* Both snapshots are painted stacked. Dropping the outgoing one
    avoids ghosting the clock, which reads a different time in the
    two documents. */
 ::view-transition-old(site-nav) {
+  animation: none;
   opacity: 0;
+}
+
+/* The incoming nav fades on its own page's clock rather than being
+   pinned opaque from frame 0. Case pages are light and the homepage
+   is dark, and .nav has no background at rest, so an opaque incoming
+   nav paints the arriving page's glyphs straight onto the departing
+   page's ground: measured at 1.44:1 for the first half of --d-fast
+   on dark -> light, against 14.8:1 once settled. Sharing the clock
+   with cut-fade lands glyph and ground together. Nothing can ghost
+   through the brief translucency, since the outgoing nav is already
+   dropped and there is no background behind it. */
+::view-transition-new(site-nav) {
+  animation: cut-fade var(--d-fast) linear both;
 }
 
 /* ------------------------------------------------------------
@@ -110,7 +121,8 @@
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(root),
   ::view-transition-old(root),
-  ::view-transition-new(root) {
+  ::view-transition-new(root),
+  ::view-transition-new(site-nav) {
     animation: none;
   }
 }

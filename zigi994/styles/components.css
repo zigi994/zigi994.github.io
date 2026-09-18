@@ -3,6 +3,26 @@
    ============================================================ */
 
 .cursor {
+  /* The whole cursor is composited with mix-blend-mode: difference, so what
+     reaches the screen is |--cursor-fg − backdrop|, never --cursor-fg itself.
+     That is what lets one element stay visible over a near-black page, a pale
+     artboard and a photograph, and it is also why neither value below is a
+     per-theme "white or black": what has to be tuned is the *difference*.
+
+     White over the dark room inverts to near-white on the page and to the
+     page's own ink over a light mockup — the original behaviour, untouched.
+     On bone it is still perfectly visible, but |255 − 247,242,232| is
+     (8, 13, 23): a cold blue-black sitting on a warm sheet. #d9d8d4 is bone
+     minus the ink ramp, so its difference against the page ground lands on
+     (30, 26, 20) — within three steps of --fg-0 — while a dark device mockup
+     still inverts it to a warm light grey around (197, 193, 185).
+
+     --cursor-label stays #000 on both themes on purpose: black differences to
+     the backdrop's own colour, so the label always reads as the page itself
+     showing through the disc. */
+  --cursor-fg: #fff;
+  --cursor-label: #000;
+
   position: fixed;
   top: 0;
   left: 0;
@@ -10,6 +30,10 @@
   pointer-events: none;
   mix-blend-mode: difference;
   display: none;
+}
+
+:root[data-theme="light"] .cursor {
+  --cursor-fg: #d9d8d4;
 }
 
 /* Pointer-only: a custom cursor is meaningless on touch. */
@@ -31,14 +55,14 @@
 .cursor__dot {
   width: 6px;
   height: 6px;
-  background: #fff;
+  background: var(--cursor-fg);
   transition: opacity var(--d-fast) linear, scale var(--d-base) var(--ease-out-expo);
 }
 
 .cursor__ring {
   width: 36px;
   height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  border: 1px solid color-mix(in oklab, var(--cursor-fg) 70%, transparent);
   display: grid;
   place-items: center;
   transition: width var(--d-base) var(--ease-out-expo),
@@ -52,7 +76,7 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #000;
+  color: var(--cursor-label);
   opacity: 0;
   scale: 0.8;
   transition: opacity var(--d-fast) linear, scale var(--d-base) var(--ease-out-back);
@@ -61,7 +85,7 @@
 .cursor.is-hovering .cursor__ring {
   width: 56px;
   height: 56px;
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in oklab, var(--cursor-fg) 90%, transparent);
   border-color: transparent;
 }
 
@@ -70,7 +94,7 @@
 .cursor.is-labelled .cursor__ring {
   width: 92px;
   height: 92px;
-  background: #fff;
+  background: var(--cursor-fg);
 }
 
 .cursor.is-labelled .cursor__text { opacity: 1; scale: 1; }
@@ -606,4 +630,38 @@
   -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
   mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
   opacity: 0.6;
+}
+
+/* ============================================================
+   Light scope — accent as mark
+
+   The split is by *job*, not by element: --accent stays the material
+   colour wherever it is a field, a wash or a tint under something else
+   (.btn::before, .glow, ::selection, .pill--accent's own backdrop), and
+   --accent-text takes over wherever the accent has to be read — a glyph,
+   a focus ring, or a mark small enough that losing it loses information.
+
+   On bone the raw accents run 1.76:1 to 3.03:1, so this is not a
+   refinement; five of the seven fail even the 3:1 large-text floor.
+
+   The first two selectors belong to base.css, which loads earlier and is
+   outside this change's scope; they are redirected from here so all seven
+   case pages pick them up without editing the shared reset.
+   ============================================================ */
+
+:root[data-theme="light"] .label--accent,
+:root[data-theme="light"] .pill--accent,
+:root[data-theme="light"] .footer__cta:hover i {
+  color: var(--accent-text);
+}
+
+/* A 2px ring at 2.05:1 is not an indicator. */
+:root[data-theme="light"] :focus-visible {
+  outline-color: var(--accent-text);
+}
+
+/* 5–7px marks: at the raw accent these dissolve into the sheet. */
+:root[data-theme="light"] .pill__dot,
+:root[data-theme="light"] .marquee__dot {
+  background: var(--accent-text);
 }
