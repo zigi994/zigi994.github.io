@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>cutout</title>
+<style>body{font:12px/1.6 monospace;background:#3a3a3a;color:#8f8;padding:16px}
+canvas{background:repeating-conic-gradient(#555 0 25%,#444 0 50%) 0 0/16px 16px;margin:8px;max-width:300px;height:auto;vertical-align:top}</style>
+</head>
+<body>
+<pre id="log">…</pre>
+<div id="preview"></div>
+<script>
+const out = [];
+const log = (m) => { out.push(m); document.getElementById('log').textContent = out.join('\n'); };
+
+/* Remove the studio-white backdrop by flooding inward from the border.
+   Connectivity matters: a global "delete near-white" would also erase the
+   character's cream face and pale-green head. */
+function keyOutBackground(img, tolerance) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+
+  const { width: W, height: H } = c;
+  const data = ctx.getImageData(0, 0, W, H);
+  const px = data.data;
+  const seen = new Uint8Array(W * H);
+  const stack = [];
+
+  const isBg = (i) => {
+    const r = px[i * 4], g = px[i * 4 + 1], b = px[i * 4 + 2];
+    return r >= tolerance && g >= tolerance && b >= tolerance;
+  };
+
+  for (let x = 0; x < W; x++) {
+    stack.push(x);
+    stack.push((H - 1) * W + x);
+  }
+  for (let y = 0; y < H; y++) {
+    stack.push(y * W);
+    stack.push(y * W + W - 1);
+  }
+
+  while (stack.length) {
+    const i = stack.pop();
+    if (i < 0 || i >= W * H || seen[i]) continue;
+    if (!isBg(i)) continue;
+    seen[i] = 1;
+    px[i * 4 + 3] = 0;
+    const x = i % W, y = (i - x) / W;
+    if (x > 0)     stack.push(i - 1);
+    if (x < W - 1) stack.push(i + 1);
+    if (y > 0)     stack.push(i - W);
+    if (y < H - 1) stack.push(i + W);
+  }
+
+  // Soften the 1px fringe left by the source antialiasing.
+  const alpha = new Uint8ClampedArray(W * H);
+  for (let i = 0; i < W * H; i++) alpha[i] = px[i * 4 + 3];
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      const i = y * W + x;
+      if (alpha[i] === 0) continue;
+      let sum = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) sum += alpha[i + dy * W + dx];
+      }
+      const avg = sum / 9;
+      if (avg < 255) px[i * 4 + 3] = Math.round(avg);
+    }
+  }
+
+  ctx.putImageData(data, 0, 0);
+  return c;
+}
+
+function trim(c) {
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  const { width: W, height: H } = c;
+  const px = ctx.getImageData(0, 0, W, H).data;
+  let x0 = W, y0 = H, x1 = 0, y1 = 0;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (px[(y * W + x) * 4 + 3] > 8) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+  }
+  if (x1 <= x0 || y1 <= y0) return c;
+  const w = x1 - x0 + 1, h = y1 - y0 + 1;
+  const o = document.createElement('canvas');
+  o.width = w; o.height = h;
+  o.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, w, h);
+  return o;
+}
+
+function resize(c, maxEdge) {
+  const s = Math.min(1, maxEdge / Math.max(c.width, c.height));
+  if (s === 1) return c;
+  const o = document.createElement('canvas');
+  o.width = Math.round(c.width * s);
+  o.height = Math.round(c.height * s);
+  const ctx = o.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(c, 0, 0, o.width, o.height);
+  return o;
+}
+
+const JOBS = [
+  ['ip-logo.png',        'assets/ip/logo-cut.webp',        248, 900,  'ipLogoCut'],
+  ['ip-figures.jpg',     'assets/ip/figures-cut.webp',     242, 1500, 'ipFiguresCut'],
+  ['ip-turnaround.png',  'assets/ip/turnaround-cut.webp',  246, 1800, 'ipTurnaroundCut'],
+  ['ip-expressions.png', 'assets/ip/expressions-cut.webp', 246, 1800, 'ipExpressionsCut'],
+];
+
+(async () => {
+  const lqip = {};
+  for (const [src, dest, tol, maxEdge] of JOBS) {
+    const img = new Image();
+    img.src = './src/' + src;
+    await img.decode();
+    let c = keyOutBackground(img, tol);
+    c = trim(c);
+    c = resize(c, maxEdge);
+    const blob = await new Promise((r) => c.toBlob(r, 'image/webp', 0.92));
+    await fetch('/_save?name=' + encodeURIComponent(dest), { method: 'POST', body: blob });
+    document.getElementById('preview').appendChild(c);
+    const tiny = resize(c, 20);
+    lqip[JOBS.find((j) => j[1] === dest)[4]] = tiny.toDataURL('image/webp', 0.6);
+    log(`${dest}  ${c.width}x${c.height}  ${(blob.size / 1024).toFixed(0)}kb`);
+  }
+  await fetch('/_save?name=_tools/cut-lqip.json', { method: 'POST', body: new Blob([JSON.stringify(lqip)]) });
+  await fetch('/_save?name=_tools/CUT_DONE.txt', { method: 'POST', body: new Blob(['ok\n' + out.join('\n')]) });
+  log('--- done ---');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,559 @@
+/* ============================================================
+   Custom cursor
+   ============================================================ */
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-cursor);
+  pointer-events: none;
+  mix-blend-mode: difference;
+  display: none;
+}
+
+/* Pointer-only: a custom cursor is meaningless on touch. */
+@media (hover: hover) and (pointer: fine) {
+  .cursor { display: block; }
+  body.has-cursor,
+  body.has-cursor a,
+  body.has-cursor button { cursor: none; }
+}
+
+.cursor__dot,
+.cursor__ring {
+  position: absolute;
+  border-radius: var(--r-full);
+  translate: -50% -50%;
+  will-change: transform, width, height;
+}
+
+.cursor__dot {
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  transition: opacity var(--d-fast) linear, scale var(--d-base) var(--ease-out-expo);
+}
+
+.cursor__ring {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  display: grid;
+  place-items: center;
+  transition: width var(--d-base) var(--ease-out-expo),
+    height var(--d-base) var(--ease-out-expo),
+    background-color var(--d-base) var(--ease-out-expo),
+    border-color var(--d-base) linear;
+}
+
+.cursor__text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #000;
+  opacity: 0;
+  scale: 0.8;
+  transition: opacity var(--d-fast) linear, scale var(--d-base) var(--ease-out-back);
+}
+
+.cursor.is-hovering .cursor__ring {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: transparent;
+}
+
+.cursor.is-hovering .cursor__dot { opacity: 0; }
+
+.cursor.is-labelled .cursor__ring {
+  width: 92px;
+  height: 92px;
+  background: #fff;
+}
+
+.cursor.is-labelled .cursor__text { opacity: 1; scale: 1; }
+
+.cursor.is-down .cursor__ring { scale: 0.82; }
+
+/* ============================================================
+   Navigation
+   ============================================================ */
+
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: var(--z-nav);
+  padding: var(--s-4) 0;
+  transition: transform var(--d-slow) var(--ease-out-expo),
+    background-color var(--d-slow) linear, backdrop-filter var(--d-slow) linear;
+}
+
+.nav.is-stuck {
+  background: color-mix(in oklab, var(--ink-0) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav.is-hidden { transform: translate3d(0, -105%, 0); }
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-5);
+}
+
+.nav__brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55em;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-size: 0.9375rem;
+}
+
+.nav__brand b { font-weight: 600; }
+
+.nav__brand span {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--s-4), 2.2vw, var(--s-7));
+}
+
+.nav__link {
+  position: relative;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  color: var(--fg-1);
+  transition: color var(--d-base) linear;
+  padding-block: 4px;
+}
+
+.nav__link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  scale: 0 1;
+  transform-origin: left;
+  transition: scale var(--d-slow) var(--ease-out-expo);
+}
+
+.nav__link:hover,
+.nav__link[aria-current="page"] { color: var(--fg-0); }
+
+.nav__link:hover::after,
+.nav__link[aria-current="page"]::after { scale: 1 1; }
+
+.nav__clock {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: 0.08em;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .nav__clock { display: none; }
+  .nav__links { gap: var(--s-4); }
+  .nav__link { font-size: 0.8125rem; }
+}
+
+/* On a phone the wordmark tagline is what pushes the links into wrapping. */
+@media (max-width: 560px) {
+  .nav__brand span { display: none; }
+  .nav__inner { gap: var(--s-4); }
+  .nav__links { gap: 0.9rem; }
+}
+
+/* ============================================================
+   Buttons / links
+   ============================================================ */
+
+.btn {
+  --btn-bg: transparent;
+  --btn-fg: var(--fg-0);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.95em 1.6em;
+  border-radius: var(--r-full);
+  border: 1px solid var(--line-strong);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color var(--d-base) var(--ease-out-expo),
+    border-color var(--d-base) linear;
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--accent);
+  border-radius: inherit;
+  scale: 1 0;
+  transform-origin: bottom;
+  transition: scale var(--d-slow) var(--ease-out-expo);
+}
+
+.btn:hover {
+  color: var(--accent-ink);
+  border-color: transparent;
+}
+
+.btn:hover::before { scale: 1 1; }
+
+.btn--solid {
+  --btn-bg: var(--fg-0);
+  --btn-fg: var(--ink-0);
+  border-color: transparent;
+}
+
+.btn__icon {
+  width: 1em;
+  height: 1em;
+  transition: translate var(--d-base) var(--ease-out-expo);
+}
+
+.btn:hover .btn__icon { translate: 3px 0; }
+
+/* Text link with a sliding underline */
+.tlink {
+  position: relative;
+  display: inline-block;
+  color: var(--fg-0);
+  padding-bottom: 2px;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  transition: background-size var(--d-slow) var(--ease-out-expo);
+}
+
+.tlink:hover { background-size: 100% 1px; }
+
+/* ============================================================
+   Section headers
+   ============================================================ */
+
+.sec-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s-5);
+  padding-bottom: var(--s-6);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--s-8);
+}
+
+.sec-head__meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+
+.sec-head__count {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  color: var(--fg-3);
+}
+
+@media (max-width: 720px) {
+  .sec-head {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}
+
+/* ============================================================
+   Marquee
+   ============================================================ */
+
+.marquee {
+  --speed: 42s;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.marquee__track {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--s-7);
+  padding-right: var(--s-7);
+  animation: marquee var(--speed) linear infinite;
+}
+
+.marquee:hover .marquee__track { animation-play-state: paused; }
+
+.marquee--reverse .marquee__track { animation-direction: reverse; }
+
+@keyframes marquee {
+  to { transform: translate3d(-100%, 0, 0); }
+}
+
+.marquee__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  font-size: clamp(1.25rem, 3.4vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  color: var(--fg-2);
+}
+
+.marquee__item b { color: var(--fg-0); font-weight: 500; }
+
+.marquee__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  flex: none;
+}
+
+/* ============================================================
+   Media frame — LQIP fade-in + hover scale
+   ============================================================ */
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--ink-2) center / cover no-repeat;
+  isolation: isolate;
+}
+
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--line);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 700ms var(--ease-out-quart),
+    scale 900ms var(--ease-out-expo);
+}
+
+.frame img.is-loaded { opacity: 1; }
+
+.frame--zoom img { scale: 1.001; }
+.frame--zoom:hover img { scale: 1.045; }
+
+.frame--pad {
+  background: var(--ink-1);
+  display: grid;
+  place-items: center;
+}
+
+.frame--pad img { object-fit: contain; }
+
+/* Ratio helpers */
+.r-1-1  { aspect-ratio: 1 / 1; }
+.r-4-3  { aspect-ratio: 4 / 3; }
+.r-3-2  { aspect-ratio: 3 / 2; }
+.r-16-9 { aspect-ratio: 16 / 9; }
+.r-16-10{ aspect-ratio: 16 / 10; }
+.r-9-16 { aspect-ratio: 9 / 16; }
+.r-2-3  { aspect-ratio: 2 / 3; }
+.r-21-9 { aspect-ratio: 21 / 9; }
+
+/* ============================================================
+   Footer
+   ============================================================ */
+
+.footer {
+  position: relative;
+  padding-top: var(--section-y);
+  padding-bottom: var(--s-7);
+  border-top: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.footer__cta {
+  display: block;
+  font-size: var(--t-display-l);
+  font-weight: 500;
+  letter-spacing: var(--track-display);
+  line-height: var(--lead-tight);
+}
+
+.footer__cta i {
+  font-style: normal;
+  color: var(--fg-3);
+  transition: color var(--d-slow) var(--ease-out-expo);
+}
+
+.footer__cta:hover i { color: var(--accent); }
+
+.footer__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s-6);
+  margin-top: var(--s-9);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--line);
+}
+
+.footer__col h4 {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--fg-3);
+  font-weight: 500;
+  margin-bottom: var(--s-4);
+}
+
+.footer__col li + li { margin-top: var(--s-2); }
+
+.footer__col a,
+.footer__col p {
+  font-size: 0.9375rem;
+  color: var(--fg-1);
+}
+
+.footer__col a { transition: color var(--d-base) linear; }
+.footer__col a:hover { color: var(--fg-0); }
+
+.footer__base {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-8);
+}
+
+/* Oversized wordmark bleeding off the bottom edge */
+.footer__mark {
+  margin-top: var(--s-8);
+  font-size: clamp(4rem, 19vw, 20rem);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 0.78;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--line-strong);
+  user-select: none;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* ============================================================
+   Utility bits
+   ============================================================ */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.42em 0.85em;
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-size: var(--t-caption);
+  color: var(--fg-1);
+  background: color-mix(in oklab, var(--ink-2) 60%, transparent);
+  white-space: nowrap;
+}
+
+.pill--accent {
+  border-color: color-mix(in oklab, var(--accent) 42%, transparent);
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 9%, transparent);
+}
+
+.pill__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  flex: none;
+}
+
+.dl {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.dl > div {
+  display: grid;
+  gap: 3px;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.dl dt {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.dl dd { font-size: 0.9375rem; color: var(--fg-0); }
+
+/* Accent field behind the hero and section transitions.
+   Anchored to the top edge rather than floating as a blurred circle:
+   the soft-blob-in-the-corner is the single fastest way to make a page
+   read as generated. The wash is paired with a fine ruled grid so the
+   space feels set, like a printed sheet. */
+.glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--accent) 15%, transparent) 0%,
+    color-mix(in oklab, var(--accent) 4%, transparent) 40%,
+    transparent 74%
+  );
+  transition: background var(--d-slow) linear;
+}
+
+.glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--line) 0 1px,
+    transparent 1px var(--grid-step)
+  );
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
+  opacity: 0.6;
+}

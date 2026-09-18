@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>asset pipeline</title>
+<style>body{font:13px/1.6 monospace;background:#111;color:#0f0;padding:20px}</style>
+</head>
+<body>
+<pre id="log">starting…</pre>
+<script type="module">
+  import * as pdfjsLib from './pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';
+
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (m) => { lines.push(m); logEl.textContent = lines.join('\n'); };
+
+  const lqip = {};
+  const meta = {};
+
+  async function post(name, blob) {
+    const r = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!r.ok) throw new Error('save failed ' + name + ' ' + r.status);
+  }
+
+  function toBlob(canvas, mime, q) {
+    return new Promise((res) => canvas.toBlob(res, mime, q));
+  }
+
+  function fit(w, h, maxEdge) {
+    const s = Math.min(1, maxEdge / Math.max(w, h));
+    return [Math.round(w * s), Math.round(h * s)];
+  }
+
+  // Tiny blurred stand-in encoded inline, so large hero art can fade in
+  // instead of popping once decoded.
+  async function makeLqip(img, key) {
+    const c = document.createElement('canvas');
+    const [w, h] = fit(img.naturalWidth || img.width, img.naturalHeight || img.height, 20);
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    lqip[key] = c.toDataURL('image/webp', 0.6);
+  }
+
+  async function processImage(srcName, outName, maxEdge, key, quality = 0.9) {
+    const img = new Image();
+    img.src = './src/' + srcName;
+    await img.decode();
+    const [w, h] = fit(img.naturalWidth, img.naturalHeight, maxEdge);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob = await toBlob(c, 'image/webp', quality);
+    await post(outName, blob);
+    await makeLqip(img, key);
+    meta[key] = { src: outName, w, h };
+    log(`  ${outName}  ${w}x${h}  ${(blob.size / 1024).toFixed(0)}kb`);
+  }
+
+  async function processPdfPage(doc, pageNum, outName, maxEdge, key) {
+    const page = await doc.getPage(pageNum);
+    const base = page.getViewport({ scale: 1 });
+    const scale = Math.min(4, maxEdge / Math.max(base.width, base.height));
+    const vp = page.getViewport({ scale });
+    const c = document.createElement('canvas');
+    c.width = Math.round(vp.width);
+    c.height = Math.round(vp.height);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    const blob = await toBlob(c, 'image/webp', 0.92);
+    await post(outName, blob);
+    const tiny = document.createElement('canvas');
+    const [tw, th] = fit(c.width, c.height, 20);
+    tiny.width = tw; tiny.height = th;
+    tiny.getContext('2d').drawImage(c, 0, 0, tw, th);
+    lqip[key] = tiny.toDataURL('image/webp', 0.6);
+    meta[key] = { src: outName, w: c.width, h: c.height };
+    log(`  ${outName}  ${c.width}x${c.height}  ${(blob.size / 1024).toFixed(0)}kb`);
+  }
+
+  try {
+    log('— interaction design artboards —');
+    const doc = await pdfjsLib.getDocument({ url: './source.pdf' }).promise;
+    log(`  pdf pages: ${doc.numPages}`);
+    for (let i = 1; i <= doc.numPages; i++) {
+      const n = String(i).padStart(2, '0');
+      await processPdfPage(doc, i, `assets/app/screen-${n}.webp`, 1800, `screen${n}`);
+    }
+
+    log('— ip design —');
+    await processImage('ip-logo.png', 'assets/ip/logo.webp', 900, 'ipLogo', 0.95);
+    await processImage('ip-turnaround.png', 'assets/ip/turnaround.webp', 2000, 'ipTurnaround', 0.92);
+    await processImage('ip-expressions.png', 'assets/ip/expressions.webp', 2000, 'ipExpressions', 0.92);
+    await processImage('ip-figures.jpg', 'assets/ip/figures.webp', 1600, 'ipFigures', 0.92);
+
+    log('— interior —');
+    await processImage('int-cafe-garden.jpg', 'assets/interior/cafe-garden.webp', 1920, 'cafeGarden');
+    await processImage('int-cafe-seating.jpg', 'assets/interior/cafe-seating.webp', 1920, 'cafeSeating');
+    await processImage('int-cafe-counter.jpg', 'assets/interior/cafe-counter.webp', 1920, 'cafeCounter');
+    await processImage('int-stay-lobby.png', 'assets/interior/stay-lobby.webp', 1920, 'stayLobby');
+    await processImage('int-stay-living.png', 'assets/interior/stay-living.webp', 1920, 'stayLiving');
+    await processImage('int-stay-atrium.png', 'assets/interior/stay-atrium.webp', 1920, 'stayAtrium');
+    await processImage('int-stay-dining.png', 'assets/interior/stay-dining.webp', 1920, 'stayDining');
+    await processImage('int-stay-bath.png', 'assets/interior/stay-bath.webp', 1920, 'stayBath');
+
+    await post('assets/manifest.json', new Blob([JSON.stringify({ lqip, meta }, null, 1)], { type: 'application/json' }));
+    log('— done —');
+    await post('_tools/DONE.txt', new Blob(['ok\n' + lines.join('\n')], { type: 'text/plain' }));
+  } catch (err) {
+    log('ERROR: ' + err.message + '\n' + err.stack);
+    await post('_tools/DONE.txt', new Blob(['error\n' + lines.join('\n')], { type: 'text/plain' }));
+  }
+</script>
+</body>
+</html>

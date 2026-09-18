@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>crop</title>
+<style>body{font:12px/1.6 monospace;background:#3a3a3a;color:#8f8;padding:16px}
+canvas{background:repeating-conic-gradient(#555 0 25%,#444 0 50%) 0 0/16px 16px;margin:8px;max-width:240px;height:auto;vertical-align:top}</style>
+</head>
+<body>
+<pre id="log">…</pre>
+<div id="preview"></div>
+<script>
+const out = [];
+const log = (m) => { out.push(m); document.getElementById('log').textContent = out.join('\n'); };
+
+// src, dest, [x,y,w,h] as fractions of the source, maxEdge, lqip key
+const JOBS = [
+  ['assets/ip/logo-cut.webp',       'assets/ip/mark-cut.webp',  [0, 0, 1, 0.715], 700,  'ipMarkCut'],
+  ['assets/ip/turnaround-cut.webp', 'assets/ip/front-cut.webp', [0.355, 0, 0.29, 1], 900, 'ipFrontCut'],
+];
+
+function trimAlpha(c) {
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  const { width: W, height: H } = c;
+  const px = ctx.getImageData(0, 0, W, H).data;
+  let x0 = W, y0 = H, x1 = 0, y1 = 0;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (px[(y * W + x) * 4 + 3] > 8) {
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+    }
+  }
+  if (x1 <= x0 || y1 <= y0) return c;
+  const o = document.createElement('canvas');
+  o.width = x1 - x0 + 1;
+  o.height = y1 - y0 + 1;
+  o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+  return o;
+}
+
+(async () => {
+  const lqip = {};
+  for (const [src, dest, box, maxEdge, key] of JOBS) {
+    const img = new Image();
+    img.src = '/' + src;
+    await img.decode();
+    const sx = Math.round(box[0] * img.naturalWidth);
+    const sy = Math.round(box[1] * img.naturalHeight);
+    const sw = Math.round(box[2] * img.naturalWidth);
+    const sh = Math.round(box[3] * img.naturalHeight);
+
+    let c = document.createElement('canvas');
+    c.width = sw; c.height = sh;
+    c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    c = trimAlpha(c);
+
+    const s = Math.min(1, maxEdge / Math.max(c.width, c.height));
+    if (s < 1) {
+      const o = document.createElement('canvas');
+      o.width = Math.round(c.width * s);
+      o.height = Math.round(c.height * s);
+      const ctx = o.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(c, 0, 0, o.width, o.height);
+      c = o;
+    }
+
+    const blob = await new Promise((r) => c.toBlob(r, 'image/webp', 0.93));
+    await fetch('/_save?name=' + encodeURIComponent(dest), { method: 'POST', body: blob });
+    document.getElementById('preview').appendChild(c);
+
+    const t = document.createElement('canvas');
+    const ts = 20 / Math.max(c.width, c.height);
+    t.width = Math.max(1, Math.round(c.width * ts));
+    t.height = Math.max(1, Math.round(c.height * ts));
+    t.getContext('2d').drawImage(c, 0, 0, t.width, t.height);
+    lqip[key] = t.toDataURL('image/webp', 0.6);
+
+    log(`${dest}  ${c.width}x${c.height}  ${(blob.size / 1024).toFixed(0)}kb`);
+  }
+  await fetch('/_save?name=_tools/crop-lqip.json', { method: 'POST', body: new Blob([JSON.stringify(lqip)]) });
+  await fetch('/_save?name=_tools/CROP_DONE.txt', { method: 'POST', body: new Blob(['ok\n' + out.join('\n')]) });
+  log('--- done ---');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>probe</title></head>
+<body>
+<pre id="out">PENDING</pre>
+<script type="module">
+  import * as pdfjsLib from './pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';
+
+  const out = document.getElementById('out');
+  try {
+    const doc = await pdfjsLib.getDocument({ url: './source.pdf' }).promise;
+    const pages = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      const vp = page.getViewport({ scale: 1 });
+      pages.push({ i, w: Math.round(vp.width), h: Math.round(vp.height) });
+    }
+    out.textContent = JSON.stringify({ numPages: doc.numPages, pages }, null, 1);
+  } catch (err) {
+    out.textContent = 'ERROR: ' + err.message;
+  }
+</script>
+</body>
+</html>

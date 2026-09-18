@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>contact sheet</title></head>
+<body style="background:#111;color:#ddd;font:12px ui-monospace,Consolas,monospace">
+<pre id="log">…</pre>
+<script type="module">
+  /* Canvas contact sheet — the only way to composite images on a machine with
+     no image toolchain.
+       ?files=a.webp,b.webp   repo-relative-ish paths, see resolve() below
+       ?cols= &cell= &bg=     grid geometry
+       ?out=                  REPO-relative save name, default tools/_qa/sheet.png
+  */
+  const log = (m) => { document.getElementById('log').textContent += '\n' + m; };
+  const params = new URLSearchParams(location.search);
+  const list = (params.get('files') || '').split(',').filter(Boolean);
+  const cols = Number(params.get('cols') || 6);
+  const cell = Number(params.get('cell') || 300);
+  const out = params.get('out') || 'tools/_qa/sheet.png';
+  const bg = '#' + (params.get('bg') || 'ffffff');
+
+  // The tooling directory is no longer inside the deployed site, so anything
+  // under tools/ has to come off the /__tools/ mount instead of the site root.
+  const resolve = (f) => {
+    const p = f.replace(/^\/+/, '');
+    if (p.startsWith('tools/')) return '/__tools/' + p.slice('tools/'.length);
+    if (p.startsWith('zigi994/')) return '/' + p.slice('zigi994/'.length);
+    return '/' + p;
+  };
+
+  async function run() {
+    if (!list.length) { log('no ?files= given'); return; }
+    const imgs = [];
+    for (const f of list) {
+      const img = new Image();
+      img.src = resolve(f);
+      // Not decode(): under headless --virtual-time-budget the decode promise
+      // never settles, which silently hung this page. drawImage only needs the
+      // load event anyway.
+      const ok = await new Promise((res) => {
+        if (img.complete && img.naturalWidth) return res(true);
+        img.onload = () => res(true);
+        img.onerror = () => res(false);
+        setTimeout(() => res(img.complete && img.naturalWidth > 0), 8000);
+      });
+      if (ok) imgs.push({ f, img });
+      else log('skip ' + f + '  (' + img.src + ')');
+    }
+    if (!imgs.length) { log('nothing decoded'); return; }
+    const rows = Math.ceil(imgs.length / cols);
+    const c = document.createElement('canvas');
+    c.width = cols * cell;
+    c.height = rows * (cell + 22);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(0, 0, c.width, c.height);
+    imgs.forEach(({ f, img }, i) => {
+      const cx = (i % cols) * cell;
+      const cy = Math.floor(i / cols) * (cell + 22);
+      const s = Math.min(cell / img.naturalWidth, cell / img.naturalHeight);
+      const w = img.naturalWidth * s, h = img.naturalHeight * s;
+      ctx.fillStyle = bg;
+      ctx.fillRect(cx + (cell - w) / 2, cy + 22, w, h);
+      ctx.drawImage(img, cx + (cell - w) / 2, cy + 22, w, h);
+      ctx.fillStyle = '#8f8';
+      ctx.font = '12px monospace';
+      ctx.fillText(f.split('/').pop(), cx + 4, cy + 15);
+    });
+    const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
+    await fetch('/_save?name=' + encodeURIComponent(out), { method: 'POST', body: blob });
+    log('DONE ' + out + '  (' + imgs.length + '/' + list.length + ' images)');
+    await fetch('/_save?name=tools/_qa/SHEET_DONE.txt', { method: 'POST', body: new Blob(['ok']) });
+  }
+  run();
+</script>
+</body>
+</html>

@@ -28,11 +28,23 @@ jobs:
         uses: actions/configure-pages@v5
 
       # The site is plain HTML/CSS/JS with no dependencies, so there is
-      # nothing to install or compile — site/ ships as-is.
+      # nothing to install or compile — zigi994/ ships as-is.
+
+      # The only rewrite in the whole pipeline. The worker's cache name is
+      # derived from BUILD_ID, so stamping the commit SHA here is what makes
+      # a deploy invalidate the previous shell cache. The grep turns a
+      # silently-missed substitution into a failed build instead of a site
+      # that never updates.
+      - name: Stamp build id into the service worker
+        run: |
+          sed -i "s/__BUILD_ID__/${GITHUB_SHA}/g" zigi994/sw.js
+          grep -q "BUILD_ID = '${GITHUB_SHA}'" zigi994/sw.js
+          ! grep -q '__BUILD_ID__' zigi994/sw.js
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: zigi994
 
       - name: Deploy
         id: deployment

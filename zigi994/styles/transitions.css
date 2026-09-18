@@ -1,0 +1,116 @@
+/* ============================================================
+   transitions.css — cross-document page transitions
+
+   Nothing here participates in navigation. A browser without
+   cross-document View Transitions drops the at-rule, matches
+   none of the pseudo-element rules, and performs an ordinary
+   document load — which is also what happens when JS is off,
+   because no script is involved in navigating.
+   ============================================================ */
+
+@view-transition {
+  navigation: auto;
+}
+
+/* ------------------------------------------------------------
+   Persistent chrome
+   The nav is byte-identical on every page, so it is lifted out
+   of the root snapshot and frozen: no fade, no geometry morph,
+   not even when the outgoing page had it retracted
+   (.nav.is-hidden translates it off the top).
+   ------------------------------------------------------------ */
+.nav {
+  view-transition-name: site-nav;
+}
+
+::view-transition-group(site-nav) {
+  animation-duration: 0s;
+}
+
+::view-transition-old(site-nav),
+::view-transition-new(site-nav) {
+  animation: none;
+}
+
+/* Both snapshots are painted stacked. Dropping the outgoing one
+   avoids ghosting the clock, which reads a different time in the
+   two documents. */
+::view-transition-old(site-nav) {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------
+   The cut
+   The outgoing page clears in --d-fast while the incoming one
+   keeps settling for --d-base, so the swap lands as a hard
+   editorial cut with a short tail rather than a crossfade
+   through a grey midpoint. The only transform is a ~1% scale:
+   enough to be felt as depth, far too small to read as a slide.
+   ------------------------------------------------------------ */
+::view-transition-group(root) {
+  animation-duration: var(--d-base);
+  animation-timing-function: var(--ease-out-expo);
+}
+
+/* The UA default isolates the pair and cross-fades it with
+   plus-lighter, which blooms the warm ink surface toward grey
+   halfway through. */
+::view-transition-image-pair(root) {
+  isolation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  animation: cut-out var(--d-fast) var(--ease-in-out-quint) both;
+}
+
+/* Opacity and scale run on separate clocks on purpose: the page
+   is legible almost immediately, then keeps settling for another
+   140ms. One combined 320ms fade would read as a crossfade. */
+::view-transition-new(root) {
+  animation: cut-fade var(--d-fast) linear both,
+    cut-settle var(--d-base) var(--ease-out-expo) both;
+}
+
+@keyframes cut-out {
+  to {
+    opacity: 0;
+    transform: scale(1.012);
+  }
+}
+
+@keyframes cut-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cut-settle {
+  from {
+    transform: scale(0.988);
+  }
+}
+
+/* ------------------------------------------------------------
+   Reduced motion
+   Opt out of the animation entirely, twice over: the navigation
+   descriptor stops the transition from ever starting, and the
+   overrides below flatten it to a hard swap if a browser honours
+   the pseudo-elements but not @view-transition inside @media.
+   Prefetch is untouched, so navigation stays fast, just still.
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

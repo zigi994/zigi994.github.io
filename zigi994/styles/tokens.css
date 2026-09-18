@@ -1,0 +1,131 @@
+/* ============================================================
+   Design tokens
+
+   Every colour here has a physical referent taken from the work
+   itself — lacquer red from the lion-dance headdress, tea-leaf
+   green from the brewing device, rammed earth and oak from the
+   interiors, celadon glaze from ceramics. Nothing is generated
+   by stepping evenly through HSL, which is what makes a palette
+   read as machine-made.
+   ============================================================ */
+
+:root {
+  /* --- surfaces: sumi ink, warm-shifted toward brown/olive rather
+         than the usual cool near-black --- */
+  --ink-0: #12110d;
+  --ink-1: #191713;
+  --ink-2: #211e18;
+  --ink-3: #2a261f;
+  --ink-4: #363029;
+
+  --line: rgba(244, 238, 226, 0.1);
+  --line-strong: rgba(244, 238, 226, 0.2);
+
+  /* --- type colour: unbleached paper, never pure white --- */
+  --fg-0: #f4eee2;
+  --fg-1: rgba(244, 238, 226, 0.66);
+  --fg-2: rgba(244, 238, 226, 0.42);
+  --fg-3: rgba(244, 238, 226, 0.25);
+
+  /* --- accent: reassigned per section at runtime.
+         Default is lacquer vermillion, the through-line of her work.
+         Every accent below clears 4.5:1 against --ink-0 so it stays
+         usable for the small uppercase labels, not just for graphics. --- */
+  --accent: #ee5c36;
+  --accent-ink: #12110d;
+
+  /* --- per-project accents --- */
+  --a-quchong: #9db37f; /* 茶绿, desaturated so it reads herbal not candy */
+  --a-yuexing: #ec9138; /* 狮鬃橙 */
+  --a-lionup: #ee5c36; /* 朱红漆 */
+  --a-toast: #cfa063; /* 橡木 + 2700K */
+  --a-stay: #d08350; /* 陶土 */
+  --a-linxi: #8fa8a2; /* 青瓷釉 — deliberately not the purple every AI tool uses */
+  --a-chashi: #aab877; /* 茶叶 */
+
+  /* --- type ---
+         Fraunces carries the Latin display and the numerals; its optical
+         and WONK axes give the numbers real character. Bricolage handles
+         UI/body Latin. CJK falls back to the system faces because a
+         subset webfont is not viable without a font toolchain. --- */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, "Songti SC",
+    "Source Han Serif SC", serif;
+  --font-sans: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
+    "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, "Cascadia Mono",
+    "Roboto Mono", Menlo, Consolas, monospace;
+  --font-cn: "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
+    "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei", var(--font-sans);
+
+  --t-display-xl: clamp(3.25rem, 10.5vw, 10.5rem);
+  --t-display-l: clamp(2.5rem, 6.6vw, 6rem);
+  --t-display-m: clamp(1.875rem, 4.2vw, 3.5rem);
+  --t-display-s: clamp(1.5rem, 2.8vw, 2.375rem);
+  --t-title: clamp(1.25rem, 1.9vw, 1.75rem);
+  --t-body-l: clamp(1.0625rem, 0.5rem + 0.6vw, 1.3125rem);
+  --t-body: clamp(0.9375rem, 0.55rem + 0.28vw, 1.0625rem);
+  --t-caption: 0.8125rem;
+  --t-label: 0.6875rem;
+
+  --lead-tight: 0.94;
+  --lead-snug: 1.12;
+  --lead-body: 1.62;
+
+  --track-display: -0.035em;
+  --track-label: 0.14em;
+
+  /* --- rhythm: 8pt base --- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  --s-10: 128px;
+
+  --gutter: clamp(20px, 4.5vw, 72px);
+  --grid-step: clamp(64px, 7vw, 116px);
+  --section-y: clamp(88px, 12vh, 200px);
+  --measure: 62ch;
+  --max-w: 1680px;
+
+  /* --- radii --- */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 32px;
+  --r-2xl: 44px;
+  --r-full: 999px;
+
+  /* --- easing: expo/quint for UI, a real spring for playful motion --- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring: linear(
+    0, 0.006, 0.025, 0.101, 0.539 26.9%, 0.721, 0.849, 0.937, 0.991 51.3%,
+    1.014, 1.024, 1.026, 1.023 62.7%, 1.014, 1.007, 1.003 76.3%, 0.999, 1
+  );
+
+  --d-fast: 180ms;
+  --d-base: 320ms;
+  --d-slow: 620ms;
+  --d-reveal: 1100ms;
+
+  --z-grain: 90;
+  --z-nav: 100;
+  --z-cursor: 200;
+  --z-overlay: 300;
+
+  /* Shadows stay warm-black; a neutral black shadow over warm surfaces
+     is the tell-tale sign of a palette that was not mixed by eye. */
+  --shadow-lift: 0 1px 1px rgba(14, 10, 6, 0.34), 0 8px 24px -8px rgba(14, 10, 6, 0.52),
+    0 32px 64px -24px rgba(14, 10, 6, 0.58);
+  --shadow-deep: 0 2px 2px rgba(14, 10, 6, 0.4), 0 24px 48px -12px rgba(14, 10, 6, 0.62),
+    0 64px 120px -32px rgba(14, 10, 6, 0.72);
+}

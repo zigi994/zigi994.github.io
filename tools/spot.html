@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>spot</title>
+<style>
+  html,body{margin:0;background:#1b1b1b;color:#ddd;font:12px ui-monospace,Consolas,monospace}
+  #bar{padding:6px 10px;color:#8f8;white-space:pre-wrap}
+  #wrap{position:relative;margin:0 10px 10px;border:1px solid #555;display:inline-block}
+  iframe{border:0;display:block;background:#000}
+  .mark{position:absolute;outline:2px solid #ff3b30;box-shadow:0 0 0 9999px rgba(0,0,0,.0);pointer-events:none;z-index:5}
+  .mark.b{outline-color:#34c759}
+  .mark span{position:absolute;top:-15px;left:0;background:#ff3b30;color:#fff;font:10px monospace;padding:0 3px;white-space:nowrap}
+  .mark.b span{background:#34c759;color:#000;top:auto;bottom:-15px}
+</style>
+</head>
+<body>
+<div id="bar">…</div>
+<div id="wrap"><iframe id="f"></iframe></div>
+<script>
+/* Visual confirmation for a numeric finding: load one page at one viewport,
+   settle the reveals, scroll a selector into view and outline it, so a
+   screenshot of THIS page shows whether the measurement is a real defect.
+
+     /__tools/spot.html?page=work/linxi.html&a=.nnode.is-sel .nnode__label&b=...&vw=1440&vh=900
+
+   Two selectors (a red, b green) because the interesting findings are pairs.
+   Set ?all=1 to outline every match of `a` instead of the first. */
+
+const SITE = location.origin + '/';
+const q = new URLSearchParams(location.search);
+const page = q.get('page') || 'index.html';
+const selA = q.get('a') || '';
+const selB = q.get('b') || '';
+const vw = Number(q.get('vw') || 1440);
+const vh = Number(q.get('vh') || 900);
+const all = q.get('all') === '1';
+
+const bar = document.getElementById('bar');
+const f = document.getElementById('f');
+f.style.width = vw + 'px';
+f.style.height = vh + 'px';
+f.src = SITE + page + '?spot=' + Date.now();
+
+const note = [];
+const say = (m) => { note.push(m); bar.textContent = note.join('\n'); };
+
+f.addEventListener('load', () => setTimeout(() => {
+  const d = f.contentDocument;
+  const w = f.contentWindow;
+  d.querySelectorAll('[data-reveal],.reveal-lines,.media-reveal').forEach((e) => e.classList.add('is-in'));
+  const intro = d.getElementById('intro');
+  if (intro) { intro.classList.add('is-done'); intro.style.display = 'none'; }
+  d.querySelectorAll('img[loading="lazy"]').forEach((i) => i.setAttribute('loading', 'eager'));
+
+  setTimeout(() => {
+    const anchor = selA ? d.querySelector(selA) : null;
+    if (anchor) {
+      const r = anchor.getBoundingClientRect();
+      w.scrollTo(0, Math.max(0, w.scrollY + r.top - vh / 2 + r.height / 2));
+    }
+    setTimeout(() => {
+      say(`${page} @ ${vw}x${vh}   scrollY=${Math.round(w.scrollY)}`);
+      const draw = (sel, cls) => {
+        if (!sel) return;
+        const els = all ? [...d.querySelectorAll(sel)] : [d.querySelector(sel)].filter(Boolean);
+        if (!els.length) { say(`  ${cls}: NO MATCH  ${sel}`); return; }
+        els.forEach((el, i) => {
+          const r = el.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > vh) return;
+          const m = document.createElement('div');
+          m.className = 'mark ' + cls;
+          m.style.left = r.left + 'px';
+          m.style.top = (r.top + bar.offsetHeight + 1) + 'px';
+          m.style.width = r.width + 'px';
+          m.style.height = r.height + 'px';
+          m.innerHTML = '<span>' + Math.round(r.width) + '\u00d7' + Math.round(r.height) + '</span>';
+          document.body.appendChild(m);
+          say(`  ${cls}[${i}] ${Math.round(r.width)}x${Math.round(r.height)} @ ${Math.round(r.left)},${Math.round(r.top)}  "${(el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 34)}"`);
+        });
+      };
+      draw(selA, 'a');
+      draw(selB, 'b');
+      document.title = 'spot-ready';
+    }, 500);
+  }, 500);
+}, 1200));
+</script>
+</body>
+</html>

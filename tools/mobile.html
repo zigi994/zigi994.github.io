@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>mobile preview</title>
+<style>
+  body { margin:0; background:#2b2b2b; font:11px ui-monospace,Consolas,monospace; color:#aaa; }
+  .row { display:flex; gap:10px; padding:10px; }
+  .cell { width:390px; }
+  .cap { padding:3px 0; color:#7c7 }
+  iframe { width:390px; height:760px; border:1px solid #555; background:#000; display:block }
+</style>
+</head>
+<body>
+<div class="row" id="r1"></div>
+<div class="row" id="r2"></div>
+<script>
+/* Six-up mobile contact strip, for eyeballing what the numeric audit cannot.
+   Served from /__tools/mobile.html; pages come from the site root at /, and the
+   completion marker is written with a repo-relative name. */
+
+const SITE = location.origin + '/';
+
+// [page, scrollY, label]
+const VIEWS = [
+  ['index.html', 700, 'home / thesis'],
+  ['index.html', 2500, 'home / work'],
+  ['index.html', 7200, 'home / lab'],
+  ['work/quchong.html', 1500, 'quchong / showcase'],
+  ['work/lionup.html', 3400, 'lionup / posters'],
+  ['work/chashi.html', 900, 'chashi / device'],
+];
+
+const rows = [document.getElementById('r1'), document.getElementById('r2')];
+let pending = VIEWS.length;
+
+VIEWS.forEach(([page, y, label], i) => {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.innerHTML = '<div class="cap">' + label + ' @' + y + '</div>';
+  const f = document.createElement('iframe');
+  f.src = SITE + page + '?mb=' + Date.now() + i;
+  cell.appendChild(f);
+  rows[i < 3 ? 0 : 1].appendChild(cell);
+
+  f.addEventListener('load', () => {
+    setTimeout(() => {
+      try {
+        const d = f.contentDocument;
+        d.querySelectorAll('[data-reveal],.media-reveal,.reveal-lines').forEach((e) => e.classList.add('is-in'));
+        const intro = d.getElementById('intro');
+        if (intro) intro.remove();
+        d.querySelectorAll('img[loading="lazy"]').forEach((n) => n.setAttribute('loading', 'eager'));
+        f.contentWindow.scrollTo(0, y);
+      } catch (e) {
+        cell.querySelector('.cap').textContent += '  [inspect failed: ' + e.message + ']';
+      }
+      if (--pending === 0) {
+        setTimeout(() => fetch('/_save?name=tools/_qa/MOBILE_DONE.txt',
+          { method: 'POST', body: new Blob(['ok']) }), 900);
+      }
+    }, 1800);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,12 +1,23 @@
-# Build/dev tooling for the asset pipeline (not part of the site)
-site/_tools/
+# ---------------------------------------------------------------
+# The deployed artifact is zigi994/ and it is fully committed.
+# Everything below is either regenerable, huge, or local-only.
+# ---------------------------------------------------------------
 
-# Retired Vite + React scaffold, kept locally only
-_archive/
-
-# Raw design source. The optimised WebP derivatives live in site/assets/,
-# so the originals stay off a public Pages repo.
+# Original design source (~45 MB of .ai/PSD/render exports). The optimised
+# WebP derivatives are committed under zigi994/assets/, so the originals
+# stay off a public repo.
+tools/src/
 *.ai
+
+# QA captures and intermediate pipeline output, all regenerable
+tools/_qa/
+tools/*.txt
+tools/*-lqip.json
+
+# Vendored pdf.js used only by the local rasterizer; re-downloadable
+tools/pdf.*.mjs
+
+# Source folders sitting next to the project on the desktop
 交互设计/
 ip设计/
 室内设计/

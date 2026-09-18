@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>audit self-test fixture</title>
+<!--
+  Positive control for audit.html. Every block below is a KNOWN defect with a
+  known measurement, so a clean run on the real pages can be trusted rather than
+  assumed. Expectations are in tools/_qa/SELFTEST-EXPECT.txt.
+  Deliberately omits tokens/base/components/page/transitions CSS, favicon,
+  manifest, sw-register.js and navigation.js so the head check has something
+  to fail on.
+-->
+<style>
+  body { margin:0; background:#12110d; color:#f4eee2; font:16px/1.6 system-ui, sans-serif; }
+  section { padding:24px; border-bottom:1px solid #333; }
+
+  /* 1. horizontal overflow: 200px past a 1440 viewport */
+  .ovf { width:1640px; height:40px; background:#ee5c36; }
+
+  /* 2. clipped text: 600px of content in a 120px hidden box, no ellipsis */
+  .clip { width:120px; overflow:hidden; white-space:nowrap; font-size:14px; background:#211e18; }
+
+  /* 3. text-on-text overlap: two absolute labels sharing the same band */
+  .olap { position:relative; height:60px; }
+  .olap b { position:absolute; top:10px; left:20px; font-size:15px; }
+  .olap i { position:absolute; top:12px; left:30px; font-size:15px; }
+
+  /* 5. no reserved aspect ratio: intrinsic sizing only */
+  .noratio { display:block; width:100%; }
+
+  /* 6. tap target: 30x20 */
+  .smalltap { width:30px; height:20px; padding:0; font-size:9px; }
+
+  /* 7. contrast: --fg-3 equivalent on --ink-0 == 2.08:1 at 12px */
+  .badcontrast { color:#4b4842; font-size:12px; }
+  /* and --fg-2 equivalent == 3.7:1 */
+  .midcontrast { color:#716e66; font-size:13px; }
+  /* passing control: must NOT be reported */
+  .okcontrast { color:#f4eee2; font-size:12px; }
+
+  /* 11. underlay control: dark text over an accent pill drawn by a sibling.
+         Ancestor walk sees #2a261f (fails); underlay sees #ee5c36 (passes).
+         Must NOT be reported. */
+  .tabs { position:relative; display:inline-flex; background:#2a261f; padding:5px; }
+  .tabs .pill { position:absolute; inset:5px auto 5px 5px; width:96px; background:#ee5c36; pointer-events:none; }
+  .tabs .btn { position:relative; z-index:1; width:96px; text-align:center; color:#12110d; font-size:13px; background:none; border:0; }
+</style>
+</head>
+<body>
+
+<section><div class="ovf"></div></section>
+
+<section><div class="clip">ThisIsOneUnbreakableStringThatIsFarTooLongForItsOneHundredAndTwentyPixelBox</div></section>
+
+<section class="olap"><b>OVERLAP-A-LABEL</b><i>OVERLAP-B-LABEL</i></section>
+
+<section>
+  <img src="/assets/does-not-exist-selftest.webp" alt="broken on purpose" width="200" height="120">
+  <img class="noratio" src="/favicon.svg" alt="no reserved ratio">
+  <img src="/favicon.svg" width="40" height="40">
+</section>
+
+<section><button class="smalltap">ok</button> <a href="#x" style="display:inline-block;width:24px;height:24px;background:#333"></a></section>
+
+<section>
+  <p class="badcontrast">fg-3 on ink-0, expect 2.08:1</p>
+  <p class="midcontrast">fg-2 on ink-0, expect 3.7:1</p>
+  <p class="okcontrast">fg-0 on ink-0, expect pass — must not be listed</p>
+  <div class="tabs"><span class="pill"></span><button class="btn">pill text</button></div>
+</section>
+
+<script src="/scripts/does-not-exist-selftest.js"></script>
+<script type="module">
+  console.error('selftest console error marker');
+  throw new Error('selftest uncaught module error');
+</script>
+</body>
+</html>

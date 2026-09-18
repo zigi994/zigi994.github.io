@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>audit</title>
+<style>
+  html,body{margin:0;background:#111;color:#ddd;font:12px/1.5 ui-monospace,Consolas,monospace}
+  #log{white-space:pre-wrap;padding:12px;margin:0}
+  /* The stage sits off-canvas so iframes can be wider than the host window
+     without introducing a scrollbar that would skew overflow measurements. */
+  #stage{position:fixed;left:-20000px;top:0;width:0;height:0;overflow:visible}
+  #stage iframe{border:0;display:block;background:#000}
+</style>
+</head>
+<body>
+<pre id="log">running…</pre>
+<div id="stage"></div>
+<script>
+/* ============================================================
+   QA audit harness.
+
+   Layout contract (post-restructure):
+     - this page is served from  /__tools/audit.html
+     - the site under test is served from  /            (repo: zigi994/)
+     - the save sink takes REPO-RELATIVE names:  /_save?name=tools/_qa/x.json
+   ============================================================ */
+
+const SITE = location.origin + '/';
+const OUT_DIR = 'tools/_qa/';
+
+const PAGES = [
+  'index.html',
+  'work/quchong.html',
+  'work/yuexing.html',
+  'work/lionup.html',
+  'work/toast.html',
+  'work/mountain-stay.html',
+  'work/linxi.html',
+  'work/chashi.html',
+];
+
+const VIEWPORTS = [
+  { tag: 'desktop', w: 1440, h: 900 },
+  { tag: 'tablet',  w: 834,  h: 1112 },
+  { tag: 'mobile',  w: 390,  h: 844 },
+];
+
+// Palette handed over with the warm-dark redesign; used as the last-resort
+// backdrop when every ancestor background resolves to transparent.
+const CANVAS_FALLBACK = [0x12, 0x11, 0x0d];
+
+const REQUIRED_HEAD = {
+  styles: ['tokens.css', 'base.css', 'components.css', 'transitions.css'],
+  pageStyles: ['home.css', 'case.css', 'concept.css'],
+  scripts: ['scripts/sw-register.js', 'scripts/navigation.js'],
+  refs: ['favicon.svg', 'manifest.webmanifest'],
+};
+
+const params = new URLSearchParams(location.search);
+const only = params.get('page');
+const onlyVp = params.get('vp');
+const pageList = only ? [only] : PAGES;
+const vpList = onlyVp ? VIEWPORTS.filter((v) => v.tag === onlyVp) : VIEWPORTS;
+
+const lines = [];
+const log = (m) => {
+  lines.push(m);
+  document.getElementById('log').textContent = lines.join('\n');
+};
+
+const round = (n) => Math.round(n * 10) / 10;
+
+/* ---------------- colour maths (WCAG 2.x) ---------------- */
+
+function parseColor(str) {
+  if (!str) return null;
+  const m = str.match(/^rgba?\(([^)]+)\)$/);
+  if (!m) return null;
+  const p = m[1].split(/[,\s/]+/).filter((s) => s.length).map(Number);
+  if (p.length < 3 || p.some((n) => Number.isNaN(n))) return null;
+  return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+}
+
+function over(fg, bg) {
+  const a = fg.a;
+  return [
+    fg.r * a + bg[0] * (1 - a),
+    fg.g * a + bg[1] * (1 - a),
+    fg.b * a + bg[2] * (1 - a),
+  ];
+}
+
+function relLum(rgb) {
+  const f = (v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
+}
+
+function contrast(a, b) {
+  const l1 = relLum(a);
+  const l2 = relLum(b);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+const hex = (rgb) => '#' + rgb.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+
+/* Walk ancestors collecting background layers until an opaque one is hit, then
+   composite downward. Returns { rgb, imageAt } where imageAt names the nearest
+   ancestor painting a background-image, because a gradient/photo backdrop makes
+   the computed ratio indicative rather than exact. */
+function ancestorBg(el, w) {
+  const stack = [];
+  let imageAt = null;
+  let node = el;
+  let base = null;
+  while (node && node.nodeType === 1) {
+    const cs = w.getComputedStyle(node);
+    if (!imageAt && cs.backgroundImage && cs.backgroundImage !== 'none') {
+      imageAt = sel(node) + ' { background-image: ' + cs.backgroundImage.slice(0, 48) + '… }';
+    }
+    const c = parseColor(cs.backgroundColor);
+    if (c && c.a > 0.001) {
+      if (c.a >= 0.999) { base = [c.r, c.g, c.b]; break; }
+      stack.push(c);
+    }
+    node = node.parentElement;
+  }
+  if (!base) base = CANVAS_FALLBACK.slice();
+  for (let i = stack.length - 1; i >= 0; i--) base = over(stack[i], base);
+  return { rgb: base, imageAt };
+}
+
+/* The ancestor walk misses backgrounds painted by a *sibling* that sits under
+   the text — sliding tab pills, tinted overlays, absolutely positioned plates.
+   Without this, `.ftabs__btn.is-active` reads as near-black-on-dark when it is
+   really dark-on-accent. Candidates come from a prebuilt opaque-background list
+   so this stays cheap. */
+function underlayBg(el, rect, opaques) {
+  const cx = (rect.left + rect.right) / 2;
+  const cy = (rect.top + rect.bottom) / 2;
+  let best = null;
+  let bestArea = Infinity;
+  for (const o of opaques) {
+    if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
+    const r = o.rect;
+    if (r.left > cx || r.right < cx || r.top > cy || r.bottom < cy) continue;
+    const area = r.width * r.height;
+    if (area < bestArea) { best = o; bestArea = area; }
+  }
+  return best;
+}
+
+/* ---------------- selector helper ---------------- */
+
+function sel(el) {
+  if (!el || el.nodeType !== 1) return '?';
+  if (el.tagName === 'HTML') return 'html';
+  if (el.tagName === 'BODY') return 'body';
+  let s = el.tagName.toLowerCase();
+  if (el.id) return s + '#' + el.id;
+  const cls = (el.getAttribute('class') || '').trim().split(/\s+/).filter(Boolean).slice(0, 3);
+  if (cls.length) s += '.' + cls.join('.');
+  const p = el.parentElement;
+  if (p) {
+    const sibs = [...p.children].filter((c) => c.tagName === el.tagName);
+    if (sibs.length > 1) s += ':nth-of-type(' + (sibs.indexOf(el) + 1) + ')';
+  }
+  return s;
+}
+
+function path(el) {
+  const parts = [];
+  let n = el;
+  for (let i = 0; n && n.nodeType === 1 && i < 4; i++) {
+    parts.unshift(sel(n));
+    if (n.tagName === 'BODY') break;
+    n = n.parentElement;
+  }
+  return parts.join(' > ');
+}
+
+/* ---------------- geometry helpers ---------------- */
+
+const CLIPS = new Set(['hidden', 'clip', 'auto', 'scroll']);
+
+function visible(el, cs, r) {
+  if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+  if (parseFloat(cs.opacity) < 0.05) return false;
+  if (r.width < 0.5 || r.height < 0.5) return false;
+  return true;
+}
+
+/* An element hanging past the viewport edge is only a defect if nothing above it
+   clips horizontally — carousels, marquees and tickers legitimately extend past
+   their own scroll container. */
+function clippedAncestor(el, w) {
+  let n = el.parentElement;
+  while (n && n.nodeType === 1 && n.tagName !== 'HTML') {
+    const cs = w.getComputedStyle(n);
+    if (CLIPS.has(cs.overflowX) || CLIPS.has(cs.overflowY)) return n;
+    n = n.parentElement;
+  }
+  return null;
+}
+
+function visibleRect(el, w) {
+  let r = el.getBoundingClientRect();
+  let box = { l: r.left, t: r.top, rr: r.right, b: r.bottom };
+  let n = el.parentElement;
+  while (n && n.nodeType === 1 && n.tagName !== 'HTML') {
+    const cs = w.getComputedStyle(n);
+    if (CLIPS.has(cs.overflowX) || CLIPS.has(cs.overflowY)) {
+      const p = n.getBoundingClientRect();
+      box.l = Math.max(box.l, p.left);
+      box.t = Math.max(box.t, p.top);
+      box.rr = Math.min(box.rr, p.right);
+      box.b = Math.min(box.b, p.bottom);
+    }
+    n = n.parentElement;
+  }
+  return box;
+}
+
+function directText(el) {
+  let t = '';
+  for (const n of el.childNodes) if (n.nodeType === 3) t += n.nodeValue;
+  return t.replace(/\s+/g, ' ').trim();
+}
+
+/* ---------------- the analysis, run against an iframe realm ---------------- */
+
+function analyze(w, d, vp, pageUrl) {
+  const R = {
+    page: pageUrl, vp: vp.tag, vw: vp.w, vh: vp.h,
+    doc: {}, overflow: [], clipped: [], overlap: [], images: [],
+    tap: [], contrast: [], head: {}, resources: [], notes: [],
+  };
+
+  const de = d.documentElement;
+  R.doc = {
+    scrollWidth: de.scrollWidth,
+    clientWidth: de.clientWidth,
+    innerWidth: w.innerWidth,
+    scrollHeight: de.scrollHeight,
+    bodyScrollWidth: d.body ? d.body.scrollWidth : 0,
+    overflowX: Math.max(0, de.scrollWidth - de.clientWidth),
+  };
+
+  const all = [...d.querySelectorAll('*')];
+  const VW = de.clientWidth;
+  const cache = new Map();
+  const csOf = (el) => {
+    let c = cache.get(el);
+    if (!c) { c = w.getComputedStyle(el); cache.set(el, c); }
+    return c;
+  };
+
+  /* ---- 1. horizontal overflow ---- */
+  for (const el of all) {
+    if (el.tagName === 'HTML' || el.tagName === 'BODY') continue;
+    const cs = csOf(el);
+    const r = el.getBoundingClientRect();
+    if (!visible(el, cs, r)) continue;
+    if (cs.position === 'fixed') continue;
+    const outR = r.right - VW;
+    const outL = -r.left;
+    if (outR <= 1 && outL <= 1) continue;
+    const clipper = clippedAncestor(el, w);
+    if (clipper) continue;
+    R.overflow.push({
+      sel: path(el), tag: el.tagName.toLowerCase(),
+      left: round(r.left), right: round(r.right), width: round(r.width),
+      pastRight: round(Math.max(0, outR)), pastLeft: round(Math.max(0, outL)),
+      pos: cs.position, text: directText(el).slice(0, 60),
+    });
+  }
+  // Keep the widest offenders; a single broken container reports its whole subtree.
+  R.overflow.sort((a, b) => (b.pastRight + b.pastLeft) - (a.pastRight + a.pastLeft));
+  R.overflow = R.overflow.slice(0, 14);
+
+  /* ---- 2. clipped text + intra-container text overflow ---- */
+  const textEls = [];
+  const rng = d.createRange();
+  for (const el of all) {
+    const txt = directText(el);
+    if (!txt) continue;
+    const cs = csOf(el);
+    const r = el.getBoundingClientRect();
+    if (!visible(el, cs, r)) continue;
+
+    // Tight rects over the element's own text nodes, kept PER LINE. A union rect
+    // is wrong for inline elements: a <strong> that wraps across two lines has a
+    // union box spanning the whole paragraph, which then "overlaps" every
+    // sibling on those lines.
+    let rect = null;
+    const lineRects = [];
+    for (const n of el.childNodes) {
+      if (n.nodeType !== 3 || !n.nodeValue.trim()) continue;
+      rng.selectNodeContents(n);
+      for (const rr of rng.getClientRects()) {
+        if (rr.width < 1 || rr.height < 1) continue;
+        lineRects.push({ left: rr.left, top: rr.top, right: rr.right, bottom: rr.bottom });
+        rect = rect ? {
+          left: Math.min(rect.left, rr.left), top: Math.min(rect.top, rr.top),
+          right: Math.max(rect.right, rr.right), bottom: Math.max(rect.bottom, rr.bottom),
+        } : { left: rr.left, top: rr.top, right: rr.right, bottom: rr.bottom };
+      }
+    }
+    textEls.push({ el, cs, r, txt, rect, lineRects });
+
+    // SVG children have no CSS box model; scrollWidth on them is meaningless,
+    // but the outer <svg> does clip to its viewport, so measure against that.
+    const isSvgChild = el.namespaceURI === 'http://www.w3.org/2000/svg' && el.tagName !== 'svg';
+    if (isSvgChild) {
+      const owner = el.ownerSVGElement;
+      if (owner && el.getBBox) {
+        const or = owner.getBoundingClientRect();
+        const past = Math.max(0, r.right - or.right) + Math.max(0, or.left - r.left) +
+          Math.max(0, r.bottom - or.bottom) + Math.max(0, or.top - r.top);
+        if (past > 1) {
+          R.clipped.push({
+            sel: path(el), kind: 'svg-text-outside-viewport',
+            overflowX: 'svg-clip', overflowY: 'svg-clip',
+            lostX: round(past), lostY: 0,
+            clientW: round(r.width), clientH: round(r.height),
+            scrollW: round(or.width), scrollH: round(or.height),
+            fontSize: cs.fontSize, text: txt.slice(0, 70),
+          });
+        }
+      }
+      continue;
+    }
+
+    const hidesX = cs.overflowX === 'hidden' || cs.overflowX === 'clip';
+    const hidesY = cs.overflowY === 'hidden' || cs.overflowY === 'clip';
+    const intentional = cs.textOverflow === 'ellipsis' ||
+      (cs.webkitLineClamp && cs.webkitLineClamp !== 'none');
+    const dx = el.scrollWidth - el.clientWidth;
+    const dy = el.scrollHeight - el.clientHeight;
+    if ((hidesX && dx > 1) || (hidesY && dy > 1)) {
+      R.clipped.push({
+        sel: path(el), kind: intentional ? 'truncated-by-design' : 'clipped',
+        overflowX: cs.overflowX, overflowY: cs.overflowY,
+        lostX: dx > 1 ? dx : 0, lostY: dy > 1 ? dy : 0,
+        clientW: el.clientWidth, clientH: el.clientHeight,
+        scrollW: el.scrollWidth, scrollH: el.scrollHeight,
+        fontSize: cs.fontSize, text: txt.slice(0, 70),
+      });
+    } else if (!hidesX && dx > 2 && cs.overflowX === 'visible') {
+      // Content wider than the padding box without a clip: an unbreakable run.
+      R.clipped.push({
+        sel: path(el), kind: 'content-wider-than-box',
+        lostX: dx, lostY: 0, clientW: el.clientWidth, clientH: el.clientHeight,
+        scrollW: el.scrollWidth, scrollH: el.scrollHeight,
+        fontSize: cs.fontSize, text: txt.slice(0, 70),
+      });
+    }
+  }
+  R.clipped.sort((a, b) => (b.lostX + b.lostY) - (a.lostX + a.lostY));
+  R.clipped = R.clipped.slice(0, 18);
+
+  /* ---- 3. text-on-text overlap ---- */
+  // Tight rects from the text nodes themselves, intersected with any clipping
+  // ancestor, so an off-screen slide's text does not read as an overlap.
+  const boxes = [];
+  for (const t of textEls.slice(0, 900)) {
+    // Range rects span the whole line box, so lines of differing line-height
+    // always touch. Strip the half-leading down to the glyph band, else every
+    // stat number/label pair reads as a collision.
+    const fs = parseFloat(t.cs.fontSize) || 16;
+    const lh = parseFloat(t.cs.lineHeight) || fs * 1.2;
+    const lead = Math.max(0, (lh - fs * 1.16) / 2);
+    const clip = visibleRect(t.el, w);
+    const opaque = (parseColor(t.cs.backgroundColor) || { a: 0 }).a > 0.85;
+    for (const lr of t.lineRects) {
+      const box = {
+        l: Math.max(lr.left, clip.l), t: Math.max(lr.top + lead, clip.t),
+        r: Math.min(lr.right, clip.rr), b: Math.min(lr.bottom - lead, clip.b),
+      };
+      if (box.r - box.l < 2 || box.b - box.t < 2) continue;
+      boxes.push({ el: t.el, cs: t.cs, txt: t.txt, box, opaque });
+    }
+  }
+  boxes.sort((a, b) => a.box.t - b.box.t);
+
+  const pairSeen = new Map();
+  for (let i = 0; i < boxes.length; i++) {
+    const A = boxes[i];
+    for (let j = i + 1; j < boxes.length; j++) {
+      const B = boxes[j];
+      if (B.box.t >= A.box.b) break; // sorted by top: nothing below can overlap
+      if (A.el === B.el || A.el.contains(B.el) || B.el.contains(A.el)) continue;
+      if (A.opaque || B.opaque) continue; // own opaque backdrop == deliberate layering
+      const ox = Math.min(A.box.r, B.box.r) - Math.max(A.box.l, B.box.l);
+      const oy = Math.min(A.box.b, B.box.b) - Math.max(A.box.t, B.box.t);
+      if (ox <= 1 || oy <= 1) continue;
+      const area = ox * oy;
+      const smaller = Math.min((A.box.r - A.box.l) * (A.box.b - A.box.t),
+                               (B.box.r - B.box.l) * (B.box.b - B.box.t));
+      const frac = area / smaller;
+      if (frac < 0.25) continue;
+      const key = path(A.el) + '||' + path(B.el);
+      const rec = {
+        a: path(A.el), b: path(B.el),
+        aText: A.txt.slice(0, 40), bText: B.txt.slice(0, 40),
+        overlapPx: round(area), frac: round(frac * 100),
+        ox: round(ox), oy: round(oy),
+        aPos: A.cs.position, bPos: B.cs.position,
+      };
+      const prev = pairSeen.get(key);
+      if (!prev || prev.overlapPx < area) pairSeen.set(key, rec);
+    }
+  }
+  R.overlap = [...pairSeen.values()].sort((a, b) => b.overlapPx - a.overlapPx).slice(0, 12);
+
+  /* ---- 4. images ---- */
+  const allImgs = [...d.querySelectorAll('img')];
+  R.imgTotal = allImgs.length;
+  R.imgLoaded = allImgs.filter((i) => i.complete && i.naturalWidth > 0).length;
+  R.textElTotal = textEls.length;
+  R.elTotal = all.length;
+  for (const img of allImgs) {
+    const cs = csOf(img);
+    const r = img.getBoundingClientRect();
+    const hasAttr = !!(img.getAttribute('width') && img.getAttribute('height'));
+    const cssAspect = cs.aspectRatio && cs.aspectRatio !== 'auto';
+    const parent = img.parentElement;
+    const pcs = parent ? csOf(parent) : null;
+    const parentAspect = pcs && pcs.aspectRatio && pcs.aspectRatio !== 'auto';
+    const absFill = cs.position === 'absolute' && cs.top !== 'auto' && cs.bottom !== 'auto';
+    const src = img.getAttribute('src') || img.currentSrc || '(no src)';
+    const rec = {
+      sel: path(img), src, alt: img.getAttribute('alt'),
+      loading: img.getAttribute('loading'),
+      complete: img.complete, naturalWidth: img.naturalWidth,
+      renderW: round(r.width), renderH: round(r.height),
+      hasAttrDims: hasAttr, cssAspectRatio: cs.aspectRatio,
+      parentAspectRatio: pcs ? pcs.aspectRatio : null,
+      objectFit: cs.objectFit, hidden: !visible(img, cs, r),
+      issues: [],
+    };
+    if (img.complete && img.naturalWidth === 0) rec.issues.push('failed-to-load');
+    if (!img.complete) rec.issues.push('still-loading-at-measure');
+    if (!hasAttr && !cssAspect && !parentAspect && !absFill) rec.issues.push('no-reserved-aspect-ratio');
+    if (img.getAttribute('alt') === null) rec.issues.push('missing-alt-attr');
+    if (rec.issues.length) R.images.push(rec);
+  }
+
+  /* ---- 5. tap targets (all viewports; only reported for mobile) ---- */
+  const TAPPABLE = 'a[href],button,input,select,textarea,summary,[role="button"],[role="link"],[role="tab"],[onclick],[tabindex]:not([tabindex="-1"])';
+  for (const el of [...d.querySelectorAll(TAPPABLE)]) {
+    const cs = csOf(el);
+    const r = el.getBoundingClientRect();
+    if (!visible(el, cs, r)) continue;
+    if (el.tagName === 'INPUT' && ['hidden'].includes(el.type)) continue;
+    const w0 = r.width, h0 = r.height;
+    if (w0 >= 43.5 && h0 >= 43.5) continue;
+    // Links inside running prose are exempt by convention; classify, don't drop.
+    let inProse = false;
+    let n = el.parentElement;
+    while (n && n.nodeType === 1) {
+      if (['P', 'LI', 'DD', 'BLOCKQUOTE', 'FIGCAPTION', 'SMALL', 'TD'].includes(n.tagName)) { inProse = true; break; }
+      if (n.tagName === 'BODY') break;
+      n = n.parentElement;
+    }
+    R.tap.push({
+      sel: path(el), tag: el.tagName.toLowerCase(),
+      w: round(w0), h: round(h0),
+      label: (el.getAttribute('aria-label') || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 42),
+      href: el.getAttribute('href'),
+      inProse, display: cs.display, fontSize: cs.fontSize,
+    });
+  }
+  R.tap.sort((a, b) => (a.w * a.h) - (b.w * b.h));
+
+  /* ---- 6. contrast on small text ---- */
+
+  // Name the offending colour after the token it came from; "--fg-3 fails" is
+  // a fix, "#4b4842 fails" is a scavenger hunt.
+  const rootCs = w.getComputedStyle(de);
+  const TOKEN_NAMES = ['--fg-0', '--fg-1', '--fg-2', '--fg-3', '--ink-0', '--ink-1',
+    '--ink-2', '--ink-3', '--ink-4', '--line', '--line-strong', '--accent', '--accent-ink'];
+  const tokens = [];
+  for (const name of TOKEN_NAMES) {
+    const raw = rootCs.getPropertyValue(name).trim();
+    if (!raw) continue;
+    const probe = d.createElement('span');
+    probe.style.cssText = 'position:absolute;left:-9999px;color:' + raw;
+    d.body.appendChild(probe);
+    const c = parseColor(w.getComputedStyle(probe).color);
+    probe.remove();
+    if (c) tokens.push({ name, raw, c });
+  }
+  const tokenFor = (str) => {
+    const c = parseColor(str);
+    if (!c) return null;
+    const hit = tokens.find((t) => t.c.r === c.r && t.c.g === c.g && t.c.b === c.b &&
+      Math.abs(t.c.a - c.a) < 0.01);
+    return hit ? hit.name : null;
+  };
+
+  // Accents are documented as "clears 4.5:1 against --ink-0"; verify it.
+  const inkTok = tokens.find((t) => t.name === '--ink-0');
+  const inkRgb = inkTok ? [inkTok.c.r, inkTok.c.g, inkTok.c.b] : CANVAS_FALLBACK;
+  R.accentCheck = [];
+  for (const name of ['--accent', '--a-quchong', '--a-yuexing', '--a-lionup', '--a-toast',
+    '--a-stay', '--a-linxi', '--a-chashi']) {
+    const raw = rootCs.getPropertyValue(name).trim();
+    const c = parseColor(raw) || (raw.startsWith('#') ? {
+      r: parseInt(raw.slice(1, 3), 16), g: parseInt(raw.slice(3, 5), 16),
+      b: parseInt(raw.slice(5, 7), 16), a: 1,
+    } : null);
+    if (!c || Number.isNaN(c.r)) continue;
+    R.accentCheck.push({
+      token: name, value: raw,
+      vsInk0: Math.round(contrast([c.r, c.g, c.b], inkRgb) * 100) / 100,
+      passes45: contrast([c.r, c.g, c.b], inkRgb) >= 4.5,
+    });
+  }
+
+  const opaques = [];
+  for (const el of all) {
+    const cs = csOf(el);
+    const c = parseColor(cs.backgroundColor);
+    if (!c || c.a < 0.85) continue;
+    if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) < 0.5) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) continue;
+    opaques.push({ el, rect, rgb: [c.r, c.g, c.b], sel: sel(el) });
+  }
+
+  const seen = new Map();
+  for (const t of textEls) {
+    const fs = parseFloat(t.cs.fontSize);
+    if (!(fs < 18)) continue;
+    const fg = parseColor(t.cs.color);
+    if (!fg) continue;
+
+    const anc = ancestorBg(t.el, w);
+    const under = t.rect ? underlayBg(t.el, t.rect, opaques) : null;
+    // Two candidate backdrops; a defect only if the text fails against both,
+    // which keeps sliding pills and tinted plates out of the report.
+    const cands = [{ rgb: anc.rgb, from: 'ancestor' }];
+    if (under) cands.push({ rgb: under.rgb, from: 'underlay ' + under.sel });
+    let best = null;
+    for (const cand of cands) {
+      const fgRgb = fg.a < 0.999 ? over(fg, cand.rgb) : [fg.r, fg.g, fg.b];
+      const ratio = contrast(fgRgb, cand.rgb);
+      if (!best || ratio > best.ratio) best = { ...cand, fgRgb, ratio };
+    }
+    if (best.ratio >= 4.5) continue;
+
+    const key = hex(best.fgRgb) + '|' + hex(best.rgb) + '|' + t.cs.fontSize + '|' + t.cs.fontWeight;
+    const prev = seen.get(key);
+    if (prev) { prev.count++; if (prev.samples.length < 3) prev.samples.push(path(t.el)); continue; }
+    const rec = {
+      fg: hex(best.fgRgb), rawColor: t.cs.color, fgToken: tokenFor(t.cs.color),
+      bg: hex(best.rgb), bgToken: tokenFor('rgb(' + best.rgb.map(Math.round).join(', ') + ')'),
+      bgFrom: best.from,
+      fontSize: t.cs.fontSize, fontWeight: t.cs.fontWeight,
+      ratio: Math.round(best.ratio * 100) / 100,
+      needs: 4.5, bgFromImage: anc.imageAt,
+      count: 1, samples: [path(t.el)], text: t.txt.slice(0, 46),
+    };
+    seen.set(key, rec);
+    R.contrast.push(rec);
+  }
+  R.contrast.sort((a, b) => a.ratio - b.ratio);
+
+  /* ---- 7. head consistency ---- */
+  const links = [...d.querySelectorAll('link')];
+  const scripts = [...d.querySelectorAll('script[src]')];
+  const sheets = links.filter((l) => (l.rel || '').toLowerCase().includes('stylesheet'))
+    .map((l) => l.getAttribute('href'));
+  const H = {
+    stylesheets: sheets,
+    icon: links.filter((l) => (l.rel || '').includes('icon')).map((l) => l.getAttribute('href')),
+    manifest: links.filter((l) => (l.rel || '').includes('manifest')).map((l) => l.getAttribute('href')),
+    scripts: scripts.map((s) => ({ src: s.getAttribute('src'), type: s.type || 'classic', defer: s.defer, async: s.async })),
+    title: d.title,
+    missing: [], extra: [],
+  };
+  for (const need of REQUIRED_HEAD.styles) {
+    if (!sheets.some((h) => h && h.endsWith(need))) H.missing.push('stylesheet ' + need);
+  }
+  if (!REQUIRED_HEAD.pageStyles.some((p) => sheets.some((h) => h && h.endsWith(p)))) {
+    H.missing.push('page stylesheet (home/case/concept).css');
+  }
+  for (const need of REQUIRED_HEAD.scripts) {
+    if (!H.scripts.some((s) => s.src && s.src.endsWith(need.split('/').pop()))) H.missing.push(need);
+  }
+  if (!H.icon.some((h) => h && h.endsWith('favicon.svg'))) H.missing.push('favicon.svg');
+  if (!H.manifest.some((h) => h && h.endsWith('manifest.webmanifest'))) H.missing.push('manifest.webmanifest');
+  H.metaViewport = (d.querySelector('meta[name="viewport"]') || {}).content || null;
+  H.metaDescription = !!d.querySelector('meta[name="description"]');
+  H.lang = de.getAttribute('lang');
+  R.head = H;
+
+  /* ---- 8. every URL the document actually references ---- */
+  const refs = new Set();
+  const add = (u) => {
+    if (!u) return;
+    const s = String(u).trim();
+    if (!s || s.startsWith('data:') || s.startsWith('#') || s.startsWith('%23')
+      || s.startsWith('blob:') || s.startsWith('javascript:') || s.startsWith('mailto:')
+      || s.startsWith('tel:')) return;
+    try { refs.add(new URL(s, d.baseURI).href); } catch (e) { /* unparseable */ }
+  };
+  links.forEach((l) => add(l.getAttribute('href')));
+  scripts.forEach((s) => add(s.getAttribute('src')));
+  d.querySelectorAll('img[src]').forEach((n) => add(n.getAttribute('src')));
+  d.querySelectorAll('[srcset]').forEach((n) => {
+    (n.getAttribute('srcset') || '').split(',').forEach((p) => add(p.trim().split(/\s+/)[0]));
+  });
+  d.querySelectorAll('source[src],video[src],audio[src],video[poster],iframe[src],embed[src],object[data]')
+    .forEach((n) => { add(n.getAttribute('src')); add(n.getAttribute('poster')); add(n.getAttribute('data')); });
+  d.querySelectorAll('use').forEach((n) => add(n.getAttribute('href') || n.getAttributeNS('http://www.w3.org/1999/xlink', 'href')));
+  // An inline SVG data URI contains its own url(%23id) filter references, and
+  // those parens mean a [^)] scan stops short — match to the closing quote
+  // instead, or the grain texture in base.css leaks in as a /work/%23n 404.
+  const stripData = (s) => s
+    .replace(/url\((["'])data:[\s\S]*?\1\)/g, 'url(data:)')
+    .replace(/url\(data:[^)]*\)/g, 'url(data:)');
+  const urlsIn = (s, base) => {
+    const found = [];
+    const re = /url\((['"]?)([^'")]+)\1\)/g;
+    let m;
+    while ((m = re.exec(stripData(s)))) found.push(m[2]);
+    return found;
+  };
+  for (const el of all) {
+    const cs = csOf(el);
+    for (const prop of ['backgroundImage', 'maskImage', 'borderImageSource', 'listStyleImage']) {
+      const v = cs[prop];
+      if (!v || v === 'none') continue;
+      urlsIn(v).forEach(add);
+    }
+  }
+  // Same-origin sheets expose cssRules, which is where @font-face src lives.
+  for (const ss of [...d.styleSheets]) {
+    let rules = null;
+    try { rules = ss.cssRules; } catch (e) { R.notes.push('stylesheet unreadable: ' + ss.href); continue; }
+    const walk = (list) => {
+      for (const rule of list) {
+        if (rule.cssRules) { walk(rule.cssRules); continue; }
+        for (const u of urlsIn(rule.cssText || '')) {
+          if (u.startsWith('#') || u.startsWith('%23') || u.startsWith('data:')) continue;
+          try { refs.add(new URL(u, ss.href || d.baseURI).href); } catch (e) { /* skip */ }
+        }
+      }
+    };
+    walk(rules);
+  }
+  R.resources = [...refs];
+  return R;
+}
+
+/* ---------------- iframe driver ---------------- */
+
+const statusCache = new Map();
+async function statusOf(url) {
+  if (statusCache.has(url)) return statusCache.get(url);
+  let s;
+  try {
+    const r = await fetch(url, { cache: 'no-store' });
+    s = r.status;
+  } catch (e) {
+    s = 'network-error:' + e.message;
+  }
+  statusCache.set(url, s);
+  return s;
+}
+
+function runOne(pageUrl, vp) {
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.width = vp.w;
+    frame.height = vp.h;
+    frame.style.width = vp.w + 'px';
+    frame.style.height = vp.h + 'px';
+    document.getElementById('stage').appendChild(frame);
+
+    const runtime = { jsErrors: [], resourceErrors: [], consoleErrors: [], hookedAt: null };
+    let done = false;
+
+    // Errors must be captured before the page's own scripts run. Every script on
+    // these pages is type=module or defer, so both execute after parsing; a tight
+    // poll that installs hooks while readyState is still 'loading' gets in first.
+    let hooked = false;
+    const tryHook = () => {
+      if (hooked) return;
+      let w;
+      try { w = frame.contentWindow; } catch (e) { return; }
+      if (!w || !frame.contentDocument) return;
+      const href = w.location.href;
+      if (href === 'about:blank' || !href.includes(pageUrl.split('/').pop())) return;
+      hooked = true;
+      runtime.hookedAt = frame.contentDocument.readyState;
+      w.addEventListener('error', (e) => {
+        const t = e.target;
+        if (t && t !== w && t.tagName) {
+          runtime.resourceErrors.push(t.tagName.toLowerCase() + ' failed: ' +
+            (t.getAttribute('src') || t.getAttribute('href') || '(inline)'));
+        } else {
+          runtime.jsErrors.push((e.message || 'error') + ' @ ' +
+            (e.filename || '').split('/').pop() + ':' + e.lineno);
+        }
+      }, true);
+      w.addEventListener('unhandledrejection', (e) => {
+        runtime.jsErrors.push('unhandled rejection: ' + (e.reason && (e.reason.message || e.reason)));
+      });
+      const ce = w.console.error;
+      w.console.error = function (...a) {
+        runtime.consoleErrors.push(a.map(String).join(' ').slice(0, 200));
+        ce.apply(w.console, a);
+      };
+    };
+
+    const poll = setInterval(tryHook, 4);
+    frame.src = SITE + pageUrl + '?qa=' + Date.now();
+
+    const finish = async () => {
+      if (done) return;
+      done = true;
+      clearInterval(poll);
+      let R;
+      try {
+        const w = frame.contentWindow;
+        const d = frame.contentDocument;
+
+        // Settle the page deterministically: force every reveal state on and
+        // dismiss the loader so measurements describe the resting layout, then
+        // sweep the scroll position so lazy images and observers all commit.
+        d.querySelectorAll('[data-reveal],.reveal-lines,.media-reveal').forEach((e) => e.classList.add('is-in'));
+        const intro = d.getElementById('intro');
+        if (intro) { intro.classList.add('is-done'); intro.style.display = 'none'; }
+        d.querySelectorAll('img[loading="lazy"]').forEach((i) => i.setAttribute('loading', 'eager'));
+        const H = d.documentElement.scrollHeight;
+        for (let y = 0; y < H; y += Math.max(200, vp.h * 0.8)) w.scrollTo(0, y);
+        w.scrollTo(0, 0);
+        await new Promise((r) => setTimeout(r, 600));
+        try { await d.fonts.ready; } catch (e) { /* no font api */ }
+        await new Promise((r) => setTimeout(r, 500));
+
+        R = analyze(w, d, vp, pageUrl);
+      } catch (e) {
+        R = {
+          page: pageUrl, vp: vp.tag, vw: vp.w, vh: vp.h,
+          fatal: e.message + '\n' + (e.stack || ''),
+          overflow: [], clipped: [], overlap: [], images: [], tap: [],
+          contrast: [], head: {}, resources: [], notes: [],
+        };
+      }
+      R.runtime = runtime;
+      frame.remove();
+
+      R.badResources = [];
+      for (const u of R.resources || []) {
+        const s = await statusOf(u);
+        if (s !== 200) R.badResources.push({ url: u.replace(SITE, '/'), status: s });
+      }
+      resolve(R);
+    };
+
+    frame.addEventListener('load', () => setTimeout(finish, 1400));
+    setTimeout(finish, 20000);
+  });
+}
+
+/* ---------------- summary rendering ---------------- */
+
+function summarise(R) {
+  const L = [];
+  const tag = `${R.page} @ ${R.vp} ${R.vw}x${R.vh}`;
+  if (R.fatal) { L.push(`[FATAL] ${tag}\n    ${R.fatal}`); return L.join('\n'); }
+  const counts = {
+    ovf: R.overflow.length, clip: R.clipped.filter((c) => c.kind !== 'truncated-by-design').length,
+    olap: R.overlap.length, img: R.images.filter((i) => i.issues.includes('failed-to-load')).length,
+    cls: R.images.filter((i) => i.issues.includes('no-reserved-aspect-ratio')).length,
+    tap: R.vp === 'mobile' ? R.tap.length : 0,
+    con: R.contrast.length,
+    js: R.runtime.jsErrors.length + R.runtime.consoleErrors.length,
+    net: R.badResources.length,
+  };
+  const bad = counts.ovf || counts.clip || counts.olap || counts.img || counts.js || counts.net
+    || counts.tap || counts.con || R.doc.overflowX > 1 || R.head.missing.length;
+  L.push(`\n[${bad ? 'FAIL' : 'ok  '}] ${tag}`);
+  L.push(`  doc scrollW=${R.doc.scrollWidth} clientW=${R.doc.clientWidth} overflowX=${R.doc.overflowX} scrollH=${R.doc.scrollHeight}  hooked@${R.runtime.hookedAt}`);
+  L.push(`  inspected: ${R.elTotal} elements, ${R.textElTotal} text nodes, ${R.imgLoaded}/${R.imgTotal} images loaded, ${R.resources.length} urls`);
+
+  if (R.head.missing.length) L.push('  HEAD missing: ' + R.head.missing.join(', '));
+  if (R.badResources.length) {
+    L.push('  BAD RESOURCES:');
+    R.badResources.forEach((b) => L.push(`    ${b.status}  ${b.url}`));
+  }
+  R.runtime.jsErrors.forEach((e) => L.push('  JS ERROR: ' + e));
+  R.runtime.consoleErrors.forEach((e) => L.push('  console.error: ' + e));
+  R.runtime.resourceErrors.forEach((e) => L.push('  RESOURCE EVENT: ' + e));
+
+  if (R.overflow.length) {
+    L.push('  HORIZONTAL OVERFLOW:');
+    R.overflow.forEach((o) => L.push(
+      `    ${o.sel}\n      w=${o.width} left=${o.left} right=${o.right} pastRight=${o.pastRight} pastLeft=${o.pastLeft} pos=${o.pos}${o.text ? '  text="' + o.text + '"' : ''}`));
+  }
+  const realClip = R.clipped.filter((c) => c.kind !== 'truncated-by-design');
+  if (realClip.length) {
+    L.push('  TEXT CLIP/OVERFLOW:');
+    realClip.forEach((c) => L.push(
+      `    [${c.kind}] ${c.sel}\n      box=${c.clientW}x${c.clientH} content=${c.scrollW}x${c.scrollH} lostX=${c.lostX} lostY=${c.lostY} fs=${c.fontSize} overflow=${c.overflowX}/${c.overflowY} text="${c.text}"`));
+  }
+  if (R.overlap.length) {
+    L.push('  TEXT OVERLAP:');
+    R.overlap.forEach((o) => L.push(
+      `    ${o.overlapPx}px² (${o.frac}% of smaller, ${o.ox}x${o.oy})\n      A ${o.a} [${o.aPos}] "${o.aText}"\n      B ${o.b} [${o.bPos}] "${o.bText}"`));
+  }
+  if (R.images.length) {
+    L.push('  IMAGES:');
+    R.images.forEach((i) => L.push(
+      `    ${i.issues.join(',')}  ${i.sel}\n      src=${i.src} natural=${i.naturalWidth} render=${i.renderW}x${i.renderH} attrDims=${i.hasAttrDims} ar=${i.cssAspectRatio}/${i.parentAspectRatio} fit=${i.objectFit} loading=${i.loading}`));
+  }
+  if (R.vp === 'mobile' && R.tap.length) {
+    L.push('  TAP TARGETS < 44x44:');
+    R.tap.forEach((t) => L.push(
+      `    ${t.w}x${t.h}${t.inProse ? ' (inline-in-prose)' : ''}  ${t.sel}  "${t.label}"${t.href ? ' -> ' + t.href : ''}`));
+  }
+  if (R.contrast.length) {
+    L.push('  CONTRAST < 4.5:1 ON TEXT UNDER 18px:');
+    R.contrast.forEach((c) => L.push(
+      `    ${c.ratio}:1  fg=${c.fg}${c.fgToken ? ' [' + c.fgToken + ']' : ''} on bg=${c.bg}${c.bgToken ? ' [' + c.bgToken + ']' : ''} (${c.bgFrom})  ${c.fontSize}/${c.fontWeight}  x${c.count}\n      e.g. ${c.samples[0]}  "${c.text}"${c.bgFromImage ? '\n      NOTE bg-image present: ' + c.bgFromImage : ''}`));
+  }
+  if (R.accentCheck && R.accentCheck.some((a) => !a.passes45)) {
+    L.push('  ACCENT TOKENS BELOW 4.5:1 vs --ink-0:');
+    R.accentCheck.filter((a) => !a.passes45)
+      .forEach((a) => L.push(`    ${a.vsInk0}:1  ${a.token}: ${a.value}`));
+  }
+  R.notes.forEach((n) => L.push('  note: ' + n));
+  return L.join('\n');
+}
+
+/* ---------------- main ---------------- */
+
+(async () => {
+  const all = [];
+  for (const vp of vpList) {
+    log(`\n=================== ${vp.tag} ${vp.w}x${vp.h} ===================`);
+    for (const p of pageList) {
+      const R = await runOne(p, vp);
+      all.push(R);
+      log(summarise(R));
+    }
+  }
+
+  const slug = (only ? only.replace(/[^a-z0-9]+/gi, '-') : 'all') + (onlyVp ? '-' + onlyVp : '');
+  await fetch('/_save?name=' + OUT_DIR + 'audit-' + slug + '.json',
+    { method: 'POST', body: new Blob([JSON.stringify(all, null, 1)]) });
+  await fetch('/_save?name=' + OUT_DIR + 'audit-' + slug + '.txt',
+    { method: 'POST', body: new Blob([lines.join('\n')]) });
+  log('\n--- done ---');
+  document.title = 'audit-done';
+  await fetch('/_save?name=' + OUT_DIR + 'AUDIT_DONE.txt',
+    { method: 'POST', body: new Blob([slug + ' ' + new Date().toISOString()]) });
+})();
+</script>
+</body>
+</html>

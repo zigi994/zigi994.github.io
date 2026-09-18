@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>measure</title>
+<style>
+  body{font:12px/1.6 ui-monospace,Consolas,monospace;background:#111;color:#ddd;margin:0;padding:16px}
+  pre{white-space:pre-wrap;margin:0}
+  #stage{position:fixed;left:-20000px;top:0;width:0;height:0}
+  #stage iframe{border:0;display:block;background:#000}
+</style>
+</head>
+<body>
+<pre id="log">…</pre>
+<div id="stage"></div>
+<script>
+/* Box-model spot checks for the components that carry the layout.
+   Served from /__tools/measure.html; site root is /, save names are
+   repo-relative (tools/_qa/…). */
+
+const SITE = location.origin + '/';
+const OUT = 'tools/_qa/MEASURE';
+
+const out = [];
+const log = (m) => { out.push(m); document.getElementById('log').textContent = out.join('\n'); };
+
+const VIEWPORTS = [
+  { tag: 'desktop', w: 1440, h: 900 },
+  { tag: 'tablet',  w: 834,  h: 1112 },
+  { tag: 'mobile',  w: 390,  h: 844 },
+];
+
+const CHECKS = [
+  ['index.html', [
+    ['nav',            'header.nav'],
+    ['nav links',      '.nav__links'],
+    ['card02 frame',   '.projects > li:nth-child(2) .frame'],
+    ['card02 img',     '.projects > li:nth-child(2) .frame img'],
+    ['card03 frame',   '.projects > li:nth-child(3) .frame'],
+    ['mascot',         '.poster__mascot'],
+    ['phone img mid',  '.phones__b'],
+    ['lab stage',      '.demo__stage'],
+    ['ftabs pill',     '.ftabs__pill'],
+    ['footer cta',     '.footer__cta'],
+  ]],
+  ['work/chashi.html', [
+    ['crumbs',         '.chero__crumbs'],
+    ['device',         '.device'],
+    ['pot',            '.device__pot'],
+    ['appcard',        '.appcard'],
+  ]],
+  ['work/lionup.html', [
+    ['ooh',            '.ooh'],
+    ['lightbox',       '.lightbox'],
+    ['lposter mascot', '.lposter__mascot'],
+    ['sleeve cup',     '.sleeve__cup'],
+  ]],
+  ['work/quchong.html', [
+    ['hero screens',   '.hero-screens img'],
+    ['phone',          '.phone'],
+    ['rail item',      '.rail__item'],
+  ]],
+  ['work/linxi.html', [
+    ['nodeui',         '.nodeui'],
+    ['nodeui canvas',  '.nodeui__canvas'],
+    ['vtree svg',      '.vtree svg'],
+  ]],
+];
+
+function run(url, checks, vp) {
+  return new Promise((resolve) => {
+    const f = document.createElement('iframe');
+    f.style.width = vp.w + 'px';
+    f.style.height = vp.h + 'px';
+    document.getElementById('stage').appendChild(f);
+    f.src = SITE + url + '?m=' + Date.now();
+    let settled = false;
+    const go = async () => {
+      if (settled) return;
+      settled = true;
+      try {
+        const d = f.contentDocument, w = f.contentWindow;
+        // Widths driven by JS after webfont metrics land (the fluid-tabs pill,
+        // for one) measure as 0 unless this waits for fonts.ready first.
+        try { await d.fonts.ready; } catch (e) { /* no font api */ }
+        await new Promise((r) => setTimeout(r, 300));
+        // Settle reveals so measured boxes are the resting layout, not mid-animation.
+        d.querySelectorAll('[data-reveal],.reveal-lines,.media-reveal').forEach((e) => e.classList.add('is-in'));
+        const intro = d.getElementById('intro');
+        if (intro) { intro.classList.add('is-done'); intro.style.display = 'none'; }
+        log(`=== ${url} @ ${vp.tag} (vw ${w.innerWidth}) ===`);
+        checks.forEach(([label, sel]) => {
+          const el = d.querySelector(sel);
+          if (!el) { log('  ' + label.padEnd(16) + 'MISSING  (' + sel + ')'); return; }
+          const r = el.getBoundingClientRect();
+          const cs = w.getComputedStyle(el);
+          const extra = el.tagName === 'IMG'
+            ? `  fit=${cs.objectFit} natural=${el.naturalWidth}x${el.naturalHeight}`
+            : `  display=${cs.display}`;
+          log('  ' + label.padEnd(16) +
+            `w=${Math.round(r.width)} h=${Math.round(r.height)} x=${Math.round(r.left)}` + extra);
+        });
+      } catch (e) {
+        log('  inspect failed: ' + e.message);
+      }
+      f.remove();
+      resolve();
+    };
+    f.addEventListener('load', () => setTimeout(go, 1600));
+    setTimeout(go, 12000);
+  });
+}
+
+(async () => {
+  for (const vp of VIEWPORTS) {
+    log(`\n########## ${vp.tag} ${vp.w}x${vp.h} ##########`);
+    for (const [url, checks] of CHECKS) await run(url, checks, vp);
+  }
+  await fetch('/_save?name=' + OUT + '.txt', { method: 'POST', body: new Blob([out.join('\n')]) });
+  log('\n--- done ---');
+  await fetch('/_save?name=' + OUT + '_DONE.txt', { method: 'POST', body: new Blob(['ok']) });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zigi — 交互设计师 / Interaction Designer</title>
+<meta name="description" content="zigi 的设计作品集。交互设计、IP 形象、空间设计——从一个像素到一百平米，设计人与事物相遇的那一刻。">
+<meta name="theme-color" content="#12110d">
+<meta property="og:title" content="zigi — 交互设计师 / Interaction Designer">
+<meta property="og:description" content="从一个像素到一百平米。界面、角色、空间——都是同一件事。">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/bricolage-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/home.css">
+<link rel="stylesheet" href="styles/transitions.css">
+</head>
+<body data-base="">
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============================================================
+     Intro curtain
+     ============================================================ -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro__inner">
+    <span class="intro__label label">Portfolio 2026</span>
+    <div class="intro__count num"><span data-intro-count>0</span><i>%</i></div>
+  </div>
+  <div class="intro__bar"><span></span></div>
+</div>
+
+<!-- ============================================================
+     Nav
+     ============================================================ -->
+<header class="nav">
+  <div class="shell nav__inner">
+    <a class="nav__brand" href="#top" aria-label="zigi, 首页">
+      <b>zigi</b>
+      <span>Interaction&nbsp;Design</span>
+    </a>
+    <nav class="nav__links" aria-label="主导航">
+      <a class="nav__link" href="#work">作品</a>
+      <a class="nav__link" href="#lab">交互实验</a>
+      <a class="nav__link" href="#approach">方法</a>
+      <a class="nav__link" href="#about">关于</a>
+      <a class="nav__link" href="#contact">联系</a>
+    </nav>
+    <span class="nav__clock" data-clock>Guangzhou</span>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============================================================
+       Hero
+       ============================================================ -->
+  <section class="hero" data-accent="#ee5c36" data-accent-zone="#ee5c36">
+    <canvas class="hero__field" data-field aria-hidden="true"></canvas>
+    <div class="glow hero__glow" aria-hidden="true"></div>
+
+    <div class="shell hero__inner">
+      <div class="hero__top">
+        <span class="pill pill--accent"><i class="pill__dot"></i>正在接受 2026 合作与实习</span>
+        <span class="label">广州 · Guangzhou</span>
+      </div>
+
+      <h1 class="hero__title display-xl cn">
+        <span class="hero__line reveal-lines">从一个像素</span>
+        <span class="hero__line hero__line--indent reveal-lines">到一百平米</span>
+      </h1>
+
+      <div class="hero__foot">
+        <p class="hero__lede lede cn" data-reveal style="--reveal-delay:520ms">
+          我做界面、做角色、也做空间。<br>
+          它们其实是同一件事——设计人与事物<em>相遇的那一刻</em>。
+        </p>
+
+        <ul class="hero__scales" data-reveal style="--reveal-delay:640ms">
+          <li><b class="num">01</b><span class="label">屏幕 / Screen</span><em>界面 · 流程 · 动效</em></li>
+          <li><b class="num">02</b><span class="label">角色 / Character</span><em>IP · 叙事 · 情绪</em></li>
+          <li><b class="num">03</b><span class="label">空间 / Space</span><em>场所 · 动线 · 光</em></li>
+        </ul>
+      </div>
+
+      <a class="hero__cue" href="#thesis" data-cursor="Scroll">
+        <span class="label">向下滚动</span>
+        <span class="hero__cue-line" aria-hidden="true"></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Marquee
+       ============================================================ -->
+  <div class="strip" aria-hidden="true">
+    <div class="marquee">
+      <div class="marquee__track">
+        <span class="marquee__item cn"><b>交互设计</b><i class="marquee__dot"></i>IP 形象<i class="marquee__dot"></i><b>空间设计</b><i class="marquee__dot"></i>品牌战役<i class="marquee__dot"></i><b>AIGC 工作流</b><i class="marquee__dot"></i>动效系统<i class="marquee__dot"></i></span>
+      </div>
+      <div class="marquee__track">
+        <span class="marquee__item cn"><b>交互设计</b><i class="marquee__dot"></i>IP 形象<i class="marquee__dot"></i><b>空间设计</b><i class="marquee__dot"></i>品牌战役<i class="marquee__dot"></i><b>AIGC 工作流</b><i class="marquee__dot"></i>动效系统<i class="marquee__dot"></i></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Thesis — three scales
+       ============================================================ -->
+  <section class="section thesis" id="thesis">
+    <div class="shell">
+      <div class="thesis__head">
+        <span class="label">01 — 设计观</span>
+        <h2 class="display-m cn reveal-lines">交互不只发生在屏幕里</h2>
+      </div>
+
+      <div class="thesis__body">
+        <p class="thesis__statement cn" data-reveal>
+          一次点击、一个眼神、一段推门而入的动线，本质上都是「反馈」。
+          我关心的始终是同一个问题：<strong>人靠近它的时候，它如何回应？</strong>
+        </p>
+        <p class="caption cn" data-reveal style="--reveal-delay:140ms">
+          所以我的作品跨越三种尺度——屏幕、角色、空间。
+          它们用完全不同的材料，回答同一道题。<br><br>
+          尺度越大，反馈越慢，但机制是一样的：先建立预期，再给出确认。
+        </p>
+      </div>
+
+      <ol class="scales" data-stagger="120">
+        <li class="scale" data-reveal="rise">
+          <div class="scale__num num">01</div>
+          <h3 class="scale__title cn">屏幕</h3>
+          <span class="scale__en label">Screen</span>
+          <p class="caption cn">最小的尺度，最密的反馈。以 8pt 网格与状态机组织信息，让每一次触摸都被确认。</p>
+          <div class="scale__viz scale__viz--screen" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </li>
+        <li class="scale" data-reveal="rise">
+          <div class="scale__num num">02</div>
+          <h3 class="scale__title cn">角色</h3>
+          <span class="scale__en label">Character</span>
+          <p class="caption cn">让品牌有一张会笑的脸。从文化母题里长出形象，再用表情与动作建立关系。</p>
+          <div class="scale__viz scale__viz--char" aria-hidden="true">
+            <i></i><i></i><i></i>
+          </div>
+        </li>
+        <li class="scale" data-reveal="rise">
+          <div class="scale__num num">03</div>
+          <h3 class="scale__title cn">空间</h3>
+          <span class="scale__en label">Space</span>
+          <p class="caption cn">最慢的交互。用光、材质与动线安排身体的节奏，人在其中停留、转身、坐下。</p>
+          <div class="scale__viz scale__viz--space" aria-hidden="true">
+            <u></u><u></u><u></u><u></u><u></u>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Selected work
+       ============================================================ -->
+  <section class="section work" id="work">
+    <div class="shell">
+      <div class="sec-head">
+        <div>
+          <div class="sec-head__meta">
+            <span class="label">02 — 精选作品</span>
+            <span class="sec-head__count">07</span>
+          </div>
+          <h2 class="display-m cn reveal-lines">七个项目，三种尺度</h2>
+        </div>
+        <p class="caption cn" data-reveal>横跨交互、IP、空间、<br>广告与 AIGC 工作流</p>
+      </div>
+    </div>
+
+    <div class="shell">
+      <ul class="projects">
+
+        <!-- 01 趣宠 -->
+        <li class="project project--feature" data-accent="#9db37f">
+          <a class="project__link" href="work/quchong.html" data-cursor="查看案例">
+            <div class="project__media frame frame--zoom r-16-10 media-reveal">
+              <div class="phones" aria-hidden="true">
+                <img class="phones__a" src="assets/app/screen-05.webp" alt="" data-lqip="screen05" loading="lazy" decoding="async">
+                <img class="phones__b" src="assets/app/screen-06.webp" alt="" data-lqip="screen06" loading="lazy" decoding="async">
+                <img class="phones__c" src="assets/app/screen-07.webp" alt="" data-lqip="screen07" loading="lazy" decoding="async">
+              </div>
+              <img class="sr-only" src="assets/app/screen-05.webp" alt="趣宠 App 首页界面，薄荷绿背景上的宠物档案卡片" data-lqip="screen05" loading="lazy">
+            </div>
+            <div class="project__body">
+              <div class="project__meta">
+                <span class="num">01</span>
+                <span class="label">交互设计 · UI/UX</span>
+                <span class="pill">主线项目</span>
+              </div>
+              <h3 class="project__title display-s cn">趣宠 — 宠物生活方式 App</h3>
+              <p class="project__desc caption cn">为「养宠新手」设计的一站式陪伴产品。把喂养记录、同城社交与用品商城收进一只猫爪形的导航里，让照顾一只小动物这件事变得轻盈。</p>
+              <div class="project__tags">
+                <span class="pill">12 张界面</span>
+                <span class="pill">爪形导航</span>
+                <span class="pill">养宠日志</span>
+                <span class="pill">同城社交</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 02 粤醒茶香 -->
+        <li class="project project--tall" data-accent="#ec9138">
+          <a class="project__link" href="work/yuexing.html" data-cursor="查看案例">
+            <div class="project__media frame frame--zoom frame--pad r-4-3 media-reveal" style="background:radial-gradient(72% 78% at 50% 16%,#2c2013,#0c0908)">
+              <img src="assets/ip/figures-cut.webp" alt="粤醒茶香 IP 盲盒手办，戴醒狮头饰的角色坐在茶杯里" data-lqip="ipFiguresCut" loading="lazy" decoding="async">
+            </div>
+            <div class="project__body">
+              <div class="project__meta">
+                <span class="num">02</span>
+                <span class="label">IP 设计 · 品牌</span>
+              </div>
+              <h3 class="project__title title cn">粤醒茶香 — 城市 IP 形象系统</h3>
+              <p class="project__desc caption cn">把醒狮的鼓点和早茶的热气揉进一个角色：一只从茶杯里醒来的小狮童。含标志、三视图、表情系统与衍生手办。</p>
+              <div class="project__tags">
+                <span class="pill">角色设定</span>
+                <span class="pill">表情系统</span>
+                <span class="pill">衍生品</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 03 城市醒狮计划 -->
+        <li class="project" data-accent="#ee5c36">
+          <a class="project__link" href="work/lionup.html" data-cursor="查看案例">
+            <div class="project__media frame r-4-3 media-reveal poster poster--lion">
+              <div class="poster__inner" aria-hidden="true">
+                <span class="poster__kicker">粤醒茶香 × 广州</span>
+                <strong class="poster__head cn">早茶<br>醒了</strong>
+                <img class="poster__mascot" src="assets/ip/front-cut.webp" alt="" loading="lazy" decoding="async">
+                <span class="poster__foot">CITY LION-UP · 2026</span>
+              </div>
+            </div>
+            <div class="project__body">
+              <div class="project__meta">
+                <span class="num">03</span>
+                <span class="label">广告设计 · 战役</span>
+                <span class="pill">概念</span>
+              </div>
+              <h3 class="project__title title cn">城市醒狮计划 — 品牌战役</h3>
+              <p class="project__desc caption cn">让 IP 走出包装，占领早晨的城市。地铁灯箱、茶楼实体互动与一支「唤醒」主题的社交传播。</p>
+              <div class="project__tags">
+                <span class="pill">OOH</span>
+                <span class="pill">线下互动</span>
+                <span class="pill">社交传播</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 04 TOAST -->
+        <li class="project" data-accent="#cfa063">
+          <a class="project__link" href="work/toast.html" data-cursor="查看案例">
+            <div class="project__media frame frame--zoom r-4-3 media-reveal">
+              <img src="assets/interior/cafe-counter.webp" alt="TOAST 烘焙所室内，暖光下的木格栅墙与面包展示柜" data-lqip="cafeCounter" loading="lazy" decoding="async">
+            </div>
+            <div class="project__body">
+              <div class="project__meta">
+                <span class="num">04</span>
+                <span class="label">室内设计 · 商业空间</span>
+              </div>
+              <h3 class="project__title title cn">TOAST 烘焙所 — 咖啡烘焙空间</h3>
+              <p class="project__desc caption cn">一间 60㎡ 的街角店。用一道枯山水把排队与堂食分开，让等待也成为风景的一部分。</p>
+              <div class="project__tags">
+                <span class="pill">60㎡</span>
+                <span class="pill">枯山水</span>
+                <span class="pill">动线分流</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 05 山居 -->
+        <li class="project" data-accent="#d08350">
+          <a class="project__link" href="work/mountain-stay.html" data-cursor="查看案例">
+            <div class="project__media frame frame--zoom r-4-3 media-reveal">
+              <img src="assets/interior/stay-lobby.webp" alt="山居民宿大堂，木构屋檐与波浪形前台" data-lqip="stayLobby" loading="lazy" decoding="async">
+            </div>
+            <div class="project__body">
+              <div class="project__meta">
+                <span class="num">05</span>
+                <span class="label">室内设计 · 民宿</span>
+              </div>
+              <h3 class="project__title title cn">山居 — 新中式民宿</h3>
+              <p class="project__desc caption cn">把老屋的木梁与瓦檐留在室内，再放进一张会流动的前台。夯土、原木与红灯笼，构成一段从村口到房间的缓坡。</p>
+              <div class="project__tags">
+                <span class="pill">新中式</span>
+                <span class="pill">原生木构</span>
+                <span class="pill">五个场景</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 06 灵犀 -->
+        <li class="project" data-accent="#8fa8a2">
+          <a class="project__link" href="work/linxi.html" data-cursor="查看案例">
+            <div class="project__media frame r-4-3 media-reveal poster poster--linxi">
+              <div class="linxi-viz" aria-hidden="true">
+                <div class="linxi-viz__bar"><i></i><i></i><i></i></div>
+                <div class="linxi-viz__canvas">
+                  <div class="linxi-viz__node linxi-viz__node--1"></div>
+                  <div class="linxi-viz__node linxi-viz__node--2"></div>
+                  <div class="linxi-viz__node linxi-viz__node--3"></div>
+                  <svg class="linxi-viz__wires" viewBox="0 0 200 120" fill="none">
+                    <path d="M42 30 C90 30 100 60 148 60" stroke="currentColor" stroke-width="1"/>
+                    <path d="M42 90 C90 90 100 62 148 62" stroke="currentColor" stroke-width="1"/>
+                  </svg>
+                </div>
+                <div class="linxi-viz__prompt"><span></span></div>
+              </div>
+            </div>
+            <div class="project__body">
+              <div class="project__meta">
+                <span class="num">06</span>
+                <span class="label">AI 设计 · 工具概念</span>
+                <span class="pill">概念</span>
+              </div>
+              <h3 class="project__title title cn">灵犀 LINXI — AI 创作工作台</h3>
+              <p class="project__desc caption cn">为设计师而非提示词工程师设计的 AI 工具。把「生成」变成可回溯的节点，让灵感有版本、有分叉、有可控的手感。</p>
+              <div class="project__tags">
+                <span class="pill">节点式生成</span>
+                <span class="pill">版本分叉</span>
+                <span class="pill">工作流</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 07 茶时 -->
+        <li class="project" data-accent="#a3c46b">
+          <a class="project__link" href="work/chashi.html" data-cursor="查看案例">
+            <div class="project__media frame r-4-3 media-reveal poster poster--chashi">
+              <div class="chashi-viz" aria-hidden="true">
+                <div class="chashi-viz__dial">
+                  <svg viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="86" fill="none" stroke="currentColor" stroke-opacity=".18" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="72" fill="none" stroke="currentColor" stroke-opacity=".28" stroke-width="10"
+                            stroke-dasharray="452" stroke-dashoffset="150" stroke-linecap="round"
+                            transform="rotate(-90 100 100)"/>
+                  </svg>
+                  <div class="chashi-viz__read"><b class="num">86</b><span>°C</span></div>
+                </div>
+                <div class="chashi-viz__steam"><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <div class="project__body">
+              <div class="project__meta">
+                <span class="num">07</span>
+                <span class="label">交互设计 · 软硬结合</span>
+                <span class="pill">概念</span>
+              </div>
+              <h3 class="project__title title cn">茶时 CHASHI — 智能茶器 × App</h3>
+              <p class="project__desc caption cn">一只知道水温的茶壶。把冲泡的火候变成一圈可以旋的光，屏幕只在需要时出现——最好的界面是没有界面。</p>
+              <div class="project__tags">
+                <span class="pill">实体旋钮</span>
+                <span class="pill">光反馈</span>
+                <span class="pill">无屏优先</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Interaction lab
+       ============================================================ -->
+  <section class="section lab" id="lab" data-accent="#8fa8a2" data-accent-zone="#8fa8a2">
+    <div class="shell">
+      <div class="sec-head">
+        <div>
+          <div class="sec-head__meta">
+            <span class="label">03 — 交互实验室</span>
+            <span class="sec-head__count">Live</span>
+          </div>
+          <h2 class="display-m cn reveal-lines">可以上手的动效小样</h2>
+        </div>
+        <p class="caption cn" data-reveal>下面每一块都是真实运行的代码，<br>不是截图。请把光标放上去。</p>
+      </div>
+
+      <div class="lab__grid">
+
+        <!-- Spring vs linear -->
+        <article class="demo" data-reveal="rise">
+          <header class="demo__head">
+            <h3 class="demo__title cn">弹性 vs 线性</h3>
+            <span class="label">Easing</span>
+          </header>
+          <div class="demo__stage demo__stage--easing">
+            <button class="demo__trigger" data-easing-run>播放</button>
+            <div class="easing-row"><span class="label">spring</span><i class="easing-ball" data-ease="spring"></i></div>
+            <div class="easing-row"><span class="label">expo</span><i class="easing-ball" data-ease="expo"></i></div>
+            <div class="easing-row"><span class="label">linear</span><i class="easing-ball" data-ease="linear"></i></div>
+          </div>
+          <p class="demo__note caption cn">同样的距离与时长，观感完全不同。真实世界没有匀速运动，所以线性总显得廉价。</p>
+        </article>
+
+        <!-- Magnetic button -->
+        <article class="demo" data-reveal="rise">
+          <header class="demo__head">
+            <h3 class="demo__title cn">磁吸按钮</h3>
+            <span class="label">Affordance</span>
+          </header>
+          <div class="demo__stage demo__stage--center">
+            <span class="magnet" data-magnetic="0.34">
+              <span class="magnet__inner">按我</span>
+            </span>
+          </div>
+          <p class="demo__note caption cn">按钮在光标靠近时轻微迎上来。位移不超过 12px，却让点击命中率与「被回应感」明显上升。</p>
+        </article>
+
+        <!-- Elastic tabs -->
+        <article class="demo" data-reveal="rise">
+          <header class="demo__head">
+            <h3 class="demo__title cn">流体标签</h3>
+            <span class="label">Continuity</span>
+          </header>
+          <div class="demo__stage demo__stage--center">
+            <div class="ftabs" role="tablist" data-ftabs>
+              <span class="ftabs__pill" aria-hidden="true"></span>
+              <button class="ftabs__btn is-active" role="tab" aria-selected="true">主页</button>
+              <button class="ftabs__btn" role="tab" aria-selected="false">社交</button>
+              <button class="ftabs__btn" role="tab" aria-selected="false">商店</button>
+              <button class="ftabs__btn" role="tab" aria-selected="false">我的</button>
+            </div>
+          </div>
+          <p class="demo__note caption cn">高亮块不是消失再出现，而是滑过去——它替用户记住了「我从哪里来」。取自趣宠的底部导航。</p>
+        </article>
+
+        <!-- Pull to refresh -->
+        <article class="demo" data-reveal="rise">
+          <header class="demo__head">
+            <h3 class="demo__title cn">下拉阻尼</h3>
+            <span class="label">Physics</span>
+          </header>
+          <div class="demo__stage demo__stage--center">
+            <div class="pull" data-pull>
+              <div class="pull__hint"><span class="label" data-pull-label>向下拖动</span></div>
+              <div class="pull__sheet"><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <p class="demo__note caption cn">位移随手指递减，松手后弹回。阻尼曲线是界面「有重量」的来源。可拖动。</p>
+        </article>
+
+        <!-- Counter -->
+        <article class="demo" data-reveal="rise">
+          <header class="demo__head">
+            <h3 class="demo__title cn">数字滚动</h3>
+            <span class="label">Feedback</span>
+          </header>
+          <div class="demo__stage demo__stage--center">
+            <div class="odo" data-odo>
+              <b class="odo__value num" data-odo-value>1286</b>
+              <div class="odo__ctrl">
+                <button data-odo-step="-37" aria-label="减少">−</button>
+                <button data-odo-step="37" aria-label="增加">+</button>
+              </div>
+            </div>
+          </div>
+          <p class="demo__note caption cn">数字逐位过渡而非直接替换，让变化「被看见」。等宽数字避免宽度抖动。</p>
+        </article>
+
+        <!-- Paw ripple -->
+        <article class="demo" data-reveal="rise">
+          <header class="demo__head">
+            <h3 class="demo__title cn">触点涟漪</h3>
+            <span class="label">Delight</span>
+          </header>
+          <div class="demo__stage demo__stage--center">
+            <div class="ripple" data-ripple>
+              <span class="ripple__hint label">在此区域点击</span>
+            </div>
+          </div>
+          <p class="demo__note caption cn">从落点扩散的涟漪确认了「系统收到了」。在趣宠里它是一枚小小的爪印。</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Approach
+       ============================================================ -->
+  <section class="section approach" id="approach">
+    <div class="shell">
+      <div class="sec-head">
+        <div>
+          <div class="sec-head__meta"><span class="label">04 — 工作方法</span></div>
+          <h2 class="display-m cn reveal-lines">先想清楚，再画好看</h2>
+        </div>
+      </div>
+
+      <ol class="steps">
+        <li class="step" data-reveal>
+          <span class="step__idx num">01</span>
+          <h3 class="step__title cn">找到那个真问题</h3>
+          <p class="caption cn">养宠新手怕的不是喂不饱，是不知道自己做得对不对。定义问题的方式，决定了后面所有的形式。</p>
+        </li>
+        <li class="step" data-reveal>
+          <span class="step__idx num">02</span>
+          <h3 class="step__title cn">给它一个结构</h3>
+          <p class="caption cn">信息层级、动线、状态机。结构对了，视觉只是把它说清楚；结构错了，再美也救不回来。</p>
+        </li>
+        <li class="step" data-reveal>
+          <span class="step__idx num">03</span>
+          <h3 class="step__title cn">做出可以摸的东西</h3>
+          <p class="caption cn">静态稿骗得过评审，骗不过手。我用代码把方案跑起来，在真实的延迟与惯性里做判断。</p>
+        </li>
+        <li class="step" data-reveal>
+          <span class="step__idx num">04</span>
+          <h3 class="step__title cn">抠到最后 5%</h3>
+          <p class="caption cn">一帧的时长、一像素的对齐、一次回弹的过冲量。用户说不出哪里好，但他们感觉得到。</p>
+        </li>
+      </ol>
+
+      <div class="stats" data-stagger="110">
+        <div class="stat" data-reveal>
+          <b class="stat__num num"><span data-counter="5">0</span></b>
+          <span class="stat__label cn">设计领域</span>
+        </div>
+        <div class="stat" data-reveal>
+          <b class="stat__num num"><span data-counter="7">0</span></b>
+          <span class="stat__label cn">精选项目</span>
+        </div>
+        <div class="stat" data-reveal>
+          <b class="stat__num num"><span data-counter="12">0</span></b>
+          <span class="stat__label cn">界面稿</span>
+        </div>
+        <div class="stat" data-reveal>
+          <b class="stat__num num"><span data-counter="8">0</span><i>pt</i></b>
+          <span class="stat__label cn">基础网格</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       About
+       ============================================================ -->
+  <section class="section about" id="about">
+    <div class="shell about__inner">
+      <div class="about__lead">
+        <div class="sec-head__meta"><span class="label">05 — 关于</span></div>
+        <h2 class="display-s cn reveal-lines">你好，我是 zigi</h2>
+        <div class="about__text stack-lg">
+          <p class="lede cn" data-reveal>
+            一名在广州工作的交互设计师。喜欢把复杂的东西整理清楚，
+            也喜欢在整理干净之后，再放回一点点温度。
+          </p>
+          <p class="body cn" data-reveal>
+            我的训练跨了两条路：一边是界面与动效，一边是空间与材质。
+            这让我习惯用「身体尺度」去想数字产品——按钮多大才好按，
+            一次转场应该走多久，就像走廊多宽才不局促。
+          </p>
+          <p class="body cn" data-reveal>
+            我直接在代码里做设计。不是为了当工程师，而是因为交互的手感
+            只能在真实的运行环境里判断。这个作品集本身就是这么做出来的。
+          </p>
+        </div>
+      </div>
+
+      <aside class="about__side">
+        <dl class="dl" data-reveal>
+          <div><dt>Focus</dt><dd class="cn">交互设计 / 界面 / 动效</dd></div>
+          <div><dt>Also</dt><dd class="cn">IP 形象 / 空间 / 品牌</dd></div>
+          <div><dt>Tools</dt><dd>Figma · Illustrator · Blender · HTML/CSS/JS</dd></div>
+          <div><dt>Based</dt><dd class="cn">中国 · 广州</dd></div>
+          <div><dt>Now</dt><dd class="cn">寻找 2026 的合作与机会</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================
+     Footer
+     ============================================================ -->
+<footer class="footer" id="contact" data-accent="#ee5c36" data-accent-zone="#ee5c36">
+  <div class="shell">
+    <div class="sec-head__meta"><span class="label">06 — 联系</span></div>
+    <a class="footer__cta cn" href="mailto:hello@example.com" data-cursor="写邮件">
+      说个想法吧 <i>→</i>
+    </a>
+
+    <div class="footer__grid">
+      <div class="footer__col">
+        <h4>Email</h4>
+        <p><a class="tlink" href="mailto:hello@example.com">hello@example.com</a></p>
+      </div>
+      <div class="footer__col">
+        <h4>Social</h4>
+        <ul>
+          <li><a class="tlink" href="#">小红书</a></li>
+          <li><a class="tlink" href="#">Behance</a></li>
+          <li><a class="tlink" href="#">站酷 ZCOOL</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Index</h4>
+        <ul>
+          <li><a class="tlink" href="#work">作品</a></li>
+          <li><a class="tlink" href="#lab">交互实验</a></li>
+          <li><a class="tlink" href="#about">关于</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Colophon</h4>
+        <p class="cn">Bricolage Grotesque + Fraunces + 系统中文字体<br>手写 HTML / CSS / JS<br>无框架、无构建</p>
+      </div>
+    </div>
+
+    <div class="footer__base">
+      <span class="caption">© 2026 zigi. 保留所有权利。</span>
+      <a class="caption tlink" href="#top">回到顶部 ↑</a>
+    </div>
+  </div>
+
+  <div class="footer__mark" aria-hidden="true">zigi</div>
+</footer>
+
+<div class="progress" data-progress aria-hidden="true"></div>
+
+<script type="module" src="scripts/motion.js"></script>
+<script type="module" src="scripts/home.js"></script>
+<script src="scripts/sw-register.js" defer></script>
+<script src="scripts/navigation.js" defer></script>
+</body>
+</html>

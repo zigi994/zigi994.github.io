@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>离线 — zigi</title>
+<meta name="theme-color" content="#12110d">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<!-- Everything is inlined. This page is the last thing standing when the
+     network is gone, so it cannot depend on a stylesheet, a font file or a
+     script having made it into the cache alongside it. Colours are the real
+     tokens from styles/tokens.css, hard-coded. -->
+<style>
+  :root {
+    --ink-0: #12110d;
+    --ink-2: #211e18;
+    --fg-0: #f4eee2;
+    --fg-2: rgba(244, 238, 226, 0.42);
+    --accent: #ee5c36;
+    --line: rgba(244, 238, 226, 0.1);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    display: grid;
+    place-items: center;
+    padding: clamp(20px, 4.5vw, 72px);
+    background: var(--ink-0);
+    color: var(--fg-0);
+    font-family: "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
+      "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei",
+      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    width: 100%;
+    max-width: 44ch;
+  }
+
+  .mark {
+    display: block;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 32px;
+  }
+
+  .label {
+    font-family: "SF Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 16px;
+  }
+
+  h1 {
+    margin: 0 0 16px;
+    font-size: clamp(1.875rem, 4.2vw, 3.5rem);
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+  }
+
+  p {
+    margin: 0;
+    color: var(--fg-2);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  a, button {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-block;
+    padding: 0.7em 1.3em;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg-0);
+    font: inherit;
+    font-size: 0.875rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 320ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  button {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink-0);
+  }
+
+  a:hover { background: var(--ink-2); border-color: rgba(244, 238, 226, 0.2); }
+  button:hover { background: #f2734f; border-color: #f2734f; }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a, button { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+    <rect width="64" height="64" rx="14" fill="#211e18"/>
+    <path d="M20 20h24L20 44h24" fill="none" stroke="#ee5c36" stroke-width="5.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+
+  <p class="label">Offline — 503</p>
+  <h1>这一页还没被缓存</h1>
+  <p>网络断开了，而你要找的页面不在离线缓存里。回到首页可以继续看已经读过的内容——它们都还在。</p>
+
+  <div class="actions">
+    <button type="button" id="retry">重试 Retry</button>
+    <a href="/">返回首页 Home</a>
+  </div>
+</main>
+
+<script>
+  document.getElementById('retry').addEventListener('click', function () {
+    location.reload();
+  });
+  // Coming back online is the common case; reloading then saves a click.
+  window.addEventListener('online', function () {
+    location.reload();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "zigi — 交互设计师",
+  "short_name": "zigi",
+  "description": "zigi 的设计作品集。交互设计、IP 形象、空间设计——从一个像素到一百平米。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#12110d",
+  "theme_color": "#12110d",
+  "categories": ["design", "portfolio"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}
