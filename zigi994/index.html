@@ -60,8 +60,14 @@
        Hero
        ============================================================ -->
   <section class="hero" data-accent="#ee5c36" data-accent-zone="#ee5c36">
-    <canvas class="hero__ink" data-hero-gl aria-hidden="true"></canvas>
-    <canvas class="hero__field" data-field aria-hidden="true"></canvas>
+    <!-- The two decorative layers carry their own out-of-flow declaration.
+         Both are full-bleed canvases, so if home.css is ever missing or a
+         deploy behind, in-flow they would push the entire hero off screen —
+         which is exactly what happened once. Documents are always fetched
+         fresh, so an inline rule cannot go stale with the stylesheet. Only
+         position: the opacity reveal has to stay overridable from CSS. -->
+    <canvas class="hero__ink" data-hero-gl aria-hidden="true" style="position:absolute;inset:0"></canvas>
+    <canvas class="hero__field" data-field aria-hidden="true" style="position:absolute;inset:0"></canvas>
     <div class="glow hero__glow" aria-hidden="true"></div>
 
     <div class="shell hero__inner">

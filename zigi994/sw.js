@@ -9,7 +9,10 @@
 
      html   network-first   — a deploy must be visible on the
                               next load, never one load later
-     css/js/font  stale-while-revalidate, keyed to BUILD_ID —
+     css/js network-first   — they have to come from the same
+                              deploy as the document that asks
+                              for them; see mustMatchDocument
+     font/icon/json  stale-while-revalidate, keyed to BUILD_ID —
                               instant paint, refreshed in the
                               background, wiped on every deploy
      assets/*.img cache-first, in a cache that survives version
@@ -94,6 +97,23 @@ const isMedia = (url) =>
 
 const isShellAsset = (url) =>
   /\.(?:css|m?js|woff2?|json|webmanifest|svg)$/i.test(url.pathname);
+
+/* Stylesheets and scripts have to come from the same deploy as the document
+   that references them; everything else in the shell does not.
+
+   This is not hypothetical. Documents are network-first and the shell was
+   uniformly stale-while-revalidate, so the first load after a deploy handed
+   a returning visitor the new HTML with the previous build's CSS — the old
+   worker is still in control for that one navigation and answers from its
+   own cache before revalidating. Usually that just means a stale colour.
+   The build that added the hero canvas made it fatal: with no rule to take
+   it out of flow, a 1900px canvas laid out inline and pushed the entire
+   hero off screen. First-time visitors were fine, which is exactly why it
+   survived a local check.
+
+   Fonts, icons and the LQIP manifest are keyed by stable filenames and
+   render identically across builds, so they keep the instant-paint path. */
+const mustMatchDocument = (url) => /\.(?:css|m?js)$/i.test(url.pathname);
 
 const isDocument = (request, url) =>
   request.mode === 'navigate' ||
@@ -201,6 +221,26 @@ async function networkFirst(event) {
   }
 }
 
+/* Same ordering as networkFirst but without the offline.html endgame: handing
+   an HTML body back for a stylesheet request would be its own failure. The
+   network attempt normally lands in the HTTP cache rather than on the wire,
+   so the cost against stale-while-revalidate is a cache lookup, not a
+   round trip. */
+async function networkFirstAsset(event) {
+  const request = event.request;
+  const cache = await caches.open(SHELL_CACHE);
+
+  try {
+    const response = await fetch(request);
+    if (isCacheable(response)) cache.put(request, response.clone());
+    return response;
+  } catch (err) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response('', { status: 504, statusText: 'offline' });
+  }
+}
+
 async function staleWhileRevalidate(event) {
   const request = event.request;
   const cache = await caches.open(SHELL_CACHE);
@@ -271,6 +311,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isShellAsset(url)) {
-    event.respondWith(staleWhileRevalidate(event));
+    event.respondWith(
+      mustMatchDocument(url) ? networkFirstAsset(event) : staleWhileRevalidate(event)
+    );
   }
 });
