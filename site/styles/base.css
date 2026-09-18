@@ -1,0 +1,329 @@
+/* ============================================================
+   Fonts, reset, primitives
+   ============================================================ */
+
+@font-face {
+  font-family: "Inter var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter-latin-var.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter-latin-ext-var.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+/* Lenis-style virtual scroll takes over once JS boots. */
+html.has-smooth-scroll {
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-0);
+  color: var(--fg-0);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: var(--lead-body);
+  font-feature-settings: "cv05" 1, "cv11" 1, "ss03" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
+}
+
+body.is-locked {
+  overflow: hidden;
+}
+
+h1, h2, h3, h4, h5, p, figure, blockquote, dl, dd {
+  margin: 0;
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img, picture, svg, video, canvas {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}
+
+/* ============================================================
+   Type primitives
+   ============================================================ */
+
+.display-xl,
+.display-l,
+.display-m,
+.display-s {
+  font-weight: 500;
+  letter-spacing: var(--track-display);
+  line-height: var(--lead-tight);
+  text-wrap: balance;
+}
+
+.display-xl { font-size: var(--t-display-xl); }
+.display-l  { font-size: var(--t-display-l); }
+.display-m  { font-size: var(--t-display-m); line-height: var(--lead-snug); }
+.display-s  { font-size: var(--t-display-s); line-height: var(--lead-snug); letter-spacing: -0.022em; }
+
+.title {
+  font-size: var(--t-title);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.28;
+}
+
+.lede {
+  font-size: var(--t-body-l);
+  line-height: 1.52;
+  color: var(--fg-1);
+  letter-spacing: -0.011em;
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+
+.body {
+  color: var(--fg-1);
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+.caption {
+  font-size: var(--t-caption);
+  color: var(--fg-2);
+  line-height: 1.5;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--fg-2);
+  font-weight: 500;
+}
+
+.label--accent { color: var(--accent); }
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.cn { font-family: var(--font-cn); }
+
+/* Optical fix: CJK glyphs are full-width, so display tracking that
+   flatters Latin makes Chinese headlines look broken. */
+:lang(zh) .display-xl,
+:lang(zh) .display-l,
+.display-xl:lang(zh),
+.display-l:lang(zh),
+.cn.display-xl,
+.cn.display-l,
+.cn.display-m {
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   Layout primitives
+   ============================================================ */
+
+.shell {
+  width: 100%;
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: var(--section-y);
+  position: relative;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--s-5);
+}
+
+.rule {
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background: var(--line);
+}
+
+.stack > * + * { margin-top: var(--s-4); }
+.stack-lg > * + * { margin-top: var(--s-6); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
+   Film grain — one fixed layer, animated by steps so it reads as
+   analog texture rather than a smooth gradient.
+   ============================================================ */
+
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  will-change: transform;
+  animation: grain-shift 6s steps(6) infinite;
+}
+
+@keyframes grain-shift {
+  0%   { transform: translate3d(0, 0, 0); }
+  16%  { transform: translate3d(-3%, 2%, 0); }
+  33%  { transform: translate3d(2%, -3%, 0); }
+  50%  { transform: translate3d(-2%, -2%, 0); }
+  66%  { transform: translate3d(3%, 1%, 0); }
+  83%  { transform: translate3d(-1%, 3%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+/* ============================================================
+   Reveal system
+   Everything below is gated on html.js, which motion.js sets the
+   moment it parses. Without scripting the content just renders —
+   no chance of a headline being hidden forever by a failed fetch.
+   ============================================================ */
+
+[data-reveal] { --reveal-y: 26px; }
+[data-reveal="fade"] { --reveal-y: 0px; }
+[data-reveal="rise"] { --reveal-y: 48px; }
+
+.js [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y), 0);
+  transition: opacity var(--d-reveal) var(--ease-out-expo),
+    transform var(--d-reveal) var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.js [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Line-by-line masked headline reveal.
+   .is-split is added by the splitter, so unsplit text stays visible. */
+.reveal-lines { display: block; }
+
+.reveal-lines .line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.reveal-lines .line > span { display: block; }
+
+.js .reveal-lines.is-split .line > span {
+  transform: translate3d(0, 115%, 0);
+  transition: transform 1250ms var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 85ms);
+}
+
+.js .reveal-lines.is-split.is-in .line > span { transform: none; }
+
+/* Clip-reveal for media */
+.js .media-reveal {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1400ms var(--ease-out-expo);
+}
+
+.js .media-reveal.is-in { clip-path: inset(0 0 0 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .js [data-reveal],
+  .js .reveal-lines.is-split .line > span {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .js .media-reveal { clip-path: none !important; }
+  .grain { animation: none; }
+}

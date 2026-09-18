@@ -1,0 +1,401 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>趣宠 — 宠物生活方式 App / zigi</title>
+<meta name="description" content="趣宠是一款为养宠新手设计的一站式陪伴 App。12 张界面稿，一只猫爪形导航，把喂养记录、同城社交与用品商城收在一起。">
+<meta name="theme-color" content="#07080a">
+<link rel="preload" href="../assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../styles/tokens.css">
+<link rel="stylesheet" href="../styles/base.css">
+<link rel="stylesheet" href="../styles/components.css">
+<link rel="stylesheet" href="../styles/case.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307080a'/%3E%3Cpath d='M10 10h12L10 22h12' stroke='%236fd3a8' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body data-base="../" data-accent="#6fd3a8" data-accent-zone="#6fd3a8">
+
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="shell nav__inner">
+    <a class="nav__brand" href="../index.html" aria-label="zigi, 返回首页">
+      <b>zigi</b><span>Interaction&nbsp;Design</span>
+    </a>
+    <nav class="nav__links" aria-label="主导航">
+      <a class="nav__link" href="../index.html#work">作品</a>
+      <a class="nav__link" href="../index.html#lab">交互实验</a>
+      <a class="nav__link" href="../index.html#about">关于</a>
+      <a class="nav__link" href="../index.html#contact">联系</a>
+    </nav>
+    <span class="nav__clock" data-clock>Guangzhou</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============================================================
+       Hero
+       ============================================================ -->
+  <section class="chero">
+    <div class="glow chero__glow" aria-hidden="true"></div>
+    <div class="shell chero__inner">
+      <div class="chero__crumbs caption">
+        <a href="../index.html#work">作品</a><i>/</i><span>趣宠</span>
+      </div>
+
+      <div class="chero__kicker">
+        <span class="label label--accent">01 — 交互设计 · UI/UX</span>
+        <span class="pill">2025</span>
+        <span class="pill">个人项目</span>
+      </div>
+
+      <h1 class="chero__title display-l reveal-lines">趣宠 — 一只小动物的日常</h1>
+
+      <p class="chero__sub lede cn" data-reveal>
+        为「第一次养宠」的人做的陪伴型产品。它不教你成为专家，
+        只在你不确定的时候，告诉你「这样就挺好」。
+      </p>
+
+      <dl class="chero__facts" data-reveal>
+        <div class="chero__fact"><dt>Role</dt><dd>交互 / 视觉 / 原型</dd></div>
+        <div class="chero__fact"><dt>Scope</dt><dd>12 张界面稿 · 4 个主模块</dd></div>
+        <div class="chero__fact"><dt>Platform</dt><dd>iOS · 390×844pt</dd></div>
+        <div class="chero__fact"><dt>Tools</dt><dd>Illustrator · Figma</dd></div>
+        <div class="chero__fact"><dt>Year</dt><dd>2025</dd></div>
+      </dl>
+    </div>
+
+    <div class="shell cstage" data-reveal="rise">
+      <div class="frame r-16-9 media-reveal" style="background:linear-gradient(180deg,#151a17,#0b0d0b)">
+        <div class="hero-screens" aria-hidden="true">
+          <img src="../assets/app/screen-01.webp" alt="" data-lqip="screen01" loading="eager" decoding="async">
+          <img src="../assets/app/screen-03.webp" alt="" data-lqip="screen03" loading="eager" decoding="async">
+          <img src="../assets/app/screen-05.webp" alt="" data-lqip="screen05" loading="eager" decoding="async">
+          <img src="../assets/app/screen-06.webp" alt="" data-lqip="screen06" loading="eager" decoding="async">
+          <img src="../assets/app/screen-07.webp" alt="" data-lqip="screen07" loading="eager" decoding="async">
+        </div>
+      </div>
+      <p class="caption cn" style="margin-top:var(--s-4)">趣宠 App 主要界面一览：启动、注册、首页、社交、商店。</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       01 Problem
+       ============================================================ -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>01</b><span class="label">问题</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">新手怕的不是麻烦，是不确定</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              我采访了 6 位养宠不到一年的朋友。他们提到的困难几乎没有一条是「太累」——
+              喂食、铲屎、遛狗都能忍。反复出现的那句话是：
+              <em>「我不知道我做得对不对。」</em>
+            </p>
+            <p class="cn" data-reveal>
+              市面上的宠物 App 多在解决「买」和「逛」，把记录功能塞进三级页面。
+              可对新手来说，<strong>记录本身就是安慰</strong>——它把模糊的焦虑变成看得见的规律。
+            </p>
+            <p class="cn" data-reveal>
+              所以我把产品的重心倒过来：先是一本养宠日志，然后才是社区和商城。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="specs" data-reveal>
+        <div class="spec"><b>6</b><span>位新手访谈</span></div>
+        <div class="spec"><b>3</b><span>类核心记录：吃 / 睡 / 如厕</span></div>
+        <div class="spec"><b>4</b><span>个一级模块</span></div>
+        <div class="spec"><b>2</b><span>次入口即达档案</span></div>
+      </div>
+
+      <div class="pquote" data-reveal>
+        <p class="cn">把「养得好不好」这个问题，<br>翻译成三条可以每天打勾的线。</p>
+        <cite>Design principle</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       02 Structure
+       ============================================================ -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>02</b><span class="label">结构</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">四根手指，一只爪</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              信息架构收成四块：<strong>主页 / 社交 / 商店 / 我的</strong>。
+              底部导航被画成一只猫爪——四个肉垫就是四个标签。
+              这不只是装饰：爪垫的圆形轮廓给了指尖一个明确的落点，
+              而且它让「宠物」这件事在每一屏都在场。
+            </p>
+            <p class="cn" data-reveal>
+              进入产品前还有一道岔路：<em>「有宠物」还是「无宠物」</em>。
+              有宠物的人直接进档案；还没养的人先进领养与养宠科普。
+              一个二选一，省掉了后面一堆空状态。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow" data-reveal>
+        <div class="flow__node"><b>01</b><span>启动</span><em>在等你回家</em></div>
+        <div class="flow__node"><b>02</b><span>岔路</span><em>有宠物 / 无宠物</em></div>
+        <div class="flow__node"><b>03</b><span>注册</span><em>手机号 · 偏好宠物</em></div>
+        <div class="flow__node"><b>04</b><span>主页</span><em>档案 + 三条记录</em></div>
+        <div class="flow__node"><b>05</b><span>社交</span><em>同城 · 关注 · 好友</em></div>
+        <div class="flow__node"><b>06</b><span>商店</span><em>八类用品</em></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       03 Sticky showcase
+       ============================================================ -->
+  <section class="chapter" data-showcase>
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>03</b><span class="label">界面</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">逐屏拆解</h2>
+          <p class="caption cn" data-reveal style="margin-top:var(--s-4)">向下滚动，右侧文字会带着左边的机器一起走。</p>
+        </div>
+      </div>
+
+      <div class="showcase">
+        <div class="showcase__sticky">
+          <div class="phone">
+            <div class="phone__notch"></div>
+            <div class="phone__screen">
+              <img class="is-active" src="../assets/app/screen-01.webp" alt="趣宠启动页，插画里的猫狗围坐，下方是登录与注册按钮" data-lqip="screen01" loading="lazy">
+              <img src="../assets/app/screen-02.webp" alt="选择身份页，提供有宠物与无宠物两个入口" data-lqip="screen02" loading="lazy">
+              <img src="../assets/app/screen-03.webp" alt="注册页，手机号验证码与喜好宠物多选" data-lqip="screen03" loading="lazy">
+              <img src="../assets/app/screen-05.webp" alt="首页，宠物档案卡片与吃睡如厕三条记录入口" data-lqip="screen05" loading="lazy">
+              <img src="../assets/app/screen-06.webp" alt="社交页，好友在线状态与瀑布流动态" data-lqip="screen06" loading="lazy">
+              <img src="../assets/app/screen-07.webp" alt="商店页，八类用品图标与营销卡片" data-lqip="screen07" loading="lazy">
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__steps">
+          <article class="showcase__step is-active">
+            <span class="label">Screen 01 — 启动</span>
+            <h3 class="cn">「在等你回家」</h3>
+            <p class="cn">第一屏不谈功能，只给一句话和一群等着你的小动物。品牌的语气在这里就定了：它是室友，不是管理系统。</p>
+            <ul>
+              <li>插画占据视觉重心，按钮退到下方安全区</li>
+              <li>用户协议前置勾选，避免注册后被拦</li>
+            </ul>
+          </article>
+
+          <article class="showcase__step">
+            <span class="label">Screen 02 — 岔路</span>
+            <h3 class="cn">先问「你有宠物吗」</h3>
+            <p class="cn">一个二选一决定了后面的整条路径。有宠物 → 建档案；没有 → 进领养。这一步把两类人分开，双方看到的都是有内容的界面。</p>
+            <ul>
+              <li>两个等重按钮，不预设「正确答案」</li>
+              <li>左上角始终保留返回，选错不焦虑</li>
+            </ul>
+          </article>
+
+          <article class="showcase__step">
+            <span class="label">Screen 03 — 注册</span>
+            <h3 class="cn">顺手挑几只喜欢的</h3>
+            <p class="cn">在验证码和密码之间插入「选择喜欢的宠物（最多五个）」。它把一段枯燥的表单变成有点好玩的事，同时为首页推荐拿到了冷启动数据。</p>
+            <ul>
+              <li>上限五个，避免全选导致推荐失效</li>
+              <li>用真实照片而非图标，选择更直觉</li>
+            </ul>
+          </article>
+
+          <article class="showcase__step">
+            <span class="label">Screen 05 — 首页</span>
+            <h3 class="cn">档案是主角</h3>
+            <p class="cn">姓名、岁数、性别、生日集中在一张卡上，照片压着卡片边缘。卡下并排三个入口——睡眠、吃饭、如厕，这是每天真正会点的东西。</p>
+            <ul>
+              <li>顶部可切换宠物，多宠家庭一次到位</li>
+              <li>服务与领养按「距离感」由近到远往下排</li>
+            </ul>
+          </article>
+
+          <article class="showcase__step">
+            <span class="label">Screen 06 — 社交</span>
+            <h3 class="cn">先看见人，再看见内容</h3>
+            <p class="cn">好友头像横排在最上，带在线／离线状态。下面是推荐、关注、同城、好友四个筛选，内容用双列瀑布流——宠物照片尺幅不一，瀑布流最省裁切。</p>
+            <ul>
+              <li>「同城」是核心：遛狗搭子需要地理邻近</li>
+              <li>头像的绿点比任何文案都更快说明「他在」</li>
+            </ul>
+          </article>
+
+          <article class="showcase__step">
+            <span class="label">Screen 07 — 商店</span>
+            <h3 class="cn">八个格子装完全部品类</h3>
+            <p class="cn">窝、衣服、奶瓶、帐篷、书包、玩具、饭盆、洗护——4×2 排布，一屏看完不用滚。营销位（直播、秒杀、补贴）压在下面，不抢分类的位置。</p>
+            <ul>
+              <li>图标统一为拟物小插画，与 IP 语言一致</li>
+              <li>搜索常驻顶部，明确需求可直接跳过分类</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       04 System
+       ============================================================ -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>04</b><span class="label">系统</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">一片薄荷绿，撑住整个产品</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              全局只有一个主色：<strong>薄荷绿 #B5DCC8</strong>。它足够浅，
+              可以直接铺满背景而不压迫；又足够有色相，让白色卡片自然浮起来。
+              宠物照片的毛色多是暖调，绿色是它的补色——照片一放上去就跳出来。
+            </p>
+            <p class="cn" data-reveal>
+              圆角统一走大半径（16–24pt），配合爪垫、气泡与卡片，
+              整个界面没有一个尖角。<em>形状本身就是语气</em>。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="swatches" data-reveal>
+        <div class="swatch"><div class="swatch__chip" style="--c:#b5dcc8"></div><dl><dt>主色 · 薄荷</dt><dd>#B5DCC8</dd></dl></div>
+        <div class="swatch"><div class="swatch__chip" style="--c:#d8ece1"></div><dl><dt>背景 · 浅雾</dt><dd>#D8ECE1</dd></dl></div>
+        <div class="swatch"><div class="swatch__chip" style="--c:#ffffff"></div><dl><dt>卡片 · 纯白</dt><dd>#FFFFFF</dd></dl></div>
+        <div class="swatch"><div class="swatch__chip" style="--c:#f6a94a"></div><dl><dt>强调 · 暖橙</dt><dd>#F6A94A</dd></dl></div>
+        <div class="swatch"><div class="swatch__chip" style="--c:#2f4f3e"></div><dl><dt>文字 · 深绿</dt><dd>#2F4F3E</dd></dl></div>
+      </div>
+
+      <div class="pquote" data-reveal>
+        <p class="cn">没有一个尖角，<br>因为这是一件关于温柔的事。</p>
+        <cite>Shape language</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       05 All screens rail
+       ============================================================ -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>05</b><span class="label">全部界面</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">七张成稿</h2>
+          <p class="caption cn" data-reveal style="margin-top:var(--s-4)">可以左右拖动。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="rail" data-rail data-native-scroll>
+        <figure class="rail__item">
+          <div class="frame frame--zoom"><img src="../assets/app/screen-01.webp" alt="启动页" data-lqip="screen01" loading="lazy"></div>
+          <figcaption class="rail__cap">01 / 启动</figcaption>
+        </figure>
+        <figure class="rail__item">
+          <div class="frame frame--zoom"><img src="../assets/app/screen-02.webp" alt="身份岔路页" data-lqip="screen02" loading="lazy"></div>
+          <figcaption class="rail__cap">02 / 岔路</figcaption>
+        </figure>
+        <figure class="rail__item">
+          <div class="frame frame--zoom"><img src="../assets/app/screen-03.webp" alt="注册页" data-lqip="screen03" loading="lazy"></div>
+          <figcaption class="rail__cap">03 / 注册</figcaption>
+        </figure>
+        <figure class="rail__item">
+          <div class="frame frame--zoom"><img src="../assets/app/screen-04.webp" alt="登录页" data-lqip="screen04" loading="lazy"></div>
+          <figcaption class="rail__cap">04 / 登录</figcaption>
+        </figure>
+        <figure class="rail__item">
+          <div class="frame frame--zoom"><img src="../assets/app/screen-05.webp" alt="首页" data-lqip="screen05" loading="lazy"></div>
+          <figcaption class="rail__cap">05 / 首页</figcaption>
+        </figure>
+        <figure class="rail__item">
+          <div class="frame frame--zoom"><img src="../assets/app/screen-06.webp" alt="社交页" data-lqip="screen06" loading="lazy"></div>
+          <figcaption class="rail__cap">06 / 社交</figcaption>
+        </figure>
+        <figure class="rail__item">
+          <div class="frame frame--zoom"><img src="../assets/app/screen-07.webp" alt="商店页" data-lqip="screen07" loading="lazy"></div>
+          <figcaption class="rail__cap">07 / 商店</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       06 Reflection
+       ============================================================ -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>06</b><span class="label">复盘</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">如果再做一版</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              <strong>记录要更短。</strong>目前进入记录仍需一次跳转。
+              下一版我想把「今天吃了吗」做成首页可直接打勾的一行，
+              点一下就完成，连页面都不用换。
+            </p>
+            <p class="cn" data-reveal>
+              <strong>要有回看。</strong>记了三个月的数据现在没有出口。
+              周视图的趋势线才是新手真正需要的那句「你做得对」。
+            </p>
+            <p class="cn" data-reveal>
+              <strong>商店可以再退一步。</strong>它现在占了一级导航，
+              但新手前两周并不买东西。也许它该从「商店」变成档案里的「该补货了」。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================
+     Next
+     ============================================================ -->
+<section class="next" data-accent="#f2892b" data-accent-zone="#f2892b">
+  <div class="shell">
+    <a class="next__link" href="yuexing.html" data-cursor="下一个">
+      <div>
+        <span class="next__label label">下一个项目 — 02</span>
+        <span class="next__title">粤醒茶香 — 城市 IP 形象系统</span>
+      </div>
+      <div class="next__thumb frame" style="background:radial-gradient(70% 80% at 50% 20%,#2e2113,#0a0807)">
+        <img src="../assets/ip/figures-cut.webp" alt="" data-lqip="ipFiguresCut" loading="lazy"
+             style="object-fit:contain;padding:8%">
+      </div>
+    </a>
+  </div>
+</section>
+
+<footer class="footer" data-accent="#6fd3a8">
+  <div class="shell">
+    <div class="footer__base">
+      <span class="caption">© 2026 zigi</span>
+      <a class="caption tlink" href="../index.html">返回首页 ↑</a>
+    </div>
+  </div>
+</footer>
+
+<div class="progress" data-progress aria-hidden="true"></div>
+
+<script type="module" src="../scripts/motion.js"></script>
+<script type="module" src="../scripts/case.js"></script>
+</body>
+</html>

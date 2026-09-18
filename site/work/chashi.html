@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>茶时 CHASHI — 智能茶器 × App / zigi</title>
+<meta name="description" content="一只知道水温的茶壶。把冲泡的火候变成一圈可以旋的光，屏幕只在需要时出现——最好的界面是没有界面。">
+<meta name="theme-color" content="#07080a">
+<link rel="preload" href="../assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../styles/tokens.css">
+<link rel="stylesheet" href="../styles/base.css">
+<link rel="stylesheet" href="../styles/components.css">
+<link rel="stylesheet" href="../styles/case.css">
+<link rel="stylesheet" href="../styles/concept.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307080a'/%3E%3Cpath d='M10 10h12L10 22h12' stroke='%23a3c46b' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body data-base="../" data-accent="#a3c46b" data-accent-zone="#a3c46b">
+
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="shell nav__inner">
+    <a class="nav__brand" href="../index.html" aria-label="zigi, 返回首页">
+      <b>zigi</b><span>Interaction&nbsp;Design</span>
+    </a>
+    <nav class="nav__links" aria-label="主导航">
+      <a class="nav__link" href="../index.html#work">作品</a>
+      <a class="nav__link" href="../index.html#lab">交互实验</a>
+      <a class="nav__link" href="../index.html#about">关于</a>
+      <a class="nav__link" href="../index.html#contact">联系</a>
+    </nav>
+    <span class="nav__clock" data-clock>Guangzhou</span>
+  </div>
+</header>
+
+<main>
+
+  <section class="chero">
+    <div class="glow chero__glow" aria-hidden="true"></div>
+    <div class="shell chero__inner">
+      <div class="chero__crumbs caption">
+        <a href="../index.html#work">作品</a><i>/</i><span>茶时 CHASHI</span>
+      </div>
+
+      <div class="chero__kicker">
+        <span class="label label--accent">07 — 交互设计 · 软硬结合</span>
+        <span class="pill pill--accent"><i class="pill__dot"></i>概念方案</span>
+      </div>
+
+      <h1 class="chero__title display-l reveal-lines">茶时 — 最好的界面是没有界面</h1>
+
+      <p class="chero__sub lede cn" data-reveal>
+        泡茶的关键只有一个数：水温。所以这台设备上没有屏幕，
+        只有<em>一圈会变色的光</em>。手动它，光跟着走；
+        松手，它自己烧到那个温度。
+      </p>
+
+      <dl class="chero__facts" data-reveal>
+        <div class="chero__fact"><dt>Type</dt><dd>智能硬件 + 配套 App</dd></div>
+        <div class="chero__fact"><dt>Input</dt><dd>旋转外圈 · 无按键</dd></div>
+        <div class="chero__fact"><dt>Output</dt><dd>光环颜色 + 数字投影</dd></div>
+        <div class="chero__fact"><dt>Range</dt><dd>60–100 °C</dd></div>
+        <div class="chero__fact"><dt>Status</dt><dd>概念 / 交互原型</dd></div>
+      </dl>
+
+      <div class="notice" data-reveal>
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v.01M8 7.5v3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <p>这是一个概念项目。下方的光环是可以真实操作的原型——按住拖动即可调温，也支持方向键。</p>
+      </div>
+    </div>
+
+    <div class="shell cstage" data-reveal="rise">
+      <div class="device media-reveal" data-device>
+        <div class="device__steam" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="device__pot">
+          <div class="device__ring" tabindex="0" role="slider"
+               aria-label="冲泡水温" aria-valuemin="60" aria-valuemax="100" aria-valuenow="86">
+            <svg viewBox="0 0 200 200" aria-hidden="true">
+              <circle class="device__track" cx="100" cy="100" r="86"/>
+              <circle class="device__fill" cx="100" cy="100" r="86"/>
+              <circle class="device__knob" cx="100" cy="14" r="7"/>
+            </svg>
+          </div>
+          <div class="device__read">
+            <b class="num"><span data-temp>86</span>°</b>
+            <span class="cn" data-temp-note>乌龙 · 花香</span>
+          </div>
+        </div>
+        <span class="device__hint">按住光环拖动</span>
+      </div>
+
+      <div class="presets" style="margin-top:var(--s-5)" data-reveal>
+        <button class="preset" type="button" data-temp="70"><b>绿茶</b><span>70 °C</span></button>
+        <button class="preset" type="button" data-temp="80"><b>白茶</b><span>80 °C</span></button>
+        <button class="preset" type="button" data-temp="88"><b>乌龙</b><span>88 °C</span></button>
+        <button class="preset" type="button" data-temp="96"><b>普洱</b><span>96 °C</span></button>
+      </div>
+      <p class="caption cn" style="margin-top:var(--s-4)">设备主交互：旋转外圈调温，颜色从青草绿升到赤红。四个预设是快捷方式，不是必需品。</p>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>01</b><span class="label">出发点</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">智能家电最大的问题是太聪明</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              现在的智能水壶普遍装着一块彩色触摸屏，
+              上面有十二种模式、开机动画和天气预报。
+              但泡茶的人真正要做的判断只有一个：<strong>水要多热</strong>。
+            </p>
+            <p class="cn" data-reveal>
+              屏幕的问题不只是多余，它还<em>打断了动作</em>。
+              手上有茶叶、水在响，这时你需要的是伸手一转，
+              不是低头看菜单、点进二级页面。
+            </p>
+            <p class="cn" data-reveal>
+              所以茶时的第一个决定是<strong>把屏幕去掉</strong>。
+              剩下的设计问题变成：没有屏幕，怎么把一个数说清楚？
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pquote" data-reveal>
+        <p class="cn">屏幕不只是多余，<br>它打断了动作。</p>
+        <cite>Why no screen</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>02</b><span class="label">核心交互</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">用颜色说温度，用弧长说进度</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              光环同时编码两件事：<strong>弧长 = 数值，颜色 = 语义</strong>。
+              弧长让你知道自己在量程的哪个位置；
+              颜色则直接对应体感——
+              低温是青草绿，中温转琥珀，高温到赤红。
+            </p>
+            <p class="cn" data-reveal>
+              这个映射不是随便定的：它借的是<em>茶汤本身的颜色梯度</em>。
+              绿茶清、乌龙琥珀、普洱深红。
+              所以用户不需要学习颜色的含义，
+              他喝过茶就已经知道了。
+            </p>
+            <p class="cn" data-reveal>
+              旋转有<strong>物理阻尼与刻度感</strong>：每 2°C 一格轻微顿挫。
+              手指能数出格数，这样即使不看，也能凭手感回到常用温度。
+              <strong>触觉是无屏设备的第二块屏幕。</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="specs" data-reveal>
+        <div class="spec"><b>0</b><span>块屏幕</span></div>
+        <div class="spec"><b>1</b><span>个操作：旋转</span></div>
+        <div class="spec"><b>2<i>°C</i></b><span>每格顿挫</span></div>
+        <div class="spec"><b>280<i>°</i></b><span>可旋角度（留出缺口辨向）</span></div>
+      </div>
+
+      <div class="flow" data-reveal style="margin-top:var(--s-7)">
+        <div class="flow__node"><b>60–74</b><span>青草绿</span><em>绿茶 · 不涩</em></div>
+        <div class="flow__node"><b>74–84</b><span>浅金</span><em>白茶 · 清甜</em></div>
+        <div class="flow__node"><b>84–93</b><span>琥珀</span><em>乌龙 · 花香</em></div>
+        <div class="flow__node"><b>93–100</b><span>赤红</span><em>普洱 · 醇厚</em></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>03</b><span class="label">App 的位置</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">App 不控制，只回顾</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              大多数智能硬件的 App 是一个遥控器，
+              这很荒谬——你人就在设备旁边，为什么要拿手机？
+            </p>
+            <p class="cn" data-reveal>
+              茶时的 App 把角色反过来：<strong>它不负责操作，只负责回顾</strong>。
+              你这周泡了几次、偏爱哪个温度、
+              哪一泡你后来标记了「这次很好」。
+              <em>设备管当下，App 管记忆。</em>
+            </p>
+            <p class="cn" data-reveal>
+              唯一的远程功能是预约烧水——
+              因为那是唯一「你不在旁边」的场景。
+              功能的取舍标准很简单：只做设备做不到的事。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="duo">
+        <div data-reveal>
+          <div class="appcard">
+            <div class="appcard__screen">
+              <div class="appcard__big">
+                <b>88 °C</b>
+                <span>你最常用的温度</span>
+                <div class="appcard__spark" aria-hidden="true">
+                  <i style="--h:35%"></i><i style="--h:60%"></i><i style="--h:45%"></i>
+                  <i style="--h:82%"></i><i style="--h:70%"></i><i style="--h:96%"></i>
+                  <i style="--h:52%"></i><i style="--h:74%"></i><i style="--h:40%"></i>
+                </div>
+              </div>
+              <div class="appcard__row"><b>本周 14 泡</b><span>乌龙 8 · 普洱 4 · 绿茶 2</span></div>
+              <div class="appcard__row"><b>周三 07:20</b><span>已标记「这次很好」· 88 °C</span></div>
+              <div class="appcard__row"><b>明早 06:50</b><span>预约烧水 · 96 °C</span></div>
+            </div>
+          </div>
+          <p class="caption cn" style="margin-top:var(--s-3);text-align:center">Fig 01 — App 首页。数据在上，操作只剩一条预约。</p>
+        </div>
+
+        <div class="chapter__copy" data-reveal style="--reveal-delay:140ms">
+          <p class="cn"><strong>为什么要记录？</strong>因为泡茶是一件靠经验积累的事，
+            而人的味觉记忆非常不可靠。你只记得「上次那泡特别好」，
+            记不住是多少度、泡了多久。</p>
+          <p class="cn">「标记这一泡」是设备上唯一的第二个操作——
+            长按光环两秒。它把一次偶然的成功变成可复现的参数。</p>
+          <p class="cn">这和我在 <a class="tlink" href="quchong.html">趣宠</a> 里做的事其实是同一个：
+            <em>把模糊的感受变成看得见的规律</em>。记录本身就是安慰。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>04</b><span class="label">自评</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">无障碍是这个方案的硬伤</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              纯颜色编码对<strong>色觉障碍用户</strong>不友好——
+              红绿色盲无法区分 70°C 与 96°C。
+              弧长提供了一层冗余，但还不够。
+              需要补充的是<strong>刻度顿挫的数量差异</strong>
+              和一次到位的语音播报。
+            </p>
+            <p class="cn" data-reveal>
+              另外「没有屏幕」是个漂亮的立场，但它把所有状态
+              （加热中 / 保温 / 故障）都压到了一圈光上。
+              故障状态尤其难表达——闪红光可能被误解为高温。
+              这里可能确实需要一个极小的字符显示。
+              <em>克制不该变成固执。</em>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<section class="next" data-accent="#6fd3a8" data-accent-zone="#6fd3a8">
+  <div class="shell">
+    <a class="next__link" href="quchong.html" data-cursor="回到第一个">
+      <div>
+        <span class="next__label label">回到开头 — 01</span>
+        <span class="next__title">趣宠 — 宠物生活方式 App</span>
+      </div>
+      <div class="next__thumb frame">
+        <img src="../assets/app/screen-05.webp" alt="" data-lqip="screen05" loading="lazy">
+      </div>
+    </a>
+  </div>
+</section>
+
+<footer class="footer" data-accent="#a3c46b">
+  <div class="shell">
+    <div class="footer__base">
+      <span class="caption">© 2026 zigi</span>
+      <a class="caption tlink" href="../index.html">返回首页 ↑</a>
+    </div>
+  </div>
+</footer>
+
+<div class="progress" data-progress aria-hidden="true"></div>
+
+<script type="module" src="../scripts/motion.js"></script>
+<script type="module" src="../scripts/case.js"></script>
+<script type="module" src="../scripts/concept.js"></script>
+</body>
+</html>

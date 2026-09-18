@@ -1,13 +1,21 @@
-node_modules/
-dist/
-.vite/
+# Build/dev tooling for the asset pipeline (not part of the site)
+site/_tools/
+
+# Retired Vite + React scaffold, kept locally only
+_archive/
+
+# Raw design source. The optimised WebP derivatives live in site/assets/,
+# so the originals stay off a public Pages repo.
+*.ai
+交互设计/
+ip设计/
+室内设计/
+广告设计/
+ai设计/
 
 .env
 .env.*
 !.env.example
-
-*.ai
-site/_tools/
 
 .DS_Store
 Thumbs.db
