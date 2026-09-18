@@ -71,11 +71,14 @@
     border-color var(--d-base) linear;
 }
 
+/* The labels this carries are Chinese — 写邮件, 下一个, 回到第一个 — so the
+   uppercase did nothing while the 0.12em tracking pulled the characters
+   apart. 11px because sans CJK needs the extra pixel that tracked caps
+   were faking. */
 .cursor__text {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-cn);
+  font-size: 11px;
+  letter-spacing: 0.04em;
   color: var(--cursor-label);
   opacity: 0;
   scale: 0.8;
@@ -140,11 +143,15 @@
 
 .nav__brand b { font-weight: 600; }
 
+/* Latin-only, and it sits beside the wordmark rather than reporting a
+   value, so it takes the italic serif like every other Latin label. */
 .nav__brand span {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  font-size: 0.8125rem;
+  letter-spacing: 0;
   color: var(--fg-2);
 }
 
@@ -502,13 +509,16 @@
   border-top: 1px solid var(--line);
 }
 
+/* Email / Social / Index / Colophon — four Latin words heading Chinese
+   lists, which is the same job the case-page spec rows do. Same voice. */
 .footer__col h4 {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  font-size: 0.875rem;
+  letter-spacing: 0;
   color: var(--fg-3);
-  font-weight: 500;
   margin-bottom: var(--s-4);
 }
 
@@ -590,10 +600,9 @@
 }
 
 .dl dt {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-cn);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   color: var(--fg-3);
 }
 

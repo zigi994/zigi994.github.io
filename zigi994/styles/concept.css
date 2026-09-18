@@ -685,10 +685,9 @@
   bottom: var(--s-5);
   left: 50%;
   translate: -50% 0;
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-cn);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   color: var(--fg-3);
   pointer-events: none;
 }

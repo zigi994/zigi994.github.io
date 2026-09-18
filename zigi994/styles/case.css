@@ -195,10 +195,9 @@
   display: block;
   margin-top: var(--s-5);
   font-style: normal;
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-cn);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   color: var(--fg-3);
 }
 
@@ -392,6 +391,10 @@ html:not(.js) .showcase__step { opacity: 1; }
   display: flex;
   gap: var(--s-5);
   overflow-x: auto;
+  /* Reaching the last artboard should stop, not hand the gesture up to the
+     page or to the browser's back-swipe. Seven boards is enough that a
+     trackpad flick regularly runs off the end. */
+  overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   padding-bottom: var(--s-5);
   scrollbar-width: thin;
@@ -420,11 +423,10 @@ html:not(.js) .showcase__step { opacity: 1; }
 .rail__item img { user-select: none; -webkit-user-drag: none; }
 
 .rail__cap {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
+  font-family: var(--font-cn);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   color: var(--fg-3);
-  text-transform: uppercase;
 }
 
 /* ============================================================

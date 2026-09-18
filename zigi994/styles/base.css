@@ -71,6 +71,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
   text-rendering: optimizeLegibility;
+  /* Touch has no hover, so the tap flash is the only feedback a finger gets
+     and it has to be set rather than left to the platform: the default is a
+     grey-blue wash that belongs to no palette here. Vermillion at low alpha
+     reads on both the ink ground and the bone case pages. */
+  -webkit-tap-highlight-color: rgba(238, 92, 54, 0.18);
 }
 
 body.is-locked {
@@ -172,13 +177,59 @@ a {
   line-height: 1.5;
 }
 
+/* ------------------------------------------------------------
+   Small-type tier
+
+   This used to be one thing: mono, uppercase, +0.14em. That is a
+   Latin system, and it was carrying mostly Chinese. Uppercase does
+   nothing to CJK, but the tracking still lands on it, and a run like
+   「交互设计 · UI/UX」 pulled the Chinese from the system face and the
+   Latin from SF Mono — two families, one line, spaced for neither.
+
+   Split by script instead, because that is what actually differs:
+
+     .label        Chinese, or mixed. Sans, sentence case, a little air.
+     .label--en    Latin only. The italic serif, which is the voice the
+                   case-page spec rows already use.
+     .label--val   A value the machine produced. Mono earns its keep
+                   here and nowhere else.
+   ------------------------------------------------------------ */
 .label {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-cn);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   color: var(--fg-2);
   font-weight: 500;
+}
+
+/* Fraunces' italic is subset to ASCII, so any CJK landing in here would
+   fall through to the system Chinese face and get mechanically slanted —
+   put Chinese in plain .label. 13px, not the 11px this tier used to be:
+   an italic serif at 11px is a texture, not letterforms, which is the
+   real reason the old tier was mono. */
+.label--en {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  font-size: 0.8125rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* A Latin label nested inside a Chinese one — 广州 Guangzhou, 屏幕 Screen.
+   Two scripts naming the same thing, so they need a gap rather than a
+   separator; this is what the interpunct used to be doing. */
+.label > .label--en { margin-inline-start: 0.45em; }
+
+/* Easing names, counts, readouts — text a program would emit. Kept
+   lowercase: `spring` is how the function is spelled in the code the
+   demo is running. */
+.label--val {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
 }
 
 .label--accent { color: var(--accent); }

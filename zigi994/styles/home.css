@@ -203,12 +203,6 @@ html:not(.scripting) .intro { display: none; }
 
 .hero__scales li:hover { border-color: var(--accent); }
 
-.hero__scales b {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--fg-3);
-}
-
 .hero__scales em {
   font-style: normal;
   font-size: var(--t-caption);
@@ -340,14 +334,12 @@ html:not(.scripting) .intro { display: none; }
   line-height: 1;
 }
 
-/* The English standfirst under each Chinese scale name — the one run of latin
-   on this page long enough and large enough to carry the italic serif. The
-   .label class it used to wear is deliberately gone rather than overridden:
-   mono, uppercase and tracking are that tier's whole identity, and keeping
-   them while swapping the family would read as a broken label, not a second
-   voice. Everything still set in mono — project numbers, section kickers,
-   footer headings — stays there on purpose; at 11px an italic serif is a
-   texture nobody can resolve, and the machine voice is doing real work. */
+/* The English standfirst under each Chinese scale name. This was the first
+   run of Latin given the italic serif, back when the small tier was still
+   uniformly mono and uppercase and the two could not be reconciled. That
+   tier has since been split by script — see .label in base.css — so this is
+   no longer the exception it was; it stays a separate rule only because it
+   is set larger than .label--en, being a standfirst rather than a label. */
 .scale__en {
   font-family: var(--font-display);
   font-style: italic;
@@ -877,10 +869,9 @@ html:not(.scripting) .intro { display: none; }
   position: absolute;
   top: var(--s-3);
   right: var(--s-3);
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  font-family: var(--font-cn);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   color: var(--fg-2);
   border: 1px solid var(--line);
   border-radius: var(--r-full);
