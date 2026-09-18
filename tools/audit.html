@@ -6,9 +6,12 @@
 <style>
   html,body{margin:0;background:#111;color:#ddd;font:12px/1.5 ui-monospace,Consolas,monospace}
   #log{white-space:pre-wrap;padding:12px;margin:0}
-  /* The stage sits off-canvas so iframes can be wider than the host window
-     without introducing a scrollbar that would skew overflow measurements. */
-  #stage{position:fixed;left:-20000px;top:0;width:0;height:0;overflow:visible}
+  /* The stage parks off-canvas so iframes can be wider than the host window
+     without introducing a scrollbar that would skew overflow measurements.
+     The pixel probe moves it to the document origin for the duration of a
+     capture and puts it straight back -- see holdStageOnScreen(). Only the
+     container's own offset changes, so the iframe never relayouts. */
+  #stage{position:absolute;left:-20000px;top:0;width:0;height:0;overflow:visible;z-index:9}
   #stage iframe{border:0;display:block;background:#000}
 </style>
 </head>
@@ -19,10 +22,82 @@
 /* ============================================================
    QA audit harness.
 
-   Layout contract (post-restructure):
+   Layout contract:
      - this page is served from  /__tools/audit.html
      - the site under test is served from  /            (repo: zigi994/)
      - the save sink takes REPO-RELATIVE names:  /_save?name=tools/_qa/x.json
+
+   ------------------------------------------------------------
+   HOW TO RUN  (this changed -- read it)
+   ------------------------------------------------------------
+   Contrast is now measured from real painted pixels, which a page cannot
+   capture on its own. So there are two modes, and the tool tells you at the
+   top of every run which one it is in.
+
+   1. MEASURED (use this one)
+        powershell -NoProfile -ExecutionPolicy Bypass -File tools\audit-drive.ps1
+      Launches headless Chrome, installs the pixel-sampling bindings, and points
+      it at this page. Everything else is unchanged: the harness still drives
+      itself, still writes tools/_qa/audit-*.{json,txt}, still touches
+      AUDIT_DONE.txt when it finishes. Flags: -Page work/toast.html, -Vp mobile.
+
+   2. ESTIMATED (fallback)
+        open http://localhost:8787/__tools/audit.html
+      Still works, still runs every other check. But with no pixel transport
+      the backdrop behind a glyph cannot be observed, so contrast falls back to
+      the old ancestor-background walk and EVERY contrast figure is stamped
+      "estimated". Do not trust those numbers on this site -- see below.
+
+   ------------------------------------------------------------
+   WHY: the bug this replaced
+   ------------------------------------------------------------
+   The old method resolved a backdrop by walking ancestors for an opaque
+   background-color. Every dark object on this site paints itself with a
+   background-image gradient over a transparent background-color, so the walk
+   fell through to <body> and scored the text against the page ground instead
+   of the object it actually sits on. Canvas backdrops are invisible to it for
+   the same reason, and so is any sibling underlay or blend mode.
+
+   That produced wrong numbers in BOTH directions, which is why it went
+   unnoticed for so long: while <body> was near-black the wrong backdrop
+   happened to resemble the right one, so pale-on-dark object text passed for
+   the wrong reason. Turn the page light and the same bug reports
+   .device__hint at 1.02:1 when it is really 4.91:1.
+
+   The replacement makes the compositor do the work: every glyph on the page is
+   made transparent, the frame is captured, and the pixels where the glyphs were
+   are read back. Gradients, photographs, <canvas>, blend modes, sibling
+   underlays and ancestor opacity then all resolve correctly because they were
+   actually painted. Both methods are computed on every run and the summary ends
+   with a BACKDROP METHOD DISAGREEMENT section, so the old numbers stay visible
+   and auditable rather than being quietly replaced.
+
+   Each band is captured twice, glyphs transparent and glyphs painted. The
+   difference says which sampled points actually carry ink, which is how text
+   hiding under an opaque plate is told apart from text sitting on one, and how
+   points landing in the gap between two letters are discarded.
+
+   ------------------------------------------------------------
+   HOW CONTRAST IS REPORTED
+   ------------------------------------------------------------
+   Sub-AA runs are split into four headings, and only the first one fails a page.
+   Rolling them together is what made the old report unreadable.
+
+     PAGE CHROME       navigation, headings, body copy, controls. A real defect.
+     INSIDE ARTWORK    interiors of ARTEFACT_SCOPES -- the poster comps, app
+                       mockups and device screens. The colour is content, it
+                       measures the same on both themes, and it is the designer's
+                       own work. Reported, not counted.
+     ONLY WHILE FADED  fails at its ancestor's opacity but passes at full
+                       strength: a deliberate de-emphasis of content the reader
+                       is not looking at, like an inactive .showcase__step.
+     STROKE-ONLY       color:transparent with a -webkit-text-stroke doing the
+                       drawing. Decorative by construction (.footer__mark).
+
+   Three more headings cover text that is not scored at all, each counted in the
+   coverage line so nothing disappears silently: clipped out of view and painted
+   nowhere, paints no pixels because something opaque covers it, and no painted
+   colour at all. Tap targets keep their existing inline-in-prose advisory.
    ============================================================ */
 
 const SITE = location.origin + '/';
@@ -45,9 +120,27 @@ const VIEWPORTS = [
   { tag: 'mobile',  w: 390,  h: 844 },
 ];
 
-// Palette handed over with the warm-dark redesign; used as the last-resort
-// backdrop when every ancestor background resolves to transparent.
-const CANVAS_FALLBACK = [0x12, 0x11, 0x0d];
+/* The dark theme's --ink-0, used by the LEGACY backdrop walk as its last resort
+   when every ancestor background resolves to transparent. Deliberately left as
+   a stale constant: it is part of what the old method got wrong (on a light
+   page it guesses near-black), and the disagreement report is only honest if it
+   reproduces the old behaviour exactly rather than a repaired version of it. */
+const LEGACY_CANVAS_FALLBACK = [0x12, 0x11, 0x0d];
+
+/* Scopes whose interior colour is CONTENT rather than page chrome: the
+   designer's own poster comps, the app UI mockups, the device screens. These
+   are the same boundaries tokens.css re-declares the dark ramp at, because they
+   are all objects photographed in a dark room and they stay dark on the light
+   theme by design.
+
+   A sub-AA run inside one of these is still measured and still printed, but
+   under its own heading and outside the page verdict -- the same treatment the
+   tap-target check already gives an inline-in-prose link. The point is that
+   "the kicker on your poster artwork is 1.86:1" is a note about artwork, not a
+   broken page, and burying it in with real chrome defects is what makes people
+   stop reading the report. */
+const ARTEFACT_SCOPES = ['.lposter', '.appcard', '.ooh', '.sleeve', '.spost',
+  '.nodeui', '.device'];
 
 const REQUIRED_HEAD = {
   styles: ['tokens.css', 'base.css', 'components.css', 'transitions.css'],
@@ -74,9 +167,19 @@ const round = (n) => Math.round(n * 10) / 10;
 
 function parseColor(str) {
   if (!str) return null;
-  const m = str.match(/^rgba?\(([^)]+)\)$/);
+  const s = String(str).trim();
+  // #rgb / #rrggbb — how the pixel sampler reports a colour, and how tokens are
+  // authored. getComputedStyle never returns this form, which is why the first
+  // version of the probe silently discarded every sample it took.
+  const h = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (h) {
+    const d = h[1];
+    const x = d.length === 3 ? d.split('').map((c) => c + c) : [d.slice(0, 2), d.slice(2, 4), d.slice(4, 6)];
+    return { r: parseInt(x[0], 16), g: parseInt(x[1], 16), b: parseInt(x[2], 16), a: 1 };
+  }
+  const m = s.match(/^rgba?\(([^)]+)\)$/);
   if (!m) return null;
-  const p = m[1].split(/[,\s/]+/).filter((s) => s.length).map(Number);
+  const p = m[1].split(/[,\s/]+/).filter((t) => t.length).map(Number);
   if (p.length < 3 || p.some((n) => Number.isNaN(n))) return null;
   return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
 }
@@ -106,11 +209,126 @@ function contrast(a, b) {
 
 const hex = (rgb) => '#' + rgb.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
 
-/* Walk ancestors collecting background layers until an opaque one is hit, then
+/* WCAG 2.x large-text threshold: 18pt (24px), or 14pt (18.66px) at >=700.
+   The old code only looked at text under 18px and always demanded 4.5, so it
+   was blind to two whole bands -- 18-24px normal text, which needs 4.5 and was
+   skipped entirely, and anything >=24px, which needs 3 and was also skipped. A
+   28px heading at 2:1 was invisible to this tool. */
+function needFor(fontSizePx, fontWeight) {
+  const bold = parseInt(fontWeight, 10) >= 700;
+  const large = fontSizePx >= 24 || (fontSizePx >= 18.66 && bold);
+  return large ? 3 : 4.5;
+}
+
+/* ---------------- pixel transport ----------------
+
+   audit-drive.ps1 installs two CDP bindings before this page loads:
+
+     window.__auditShot(json)   ask for pixels; the driver captures the given
+                                page-coordinate rect and calls back into
+                                window.__auditShotResult with one colour per
+                                requested point
+     window.__auditDone(json)   tell the driver the run is over
+
+   Sampling happens driver-side on purpose. Handing whole PNGs back into the
+   page would move hundreds of megabytes across the protocol over a full run;
+   sending a point list and getting hex strings back keeps both directions tiny.
+   ------------------------------------------------------------ */
+
+const HAS_PIXELS = typeof window.__auditShot === 'function';
+
+let shotSeq = 0;
+const shotPending = new Map();
+
+window.__auditShotResult = function (json) {
+  let msg;
+  try { msg = JSON.parse(json); } catch (e) { return; }
+  const p = shotPending.get(msg.id);
+  if (!p) return;
+  shotPending.delete(msg.id);
+  if (msg.error) p.reject(new Error(msg.error));
+  else p.resolve(msg.colors.map(parseColor));
+};
+
+/* rect is in this document's page coordinates; points are absolute page
+   coordinates too. Resolves to one {r,g,b,a} per point, or null for a point the
+   driver could not read. */
+function samplePixels(rect, points) {
+  const id = ++shotSeq;
+  const done = new Promise((resolve, reject) => {
+    shotPending.set(id, { resolve, reject });
+    setTimeout(() => {
+      if (shotPending.delete(id)) reject(new Error('pixel sample timed out'));
+    }, 30000);
+  });
+  window.__auditShot(JSON.stringify({
+    id,
+    rect: { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.w), h: Math.round(rect.h) },
+    points: points.map((p) => [Math.round(p[0]), Math.round(p[1])]),
+  }));
+  return done;
+}
+
+/* The stage lives off-canvas so the iframe can exceed the host window. Content
+   that far outside the viewport is not guaranteed to be painted, so it comes
+   back to the document origin for the length of one capture. */
+async function holdStageOnScreen(fn) {
+  const stage = document.getElementById('stage');
+  const parked = stage.style.left;
+  stage.style.left = '0px';
+  window.scrollTo(0, 0);
+  // Two frames: one to commit the offset, one to be sure it has been painted.
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  try { return await fn(); } finally { stage.style.left = parked || '-20000px'; }
+}
+
+/* Two classes, because each band is captured twice.
+
+   .__auditFreeze stays on for the whole probe phase. A capture is asynchronous,
+   so anything still moving between reading a glyph's rect and reading the pixel
+   under it would desync the two.
+
+   .__auditProbing is toggled: on, every glyph goes transparent and the frame
+   shows nothing but the backdrops; off, the page paints normally. Differencing
+   the two captures is what identifies which sampled points actually have ink on
+   them -- see sampleBand().
+
+   Only glyph fill goes. The element keeps its background, borders, size and
+   position, so the geometry is identical between the two captures.
+   -webkit-text-stroke is included because .footer__mark draws itself entirely
+   with one, and a surviving stroke would be sampled as though it were backdrop.
+   SVG is narrowed to <text>/<tspan>: a blanket `fill: transparent` would erase
+   the version-tree nodes and every icon, which ARE legitimate backdrop. */
+const PROBE_CSS = `
+html.__auditFreeze *,
+html.__auditFreeze *::before,
+html.__auditFreeze *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+html.__auditProbing *,
+html.__auditProbing *::before,
+html.__auditProbing *::after {
+  -webkit-text-fill-color: transparent !important;
+  -webkit-text-stroke-color: transparent !important;
+  text-shadow: none !important;
+  text-decoration-color: transparent !important;
+  caret-color: transparent !important;
+}
+html.__auditProbing text,
+html.__auditProbing tspan { fill: transparent !important; }
+`;
+
+/* LEGACY backdrop resolution, kept for one reason: the disagreement report.
+   Walk ancestors collecting background layers until an opaque one is hit, then
    composite downward. Returns { rgb, imageAt } where imageAt names the nearest
-   ancestor painting a background-image, because a gradient/photo backdrop makes
-   the computed ratio indicative rather than exact. */
-function ancestorBg(el, w) {
+   ancestor painting a background-image.
+
+   imageAt is the tell. Whenever it is non-null this method is guessing, because
+   a gradient or photograph is exactly what it cannot see -- and on this site
+   that covers every device mockup, poster and app screen. It also cannot see a
+   <canvas>, which is what the homepage hero paints its type over. */
+function legacyAncestorBg(el, w) {
   const stack = [];
   let imageAt = null;
   let node = el;
@@ -127,17 +345,17 @@ function ancestorBg(el, w) {
     }
     node = node.parentElement;
   }
-  if (!base) base = CANVAS_FALLBACK.slice();
+  if (!base) base = LEGACY_CANVAS_FALLBACK.slice();
   for (let i = stack.length - 1; i >= 0; i--) base = over(stack[i], base);
   return { rgb: base, imageAt };
 }
 
-/* The ancestor walk misses backgrounds painted by a *sibling* that sits under
-   the text — sliding tab pills, tinted overlays, absolutely positioned plates.
-   Without this, `.ftabs__btn.is-active` reads as near-black-on-dark when it is
-   really dark-on-accent. Candidates come from a prebuilt opaque-background list
-   so this stays cheap. */
-function underlayBg(el, rect, opaques) {
+/* Also legacy. A patch on the walk above for backgrounds painted by a *sibling*
+   under the text — sliding tab pills, tinted overlays, absolutely positioned
+   plates. Without it, `.ftabs__btn.is-active` read as near-black-on-dark when it
+   is really dark-on-accent. The pixel probe gets this for free, since a sibling
+   underlay is just something that was painted. */
+function legacyUnderlayBg(el, rect, opaques) {
   const cx = (rect.left + rect.right) / 2;
   const cy = (rect.top + rect.bottom) / 2;
   let best = null;
@@ -231,11 +449,19 @@ function directText(el) {
 
 /* ---------------- the analysis, run against an iframe realm ---------------- */
 
-function analyze(w, d, vp, pageUrl) {
+/* frameOrigin is the iframe's offset inside the HOST document, so a rect in the
+   iframe's viewport can be turned into a page coordinate the driver can capture.
+   The stage is pinned to the host document origin during a capture, so this is
+   (0,0) in practice -- it is passed rather than assumed so moving the stage does
+   not silently shift every sample point. */
+async function analyze(w, d, vp, pageUrl, frameOrigin) {
   const R = {
     page: pageUrl, vp: vp.tag, vw: vp.w, vh: vp.h,
+    method: HAS_PIXELS ? 'measured' : 'estimated',
     doc: {}, overflow: [], clipped: [], overlap: [], images: [],
-    tap: [], contrast: [], head: {}, resources: [], notes: [],
+    tap: [], contrast: [], disagree: [],
+    textUnpainted: [], textClipped: [], textOccluded: [],
+    head: {}, resources: [], notes: [],
   };
 
   const de = d.documentElement;
@@ -537,23 +763,35 @@ function analyze(w, d, vp, pageUrl) {
   R.tap.sort((a, b) => (a.hitW * a.hitH) - (b.hitW * b.hitH));
   w.scrollTo(0, 0);
 
-  /* ---- 6. contrast on small text ---- */
+  /* ---- 6. contrast ---- */
 
   // Name the offending colour after the token it came from; "--fg-3 fails" is
   // a fix, "#4b4842 fails" is a scavenger hunt.
   const rootCs = w.getComputedStyle(de);
   const TOKEN_NAMES = ['--fg-0', '--fg-1', '--fg-2', '--fg-3', '--ink-0', '--ink-1',
-    '--ink-2', '--ink-3', '--ink-4', '--line', '--line-strong', '--accent', '--accent-ink'];
-  const tokens = [];
-  for (const name of TOKEN_NAMES) {
-    const raw = rootCs.getPropertyValue(name).trim();
-    if (!raw) continue;
+    '--ink-2', '--ink-3', '--ink-4', '--line', '--line-strong', '--accent',
+    '--accent-text', '--accent-ink'];
+
+  /* Custom properties compute to their specified value with var() already
+     substituted, but NOT evaluated -- a color-mix() comes back as
+     "color-mix(in oklab, #ee5c36 50%, #2a1c0e)". A throwaway span turns any of
+     those spellings into resolved rgb(). */
+  const resolveColor = (raw) => {
+    if (!raw) return null;
+    const direct = parseColor(raw);
+    if (direct) return direct;
     const probe = d.createElement('span');
-    probe.style.cssText = 'position:absolute;left:-9999px;color:' + raw;
+    probe.style.cssText = 'position:absolute;left:-9999px;top:0;color:' + raw;
     d.body.appendChild(probe);
     const c = parseColor(w.getComputedStyle(probe).color);
     probe.remove();
-    if (c) tokens.push({ name, raw, c });
+    return c;
+  };
+
+  const tokens = [];
+  for (const name of TOKEN_NAMES) {
+    const c = resolveColor(rootCs.getPropertyValue(name).trim());
+    if (c) tokens.push({ name, raw: rootCs.getPropertyValue(name).trim(), c });
   }
   const tokenFor = (str) => {
     const c = parseColor(str);
@@ -563,22 +801,72 @@ function analyze(w, d, vp, pageUrl) {
     return hit ? hit.name : null;
   };
 
-  // Accents are documented as "clears 4.5:1 against --ink-0"; verify it.
-  const inkTok = tokens.find((t) => t.name === '--ink-0');
-  const inkRgb = inkTok ? [inkTok.c.r, inkTok.c.g, inkTok.c.b] : CANVAS_FALLBACK;
+  /* --- accent tiers ---------------------------------------------------------
+
+     The old version of this check read --accent and the seven --a-* project
+     tokens off :root and scored each against --ink-0. That was right for the
+     dark theme and became correct-but-useless on the light one, where it
+     reported 1.76:1 to 3.03:1 on every case page and meant nothing, because
+     --accent is a MATERIAL colour -- a lacquer, a glaze, a tea leaf -- and on a
+     light ground nothing paints text with it. --accent-text does.
+
+     So the check now asks the only question worth asking: in each accent scope
+     the document actually declares, what colour paints glyphs, and does it
+     clear 4.5:1 against the ground of that same scope?
+
+     Reading both tokens from the scope rather than from :root is what makes it
+     work everywhere. A per-project accent is authored as data-accent on <body>,
+     .next and .footer, and tokens.css maps --accent-text off that same
+     attribute, so the scope holds the right pair. It also handles the dark
+     islands for free: inside .nodeui or .device, tokens.css puts the dark ramp
+     back and sets --accent-text to var(--accent), so the scope reports the
+     material colour against near-black -- which is exactly what is painted
+     there, and it passes.
+
+     Scoring against the scope's own --ink-0 rather than a global one matters for
+     the same reason: the ground under an accent glyph inside a dark object is
+     not the page ground.
+     ------------------------------------------------------------------------ */
+  const accentScopes = new Set([de]);
+  if (d.body) accentScopes.add(d.body);
+  d.querySelectorAll('[data-accent]').forEach((el) => accentScopes.add(el));
+
   R.accentCheck = [];
-  for (const name of ['--accent', '--a-quchong', '--a-yuexing', '--a-lionup', '--a-toast',
-    '--a-stay', '--a-linxi', '--a-chashi']) {
-    const raw = rootCs.getPropertyValue(name).trim();
-    const c = parseColor(raw) || (raw.startsWith('#') ? {
-      r: parseInt(raw.slice(1, 3), 16), g: parseInt(raw.slice(3, 5), 16),
-      b: parseInt(raw.slice(5, 7), 16), a: 1,
-    } : null);
-    if (!c || Number.isNaN(c.r)) continue;
+  const accentSeen = new Set();
+  for (const scope of accentScopes) {
+    const scs = w.getComputedStyle(scope);
+    const rawText = scs.getPropertyValue('--accent-text').trim();
+    const rawMat = scs.getPropertyValue('--accent').trim();
+    const rawInk = scs.getPropertyValue('--ink-0').trim();
+    // No --accent-text anywhere means a stylesheet predating the text tier; the
+    // material colour is then also the text colour and gets checked as such.
+    const paints = rawText || rawMat;
+    const paintC = resolveColor(paints);
+    const inkC = resolveColor(rawInk);
+    if (!paintC || !inkC) continue;
+    const ground = [inkC.r, inkC.g, inkC.b];
+    const glyph = paintC.a < 0.999 ? over(paintC, ground) : [paintC.r, paintC.g, paintC.b];
+    const ratio = contrast(glyph, ground);
+    const key = hex(glyph) + '|' + hex(ground);
+    if (accentSeen.has(key)) continue;
+    accentSeen.add(key);
     R.accentCheck.push({
-      token: name, value: raw,
-      vsInk0: Math.round(contrast([c.r, c.g, c.b], inkRgb) * 100) / 100,
-      passes45: contrast([c.r, c.g, c.b], inkRgb) >= 4.5,
+      scope: sel(scope),
+      dataAccent: scope.getAttribute && scope.getAttribute('data-accent'),
+      textTier: rawText || '(none declared)',
+      materialTier: rawMat,
+      tierChecked: rawText ? '--accent-text' : '--accent',
+      glyph: hex(glyph), ground: hex(ground),
+      ratio: Math.round(ratio * 100) / 100,
+      needs: 4.5,
+      passes45: ratio >= 4.5,
+      // Informational: what the material tier would score if it were used as
+      // text here. On the light theme this is the number the old check printed.
+      materialAsText: (() => {
+        const m = resolveColor(rawMat);
+        if (!m) return null;
+        return Math.round(contrast([m.r, m.g, m.b], ground) * 100) / 100;
+      })(),
     });
   }
 
@@ -593,43 +881,396 @@ function analyze(w, d, vp, pageUrl) {
     opaques.push({ el, rect, rgb: [c.r, c.g, c.b], sel: sel(el) });
   }
 
-  const seen = new Map();
+  /* --- inventory every painted text run -------------------------------------
+     Every run, not just the ones under 18px, because the large-text rule needs
+     checking too and used to be skipped entirely. */
+  let runs = [];
   for (const t of textEls) {
-    const fs = parseFloat(t.cs.fontSize);
-    if (!(fs < 18)) continue;
-    const fg = parseColor(t.cs.color);
-    if (!fg) continue;
+    const cs = t.cs;
+    const fs = parseFloat(cs.fontSize) || 16;
+    const fg = parseColor(cs.color);
+    if (!fg || !t.rect) continue;
 
-    const anc = ancestorBg(t.el, w);
-    const under = t.rect ? underlayBg(t.el, t.rect, opaques) : null;
-    // Two candidate backdrops; a defect only if the text fails against both,
-    // which keeps sliding pills and tinted plates out of the report.
+    /* Effective opacity of the whole ancestor chain. No contrast tool reads
+       this, and a block faded to 0.34 is what the eye actually gets -- the
+       sticky showcase steps on quchong are 1.65:1 in their resting state and
+       4.97:1 in the one the reader is looking at. Both facts are worth having,
+       so the chain is carried through and reported instead of being flattened.
+
+       chainTinted records whether any faded ancestor paints a background of its
+       own. Group opacity fades an element's background together with its text
+       before compositing the pair onto what is behind, so compositing the glyph
+       onto the measured backdrop is exact only when there is no such background
+       -- which is the case here, but the flag keeps the report honest if that
+       ever stops being true. */
+    let eff = 1;
+    let chainTinted = false;
+    for (let n = t.el; n && n.nodeType === 1; n = n.parentElement) {
+      const ncs = (n === t.el) ? cs : csOf(n);
+      const o = parseFloat(ncs.opacity);
+      if (!(o < 0.999)) continue;
+      eff *= o;
+      if (n === t.el) continue;
+      const bc = parseColor(ncs.backgroundColor);
+      if ((bc && bc.a > 0.001) || (ncs.backgroundImage && ncs.backgroundImage !== 'none')) {
+        chainTinted = true;
+      }
+    }
+    if (eff < 0.02) continue;
+
+    /* color:transparent is not a 1:1 failure, it is a different treatment.
+       .footer__mark draws its whole glyph with -webkit-text-stroke and sets
+       color:transparent on purpose; scoring the fill would report the oversized
+       wordmark as invisible text. So the stroke becomes the measured colour, and
+       a transparent fill with no stroke is recorded as unpainted rather than
+       silently dropped or scored as a defect. */
+    const strokeW = parseFloat(cs.webkitTextStrokeWidth) || 0;
+    const strokeC = parseColor(cs.webkitTextStrokeColor);
+    let paint = fg;
+    let paintFrom = 'color';
+    if (fg.a < 0.02) {
+      if (strokeW > 0 && strokeC && strokeC.a > 0.02) {
+        paint = strokeC;
+        paintFrom = 'text-stroke ' + strokeW + 'px';
+      } else {
+        R.textUnpainted.push({ sel: path(t.el), text: t.txt.slice(0, 46), color: cs.color });
+        continue;
+      }
+    }
+
+    let artefact = null;
+    for (const scope of ARTEFACT_SCOPES) {
+      if (t.el.closest && t.el.closest(scope)) { artefact = scope; break; }
+    }
+
+    runs.push({
+      el: t.el, cs, txt: t.txt, fs, fw: cs.fontWeight,
+      paint, paintFrom, eff, chainTinted, artefact,
+      needs: needFor(fs, cs.fontWeight),
+      measured: null,
+    });
+  }
+  R.textRunTotal = runs.length;
+
+  /* --- the pixel probe ------------------------------------------------------
+     Make every glyph transparent, walk the page in viewport-sized bands, and
+     read back the pixels where the glyphs were. Five points across each run,
+     keeping the WORST, so a run crossing a gradient is scored at its weakest
+     point rather than its average. */
+  const rng2 = d.createRange();
+  const firstRect = (el) => {
+    for (const n of el.childNodes) {
+      if (n.nodeType !== 3 || !n.nodeValue.trim()) continue;
+      rng2.selectNodeContents(n);
+      for (const rr of rng2.getClientRects()) {
+        if (rr.width >= 2 && rr.height >= 2) return rr;
+      }
+    }
+    return null;
+  };
+
+  if (HAS_PIXELS && runs.length) {
+    const style = d.createElement('style');
+    style.id = '__auditProbeStyle';
+    style.textContent = PROBE_CSS;
+    d.head.appendChild(style);
+    de.classList.add('__auditFreeze');
+    de.classList.add('__auditProbing');
+
+    const VWb = de.clientWidth;
+    const VHb = de.clientHeight;
+
+    /* A glyph rect is geometry, not visibility. An .odo__digit reel stacks ten
+       <i> digits inside a 1em overflow:hidden window and translates one into
+       place: the other nine have perfectly real rects that are painted nowhere.
+       Sampling one of those reads whatever unrelated element happens to occupy
+       that coordinate, which is how the first version of this probe scored the
+       homepage counter at 2.19:1 against a celadon fill from a different part of
+       the section entirely.
+
+       So a rect is only sampled where it survives intersection with every
+       clipping ancestor, and only the surviving part of it is sampled. */
+    const clippedRect = (el, r) => {
+      const c = visibleRect(el, w);
+      const box = {
+        left: Math.max(r.left, c.l), top: Math.max(r.top, c.t),
+        right: Math.min(r.right, c.rr), bottom: Math.min(r.bottom, c.b),
+      };
+      box.width = box.right - box.left;
+      box.height = box.bottom - box.top;
+      if (box.width < 2 || box.height < 2) return null;
+      // Mostly-clipped text is a scrolled-away carousel slide, not something a
+      // reader is looking at; measuring a 3px sliver of it is not informative.
+      const area = box.width * box.height;
+      const full = Math.max(1, (r.right - r.left) * (r.bottom - r.top));
+      if (area / full < 0.5) return null;
+      return box;
+    };
+
+    // Rects are re-read inside each band rather than cached from scroll 0, so
+    // scroll-driven layout (the sticky showcase, any parallax) cannot desync
+    // the sample point from the glyph.
+    const sampleBand = async () => {
+      const pts = [];
+      const owners = [];
+      for (const run of runs) {
+        if (run.measured) continue;
+        const raw = firstRect(run.el);
+        if (!raw) continue;
+        const r = clippedRect(run.el, raw);
+        if (!r) continue;
+        run.everVisible = true;
+        if (r.top < 2 || r.bottom > VHb - 2) continue;
+        /* Trim the half-leading off the line box to get the band the glyphs
+           actually occupy, then grid the band. Coverage matters here because a
+           point that lands between two letters is indistinguishable from a point
+           under an opaque cover, and both captures agree at both. One row of five
+           was not enough -- it read a 56px heading and a paragraph of body copy
+           as painting nothing. Points are nearly free (they all come out of the
+           one capture), so this errs heavily towards enough of them. */
+        const lead = Math.max(0, (r.height - run.fs * 1.16) / 2);
+        const bandTop = r.top + lead;
+        const bandH = Math.max(2, (r.bottom - lead) - bandTop);
+        for (let ix = 0; ix < 13; ix++) {
+          const cx = r.left + r.width * (0.04 + 0.92 * (ix / 12));
+          if (cx < 1 || cx > VWb - 2) continue;
+          for (const fy of [0.3, 0.5, 0.7]) {
+            const cy = bandTop + bandH * fy;
+            if (cy < 1 || cy > VHb - 2) continue;
+            pts.push([frameOrigin.x + cx, frameOrigin.y + cy]);
+            owners.push({ run, cx, cy });
+          }
+        }
+      }
+      if (!pts.length) return 0;
+      const rect = { x: frameOrigin.x, y: frameOrigin.y, w: VWb, h: VHb };
+
+      /* Same points, twice: glyphs transparent, then glyphs painted.
+
+         The difference answers a question a single capture cannot. A pixel shows
+         what is on top of the stack, not whether the text is part of that stack:
+         .pull__hint's label sits under .pull__sheet, an opaque plate that hides
+         it until the sheet is dragged, and sampling there reads the sheet's
+         celadon skeleton bar and calls it a 2.55:1 defect. Hit-testing looks
+         like the fix and is not -- it says the chashi dial readout is covered by
+         its own <svg> ring, whose box spans the readout while painting nothing
+         there, and the same for a custom slider's transparent <input> overlay.
+
+         Differencing settles it from ground truth. Where the two captures agree,
+         no ink landed: either something opaque is over the glyph, or the glyph is
+         in the gap between two letters. Where they differ, that point has ink on
+         it and the transparent-pass colour is its true backdrop. So contrast ends
+         up measured only at points that actually carry ink. */
+      const bgColors = await holdStageOnScreen(() => samplePixels(rect, pts));
+      de.classList.remove('__auditProbing');
+      const fgColors = await holdStageOnScreen(() => samplePixels(rect, pts));
+      de.classList.add('__auditProbing');
+
+      // Confirm each sampled point is still inside its glyph before believing
+      // the pixels. Catches script-driven motion during the captures, which CSS
+      // pausing cannot reach.
+      const stillThere = new Map();
+      for (const o of owners) {
+        if (stillThere.has(o.run)) continue;
+        const raw = firstRect(o.run.el);
+        stillThere.set(o.run, raw ? clippedRect(o.run.el, raw) : null);
+      }
+
+      const INK = 3;   // per-channel difference that counts as ink, out of 255
+      let n = 0;
+      for (let i = 0; i < owners.length; i++) {
+        const bgc = bgColors[i];
+        const fgc = fgColors[i];
+        if (!bgc || !fgc) continue;
+        const { run, cx, cy } = owners[i];
+        const now = stillThere.get(run);
+        if (!now || cx < now.left - 1 || cx > now.right + 1 || cy < now.top - 1 || cy > now.bottom + 1) {
+          run.moved = true;
+          continue;
+        }
+        const bg = [bgc.r, bgc.g, bgc.b];
+        const alpha = run.paint.a * run.eff;
+        const glyph = alpha < 0.999 ? over({ ...run.paint, a: alpha }, bg) : [run.paint.r, run.paint.g, run.paint.b];
+
+        const painted = Math.max(Math.abs(bgc.r - fgc.r), Math.abs(bgc.g - fgc.g), Math.abs(bgc.b - fgc.b)) >= INK;
+        // A stroke-only glyph is a 1px outline round a 273px letterform: almost
+        // every point inside it is hollow, so the ink test cannot see it. Its
+        // backdrop is still measured correctly, which is what is being scored.
+        if (!painted && run.paintFrom === 'color') {
+          /* No ink here. Usually a gap between letters or an opaque cover -- but
+             if the glyph colour is itself indistinguishable from its backdrop,
+             identical captures are exactly what a genuine 1:1 failure looks like,
+             and dropping it would turn the worst possible defect into silence. So
+             only treat this as "not painted" when there would have been something
+             visible to see. */
+          const wouldShow = Math.max(Math.abs(glyph[0] - bg[0]), Math.abs(glyph[1] - bg[1]),
+            Math.abs(glyph[2] - bg[2])) >= 6;
+          if (wouldShow) { run.noInk = true; continue; }
+        }
+        run.everSampled = true;
+
+        const ratio = contrast(glyph, bg);
+        if (!run.measured || ratio < run.measured.ratio) {
+          run.measured = { ratio, bg, glyph };
+          n++;
+        }
+      }
+      return n;
+    };
+
+    try {
+      // 25% band overlap so a run straddling a boundary still lands wholly
+      // inside some band.
+      const docH = de.scrollHeight;
+      const step = Math.max(120, Math.round(VHb * 0.75));
+      for (let y = 0; y < docH; y += step) {
+        w.scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, 90));
+        await sampleBand();
+      }
+      // Anything still unmeasured is taller than the viewport, inside its own
+      // scroller, or was hidden at every band position. Centre each one and try
+      // once more; capped so a pathological page cannot stall the run.
+      let leftovers = runs.filter((run) => !run.measured);
+      for (const run of leftovers.slice(0, 60)) {
+        try { run.el.scrollIntoView({ block: 'center' }); } catch (e) { continue; }
+        await new Promise((r) => setTimeout(r, 60));
+        await sampleBand();
+      }
+    } finally {
+      de.classList.remove('__auditProbing');
+      de.classList.remove('__auditFreeze');
+      style.remove();
+      w.scrollTo(0, 0);
+      await new Promise((r) => setTimeout(r, 60));
+    }
+
+    /* Text that never survived clipping in any band is painted nowhere: a reel
+       digit parked outside its 1em window, a carousel slide scrolled away. It
+       has a rect, so the old method scored it, but scoring it means scoring a
+       coordinate rather than a glyph. Dropped from the contrast pass and counted
+       separately so the drop is visible rather than assumed. */
+    R.textClipped = [];
+    R.textOccluded = [];
+    const kept = [];
+    for (const run of runs) {
+      if (!run.measured && !run.everVisible) {
+        R.textClipped.push({ sel: path(run.el), text: run.txt.slice(0, 46) });
+        continue;
+      }
+      /* Never once sampled: every point that should have shown ink showed the
+         backdrop instead, so something is painting over the glyph. Worth knowing
+         about in its own right -- text nobody can read is a worse defect than
+         text at 3:1 -- but it is not a contrast measurement. */
+      if (!run.measured && !run.everSampled && run.noInk) {
+        R.textOccluded.push({
+          sel: path(run.el), text: run.txt.slice(0, 46), fontSize: run.cs.fontSize,
+          color: run.cs.color,
+        });
+        continue;
+      }
+      kept.push(run);
+    }
+    runs = kept;
+    R.textRunTotal = runs.length;
+    R.textMoved = runs.filter((r) => r.moved && !r.measured).length;
+  }
+
+  /* --- score, and compare the two methods ---------------------------------- */
+  R.method = HAS_PIXELS ? 'measured' : 'estimated';
+  const seen = new Map();
+  const disagree = [];
+  let measuredCount = 0;
+
+  for (const run of runs) {
+    // Legacy value, always computed, so the two methods can be compared even on
+    // runs that pass. This is the whole audit trail for the repair.
+    const anc = legacyAncestorBg(run.el, w);
+    const rect = run.el.getBoundingClientRect();
+    const under = legacyUnderlayBg(run.el, rect, opaques);
     const cands = [{ rgb: anc.rgb, from: 'ancestor' }];
     if (under) cands.push({ rgb: under.rgb, from: 'underlay ' + under.sel });
-    let best = null;
+    let legacy = null;
     for (const cand of cands) {
-      const fgRgb = fg.a < 0.999 ? over(fg, cand.rgb) : [fg.r, fg.g, fg.b];
-      const ratio = contrast(fgRgb, cand.rgb);
-      if (!best || ratio > best.ratio) best = { ...cand, fgRgb, ratio };
+      const a = run.paint.a;
+      const g = a < 0.999 ? over(run.paint, cand.rgb) : [run.paint.r, run.paint.g, run.paint.b];
+      const ratio = contrast(g, cand.rgb);
+      if (!legacy || ratio > legacy.ratio) legacy = { ...cand, glyph: g, ratio };
     }
-    if (best.ratio >= 4.5) continue;
 
-    const key = hex(best.fgRgb) + '|' + hex(best.rgb) + '|' + t.cs.fontSize + '|' + t.cs.fontWeight;
+    const m = run.measured;
+    if (m) measuredCount++;
+    const ratio = m ? m.ratio : legacy.ratio;
+    const bg = m ? m.bg : legacy.rgb;
+    const glyph = m ? m.glyph : legacy.glyph;
+
+    if (m) {
+      const delta = Math.abs(m.ratio - legacy.ratio);
+      const flips = (m.ratio >= run.needs) !== (legacy.ratio >= run.needs);
+      if (flips || delta >= 0.5) {
+        disagree.push({
+          sel: path(run.el), text: run.txt.slice(0, 40),
+          fontSize: run.cs.fontSize, needs: run.needs,
+          measuredRatio: Math.round(m.ratio * 100) / 100, measuredBg: hex(m.bg),
+          legacyRatio: Math.round(legacy.ratio * 100) / 100, legacyBg: hex(legacy.rgb),
+          legacyBgFrom: legacy.from, legacyGuessedFromImage: anc.imageAt,
+          delta: Math.round(delta * 100) / 100,
+          verdictFlip: flips,
+          // Which way the old method was wrong, in plain terms.
+          legacyWas: legacy.ratio > m.ratio ? 'over-reported (looked better than it is)'
+            : 'under-reported (looked worse than it is)',
+        });
+      }
+    }
+
+    if (ratio >= run.needs) continue;
+
+    /* A run that only fails because an ancestor is fading it is a different
+       animal from one that fails on its own colours: the first is a deliberate
+       de-emphasis of content the reader is not looking at, the second is a
+       defect at full strength. Split them so neither hides the other. */
+    let bucket = 'chrome';
+    if (run.artefact) bucket = 'artefact';
+    if (run.eff < 0.999) {
+      const atFull = contrast(
+        run.paint.a < 0.999 ? over(run.paint, bg) : [run.paint.r, run.paint.g, run.paint.b], bg);
+      if (atFull >= run.needs) bucket = 'dimmed';
+    }
+    if (run.paintFrom !== 'color') bucket = 'decorative';
+
+    const key = hex(glyph) + '|' + hex(bg) + '|' + run.cs.fontSize + '|' + run.fw + '|' + bucket;
     const prev = seen.get(key);
-    if (prev) { prev.count++; if (prev.samples.length < 3) prev.samples.push(path(t.el)); continue; }
+    if (prev) {
+      prev.count++;
+      if (prev.samples.length < 3) prev.samples.push(path(run.el));
+      continue;
+    }
     const rec = {
-      fg: hex(best.fgRgb), rawColor: t.cs.color, fgToken: tokenFor(t.cs.color),
-      bg: hex(best.rgb), bgToken: tokenFor('rgb(' + best.rgb.map(Math.round).join(', ') + ')'),
-      bgFrom: best.from,
-      fontSize: t.cs.fontSize, fontWeight: t.cs.fontWeight,
-      ratio: Math.round(best.ratio * 100) / 100,
-      needs: 4.5, bgFromImage: anc.imageAt,
-      count: 1, samples: [path(t.el)], text: t.txt.slice(0, 46),
+      bucket,
+      fg: hex(glyph), rawColor: run.cs.color, fgToken: tokenFor(run.cs.color),
+      paintFrom: run.paintFrom,
+      bg: hex(bg), bgToken: tokenFor('rgb(' + bg.map(Math.round).join(', ') + ')'),
+      bgFrom: m ? 'measured pixel' : 'ESTIMATED ' + legacy.from,
+      estimated: !m,
+      fontSize: run.cs.fontSize, fontWeight: run.fw,
+      ratio: Math.round(ratio * 100) / 100,
+      needs: run.needs,
+      opacity: Math.round(run.eff * 1000) / 1000,
+      chainTinted: run.chainTinted,
+      artefact: run.artefact,
+      legacyRatio: Math.round(legacy.ratio * 100) / 100,
+      legacyBg: hex(legacy.rgb),
+      bgFromImage: anc.imageAt,
+      count: 1, samples: [path(run.el)], text: run.txt.slice(0, 46),
     };
     seen.set(key, rec);
     R.contrast.push(rec);
   }
+
   R.contrast.sort((a, b) => a.ratio - b.ratio);
+  R.contrastMeasured = measuredCount;
+  R.contrastUnmeasured = runs.length - measuredCount;
+  R.disagree = disagree.sort((a, b) => (b.verdictFlip - a.verdictFlip) || (b.delta - a.delta));
 
   /* ---- 7. head consistency ---- */
   const links = [...d.querySelectorAll('link')];
@@ -806,13 +1447,17 @@ function runOne(pageUrl, vp) {
         try { await d.fonts.ready; } catch (e) { /* no font api */ }
         await new Promise((r) => setTimeout(r, 500));
 
-        R = analyze(w, d, vp, pageUrl);
+        // The stage is parked off-canvas between captures; its on-screen
+        // position during one is the host document origin.
+        R = await analyze(w, d, vp, pageUrl, { x: 0, y: 0 });
       } catch (e) {
         R = {
           page: pageUrl, vp: vp.tag, vw: vp.w, vh: vp.h,
+          method: HAS_PIXELS ? 'measured' : 'estimated',
           fatal: e.message + '\n' + (e.stack || ''),
           overflow: [], clipped: [], overlap: [], images: [], tap: [],
-          contrast: [], head: {}, resources: [], notes: [],
+          contrast: [], disagree: [], textUnpainted: [],
+          head: {}, resources: [], notes: [],
         };
       }
       R.runtime = runtime;
@@ -837,6 +1482,7 @@ function summarise(R) {
   const L = [];
   const tag = `${R.page} @ ${R.vp} ${R.vw}x${R.vh}`;
   if (R.fatal) { L.push(`[FATAL] ${tag}\n    ${R.fatal}`); return L.join('\n'); }
+  const byBucket = (b) => R.contrast.filter((c) => c.bucket === b);
   const counts = {
     ovf: R.overflow.length, clip: R.clipped.filter((c) => c.kind !== 'truncated-by-design').length,
     olap: R.overlap.length, img: R.images.filter((i) => i.issues.includes('failed-to-load')).length,
@@ -844,15 +1490,30 @@ function summarise(R) {
     // WCAG 2.5.8 exempts a target inside a sentence, so an inline prose link is
     // listed for review but does not fail the page. Standalone controls do.
     tap: R.vp === 'mobile' ? R.tap.filter((t) => !t.inProse).length : 0,
-    con: R.contrast.length,
+    // Only chrome counts toward the verdict. Artefact interiors, deliberately
+    // dimmed runs and stroke-only decoration are all printed below, each under
+    // its own heading, and each is a note rather than a broken page.
+    con: byBucket('chrome').length,
+    conArt: byBucket('artefact').length,
+    conDim: byBucket('dimmed').length,
+    conDec: byBucket('decorative').length,
+    accent: (R.accentCheck || []).filter((a) => !a.passes45).length,
     js: R.runtime.jsErrors.length + R.runtime.consoleErrors.length,
     net: R.badResources.length,
   };
   const bad = counts.ovf || counts.clip || counts.olap || counts.img || counts.js || counts.net
-    || counts.tap || counts.con || R.doc.overflowX > 1 || R.head.missing.length;
+    || counts.tap || counts.con || counts.accent || R.doc.overflowX > 1 || R.head.missing.length;
   L.push(`\n[${bad ? 'FAIL' : 'ok  '}] ${tag}`);
   L.push(`  doc scrollW=${R.doc.scrollWidth} clientW=${R.doc.clientWidth} overflowX=${R.doc.overflowX} scrollH=${R.doc.scrollHeight}  hooked@${R.runtime.hookedAt}`);
   L.push(`  inspected: ${R.elTotal} elements, ${R.textElTotal} text nodes, ${R.imgLoaded}/${R.imgTotal} images loaded, ${R.resources.length} urls`);
+  const cov = R.textRunTotal
+    ? `${R.contrastMeasured}/${R.textRunTotal} text runs measured from pixels` +
+      (R.contrastUnmeasured ? `, ${R.contrastUnmeasured} ESTIMATED (never fully on screen)` : '') +
+      (R.textClipped && R.textClipped.length ? `, ${R.textClipped.length} skipped (clipped out of view, painted nowhere)` : '') +
+      (R.textOccluded && R.textOccluded.length ? `, ${R.textOccluded.length} skipped (paints no pixels)` : '') +
+      (R.textMoved ? `, ${R.textMoved} discarded (moved during capture)` : '')
+    : 'no text runs';
+  L.push(`  contrast: ${R.method === 'measured' ? cov : 'ESTIMATED for all runs -- no pixel transport, see header'}`);
 
   if (R.head.missing.length) L.push('  HEAD missing: ' + R.head.missing.join(', '));
   if (R.badResources.length) {
@@ -889,15 +1550,82 @@ function summarise(R) {
     R.tap.forEach((t) => L.push(
       `    hit ${t.hitW}x${t.hitH} box ${t.w}x${t.h}${t.covered ? ' COVERED' : ''}${t.unprobed ? ' (off-viewport, box only)' : ''}${t.inProse ? ' (inline-in-prose)' : ''}  ${t.sel}  "${t.label}"${t.href ? ' -> ' + t.href : ''}`));
   }
-  if (R.contrast.length) {
-    L.push('  CONTRAST < 4.5:1 ON TEXT UNDER 18px:');
-    R.contrast.forEach((c) => L.push(
-      `    ${c.ratio}:1  fg=${c.fg}${c.fgToken ? ' [' + c.fgToken + ']' : ''} on bg=${c.bg}${c.bgToken ? ' [' + c.bgToken + ']' : ''} (${c.bgFrom})  ${c.fontSize}/${c.fontWeight}  x${c.count}\n      e.g. ${c.samples[0]}  "${c.text}"${c.bgFromImage ? '\n      NOTE bg-image present: ' + c.bgFromImage : ''}`));
+  const line = (c) => {
+    const bits = [
+      `    ${c.ratio}:1 (needs ${c.needs})  fg=${c.fg}${c.fgToken ? ' [' + c.fgToken + ']' : ''}`,
+      `on bg=${c.bg}${c.bgToken ? ' [' + c.bgToken + ']' : ''}`,
+      `${c.fontSize}/${c.fontWeight}  x${c.count}`,
+    ];
+    let s = bits.join('  ');
+    if (c.estimated) s += '  [ESTIMATED: ' + c.bgFrom + ']';
+    if (c.opacity < 0.999) s += `  ancestor-opacity=${c.opacity}`;
+    if (c.chainTinted) s += ' (faded ancestor paints its own bg -- composite approximate)';
+    if (c.paintFrom !== 'color') s += `  glyph drawn by ${c.paintFrom}`;
+    s += `\n      e.g. ${c.samples[0]}  "${c.text}"`;
+    // What the old method would have said, whenever it would have said something
+    // materially different. Keeps the repair auditable from the report itself.
+    if (!c.estimated && Math.abs(c.legacyRatio - c.ratio) >= 0.5) {
+      s += `\n      legacy ancestor-walk said ${c.legacyRatio}:1 on ${c.legacyBg}` +
+        (c.bgFromImage ? ' — guessing, bg-image at ' + c.bgFromImage : '');
+    }
+    return s;
+  };
+
+  const chrome = byBucket('chrome');
+  if (chrome.length) {
+    L.push('  CONTRAST BELOW WCAG AA -- PAGE CHROME:');
+    chrome.forEach((c) => L.push(line(c)));
   }
-  if (R.accentCheck && R.accentCheck.some((a) => !a.passes45)) {
-    L.push('  ACCENT TOKENS BELOW 4.5:1 vs --ink-0:');
-    R.accentCheck.filter((a) => !a.passes45)
-      .forEach((a) => L.push(`    ${a.vsInk0}:1  ${a.token}: ${a.value}`));
+  const art = byBucket('artefact');
+  if (art.length) {
+    L.push('  CONTRAST BELOW AA INSIDE ARTWORK (content colour, not chrome -- review, does not fail the page):');
+    art.forEach((c) => L.push(line(c) + `\n      inside ${c.artefact}`));
+  }
+  const dim = byBucket('dimmed');
+  if (dim.length) {
+    L.push('  CONTRAST BELOW AA ONLY WHILE FADED (passes at full opacity -- deliberate de-emphasis):');
+    dim.forEach((c) => L.push(line(c)));
+  }
+  const dec = byBucket('decorative');
+  if (dec.length) {
+    L.push('  CONTRAST BELOW AA ON STROKE-ONLY DECORATION (no fill colour -- decorative by construction):');
+    dec.forEach((c) => L.push(line(c)));
+  }
+  if (R.textOccluded && R.textOccluded.length) {
+    L.push('  TEXT THAT PAINTS NO PIXELS (something opaque is over it; not scored for contrast):');
+    R.textOccluded.slice(0, 8).forEach((t) => L.push(
+      `    ${t.sel}  ${t.fontSize}  color=${t.color}  "${t.text}"`));
+  }
+  if (R.textUnpainted && R.textUnpainted.length) {
+    L.push('  TEXT WITH NO PAINTED COLOUR (transparent fill, no stroke -- not scored):');
+    R.textUnpainted.slice(0, 6).forEach((t) => L.push(`    ${t.sel}  color=${t.color}  "${t.text}"`));
+  }
+
+  if (R.accentCheck && R.accentCheck.length) {
+    const failing = R.accentCheck.filter((a) => !a.passes45);
+    if (failing.length) {
+      L.push('  ACCENT TEXT TIER BELOW 4.5:1 vs ITS OWN GROUND:');
+      failing.forEach((a) => L.push(
+        `    ${a.ratio}:1  ${a.tierChecked}=${a.glyph} on --ink-0=${a.ground}  scope ${a.scope}${a.dataAccent ? ' [data-accent=' + a.dataAccent + ']' : ''}`));
+    }
+    // The material tier is printed as a fact, never as a failure: it is supposed
+    // to be a mid-tone glaze and on a light ground nothing sets type in it.
+    const info = R.accentCheck.map((a) => `${a.scope}${a.dataAccent ? '[' + a.dataAccent + ']' : ''} ` +
+      `text ${a.tierChecked}=${a.glyph} ${a.ratio}:1` +
+      (a.materialAsText !== null ? `, material --accent=${a.materialTier} would be ${a.materialAsText}:1` : ''));
+    L.push('  accent tiers: ' + info.join(' | '));
+  }
+
+  if (R.disagree && R.disagree.length) {
+    const flips = R.disagree.filter((x) => x.verdictFlip);
+    L.push(`  BACKDROP METHOD DISAGREEMENT: ${R.disagree.length} run(s) differ by >=0.5, ${flips.length} of them flip pass/fail`);
+    R.disagree.slice(0, 10).forEach((x) => L.push(
+      `    measured ${x.measuredRatio}:1 on ${x.measuredBg}   vs   legacy ${x.legacyRatio}:1 on ${x.legacyBg} (${x.legacyBgFrom})` +
+      `   delta ${x.delta}${x.verdictFlip ? '  *** VERDICT FLIP (needs ' + x.needs + ') ***' : ''}` +
+      `\n      legacy ${x.legacyWas}` +
+      (x.legacyGuessedFromImage ? `\n      legacy was guessing: ${x.legacyGuessedFromImage}` : '') +
+      `\n      ${x.sel}  "${x.text}"`));
+    if (R.disagree.length > 10) L.push(`    ... ${R.disagree.length - 10} more in the json`);
   }
   R.notes.forEach((n) => L.push('  note: ' + n));
   return L.join('\n');
@@ -907,6 +1635,15 @@ function summarise(R) {
 
 (async () => {
   const all = [];
+  if (HAS_PIXELS) {
+    log('contrast mode: MEASURED -- backdrops read from captured pixels');
+  } else {
+    log('contrast mode: ESTIMATED -- no pixel transport on this page.');
+    log('  Every contrast figure below is an ancestor-background guess and is');
+    log('  wrong wherever a gradient, photograph or <canvas> sits behind text,');
+    log('  which on this site is every device mockup, poster and the hero.');
+    log('  Run tools\\audit-drive.ps1 for measured numbers. See file header.');
+  }
   for (const vp of vpList) {
     log(`\n=================== ${vp.tag} ${vp.w}x${vp.h} ===================`);
     for (const p of pageList) {
@@ -925,6 +1662,10 @@ function summarise(R) {
   document.title = 'audit-done';
   await fetch('/_save?name=' + OUT_DIR + 'AUDIT_DONE.txt',
     { method: 'POST', body: new Blob([slug + ' ' + new Date().toISOString()]) });
+  // Lets the driver exit on a signal instead of polling for the title.
+  if (typeof window.__auditDone === 'function') {
+    window.__auditDone(JSON.stringify({ slug, mode: HAS_PIXELS ? 'measured' : 'estimated', runs: all.length }));
+  }
 })();
 </script>
 </body>

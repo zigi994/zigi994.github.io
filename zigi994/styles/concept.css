@@ -342,6 +342,17 @@
 .nodeui__canvas {
   position: relative;
   overflow: hidden;
+  /* Tall enough that the two stacked Reference cards clear each other. They sit
+     at top:9% and bottom:9% and each measures 201px, so the canvas has to
+     satisfy 402 + 0.18H + gap <= H. Left to the grid row's natural 333px they
+     overlapped by 129px: the upper card's thumbnail was sliced in half and its
+     label buried completely — a mock advertising a node editor, showing nodes
+     that collide. 520px leaves a 24px gap between them.
+     Shrinking the cards instead was the alternative and it does not work: two
+     square-thumbnail cards only fit 333px at about 80px wide, against the
+     148px Compose node they feed. The 620px rule below rebuilds this as a 2x2
+     flow layout and zeroes this out. */
+  min-height: 520px;
   background:
     radial-gradient(60% 50% at 30% 10%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 62%),
     linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px) 0 0 / 100% 26px,
@@ -547,7 +558,6 @@
 @media (max-width: 1000px) {
   .nodeui__body { grid-template-columns: 1fr; }
   .nodeui__rail, .nodeui__insp { border: 0; border-bottom: 1px solid var(--line); }
-  .nodeui__canvas { min-height: 340px; }
 }
 
 /* Four 148px cards placed by percentage cannot fit a ~348px canvas without

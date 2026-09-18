@@ -599,7 +599,13 @@ html:not(.scripting) .intro { display: none; }
   font-size: var(--t-label);
   letter-spacing: var(--track-label);
   text-transform: uppercase;
-  color: rgba(255, 240, 220, 0.72);
+  /* Full strength, not 0.72. These two labels are the only text on the poster
+     besides its headline, and on the lacquer-red ground the faded version
+     composited to 3.24:1 — the one piece of real chrome anywhere on the site
+     that failed AA. Even 0.95 only reaches 4.46:1, so the alpha had to go
+     entirely; at 11px there is nothing left to recede with. 4.78:1 on the
+     red, higher on the two darker posters that share this rule. */
+  color: rgb(255, 240, 220);
   position: relative;
   z-index: 2;
 }
