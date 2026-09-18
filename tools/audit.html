@@ -350,12 +350,22 @@ function analyze(w, d, vp, pageUrl) {
       });
     } else if (!hidesX && dx > 2 && cs.overflowX === 'visible') {
       // Content wider than the padding box without a clip: an unbreakable run.
-      R.clipped.push({
-        sel: path(el), kind: 'content-wider-than-box',
-        lostX: dx, lostY: 0, clientW: el.clientWidth, clientH: el.clientHeight,
-        scrollW: el.scrollWidth, scrollH: el.scrollHeight,
-        fontSize: cs.fontSize, text: txt.slice(0, 70),
-      });
+      // scrollWidth also grows for absolutely-positioned descendants and
+      // pseudo-elements — a 44px touch-target overlay on a 28px link, say —
+      // which overflow nothing visually. getBoundingClientRect covers only the
+      // element's own boxes, so comparing the text rect against it isolates the
+      // case where the TEXT is what sticks out.
+      const past = rect
+        ? Math.round(rect.right - (r.right - (parseFloat(cs.borderRightWidth) || 0)))
+        : 0;
+      if (past > 2) {
+        R.clipped.push({
+          sel: path(el), kind: 'content-wider-than-box',
+          lostX: past, lostY: 0, clientW: el.clientWidth, clientH: el.clientHeight,
+          scrollW: el.scrollWidth, scrollH: el.scrollHeight,
+          fontSize: cs.fontSize, text: txt.slice(0, 70),
+        });
+      }
     }
   }
   R.clipped.sort((a, b) => (b.lostX + b.lostY) - (a.lostX + a.lostY));
@@ -449,6 +459,51 @@ function analyze(w, d, vp, pageUrl) {
   }
 
   /* ---- 5. tap targets (all viewports; only reported for mobile) ---- */
+  // getBoundingClientRect is not the hit area. Negative margins, and an
+  // absolutely positioned pseudo-element used as a touch-target expander, both
+  // enlarge what a finger can land on without changing the box. So anything the
+  // box test rejects gets a second opinion from elementFromPoint, which is what
+  // the browser itself will do on a tap. Reveals are already forced on and the
+  // page has been scroll-swept by this point, so moving the scroll here is safe
+  // as long as it ends back at the top.
+  const inFixed = (el) => {
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      if (csOf(n).position === 'fixed') return true;
+    }
+    return false;
+  };
+  const VH = de.clientHeight;
+  const probeable = (x, y) => x >= 1 && y >= 1 && x <= VW - 2 && y <= VH - 2;
+  const reach = (el, cx, cy, dx, dy) => {
+    let far = 0;
+    // 1px steps: the centre is rounded to an integer, so a coarser step loses up
+    // to 2px per side and reports a compliant 44px target as 43.
+    for (let i = 1; i <= 23; i += 1) {
+      const px = cx + dx * i, py = cy + dy * i;
+      if (!probeable(px, py)) break;
+      const hit = d.elementFromPoint(px, py);
+      if (!hit || !(hit === el || el.contains(hit))) break;
+      far = i;
+    }
+    return far;
+  };
+  const hitBox = (el) => {
+    // A fixed header hides itself on scroll-down, so those stay at the top.
+    if (inFixed(el)) w.scrollTo(0, 0);
+    else el.scrollIntoView({ block: 'center' });
+    const rr = el.getBoundingClientRect();
+    const cx = Math.round(rr.left + rr.width / 2);
+    const cy = Math.round(rr.top + rr.height / 2);
+    if (!probeable(cx, cy)) return null;
+    const hit = d.elementFromPoint(cx, cy);
+    if (!hit || !(hit === el || el.contains(hit))) return { covered: true, w: 0, h: 0 };
+    return {
+      covered: false,
+      w: 1 + reach(el, cx, cy, -1, 0) + reach(el, cx, cy, 1, 0),
+      h: 1 + reach(el, cx, cy, 0, -1) + reach(el, cx, cy, 0, 1),
+    };
+  };
+
   const TAPPABLE = 'a[href],button,input,select,textarea,summary,[role="button"],[role="link"],[role="tab"],[onclick],[tabindex]:not([tabindex="-1"])';
   for (const el of [...d.querySelectorAll(TAPPABLE)]) {
     const cs = csOf(el);
@@ -457,6 +512,10 @@ function analyze(w, d, vp, pageUrl) {
     if (el.tagName === 'INPUT' && ['hidden'].includes(el.type)) continue;
     const w0 = r.width, h0 = r.height;
     if (w0 >= 43.5 && h0 >= 43.5) continue;
+    const hb = hitBox(el);
+    const hitW = hb && !hb.covered ? Math.max(w0, hb.w) : w0;
+    const hitH = hb && !hb.covered ? Math.max(h0, hb.h) : h0;
+    if (!(hb && hb.covered) && hitW >= 43.5 && hitH >= 43.5) continue;
     // Links inside running prose are exempt by convention; classify, don't drop.
     let inProse = false;
     let n = el.parentElement;
@@ -468,12 +527,15 @@ function analyze(w, d, vp, pageUrl) {
     R.tap.push({
       sel: path(el), tag: el.tagName.toLowerCase(),
       w: round(w0), h: round(h0),
+      hitW: round(hitW), hitH: round(hitH),
+      covered: !!(hb && hb.covered), unprobed: !hb,
       label: (el.getAttribute('aria-label') || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 42),
       href: el.getAttribute('href'),
       inProse, display: cs.display, fontSize: cs.fontSize,
     });
   }
-  R.tap.sort((a, b) => (a.w * a.h) - (b.w * b.h));
+  R.tap.sort((a, b) => (a.hitW * a.hitH) - (b.hitW * b.hitH));
+  w.scrollTo(0, 0);
 
   /* ---- 6. contrast on small text ---- */
 
@@ -779,7 +841,9 @@ function summarise(R) {
     ovf: R.overflow.length, clip: R.clipped.filter((c) => c.kind !== 'truncated-by-design').length,
     olap: R.overlap.length, img: R.images.filter((i) => i.issues.includes('failed-to-load')).length,
     cls: R.images.filter((i) => i.issues.includes('no-reserved-aspect-ratio')).length,
-    tap: R.vp === 'mobile' ? R.tap.length : 0,
+    // WCAG 2.5.8 exempts a target inside a sentence, so an inline prose link is
+    // listed for review but does not fail the page. Standalone controls do.
+    tap: R.vp === 'mobile' ? R.tap.filter((t) => !t.inProse).length : 0,
     con: R.contrast.length,
     js: R.runtime.jsErrors.length + R.runtime.consoleErrors.length,
     net: R.badResources.length,
@@ -821,9 +885,9 @@ function summarise(R) {
       `    ${i.issues.join(',')}  ${i.sel}\n      src=${i.src} natural=${i.naturalWidth} render=${i.renderW}x${i.renderH} attrDims=${i.hasAttrDims} ar=${i.cssAspectRatio}/${i.parentAspectRatio} fit=${i.objectFit} loading=${i.loading}`));
   }
   if (R.vp === 'mobile' && R.tap.length) {
-    L.push('  TAP TARGETS < 44x44:');
+    L.push('  TAP TARGETS < 44x44:  (hit = probed with elementFromPoint; inline-in-prose is advisory)');
     R.tap.forEach((t) => L.push(
-      `    ${t.w}x${t.h}${t.inProse ? ' (inline-in-prose)' : ''}  ${t.sel}  "${t.label}"${t.href ? ' -> ' + t.href : ''}`));
+      `    hit ${t.hitW}x${t.hitH} box ${t.w}x${t.h}${t.covered ? ' COVERED' : ''}${t.unprobed ? ' (off-viewport, box only)' : ''}${t.inProse ? ' (inline-in-prose)' : ''}  ${t.sel}  "${t.label}"${t.href ? ' -> ' + t.href : ''}`));
   }
   if (R.contrast.length) {
     L.push('  CONTRAST < 4.5:1 ON TEXT UNDER 18px:');

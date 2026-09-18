@@ -14,9 +14,9 @@
 
 /* ------------------------------------------------------------
    Persistent chrome
-   The nav is byte-identical on every page, so it is lifted out
-   of the root snapshot and frozen: no fade, no geometry morph,
-   not even when the outgoing page had it retracted
+   The nav renders identically on every page, so it is lifted
+   out of the root snapshot and frozen: no fade, no geometry
+   morph, not even when the outgoing page had it retracted
    (.nav.is-hidden translates it off the top).
    ------------------------------------------------------------ */
 .nav {
@@ -97,17 +97,17 @@
 
 /* ------------------------------------------------------------
    Reduced motion
-   Opt out of the animation entirely, twice over: the navigation
-   descriptor stops the transition from ever starting, and the
-   overrides below flatten it to a hard swap if a browser honours
-   the pseudo-elements but not @view-transition inside @media.
-   Prefetch is untouched, so navigation stays fast, just still.
+   Dropping the animations ends the transition on the next frame,
+   so the swap becomes an instant cut. Navigation and prefetch
+   are untouched.
+
+   The obvious spelling of this is a nested
+   `@view-transition { navigation: none }`. Measured in Chrome
+   152, a conditional opt-in rule also made the browser drop
+   transitions on navigations with reduced motion switched off,
+   so the opt-in above is kept unconditional.
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
-  @view-transition {
-    navigation: none;
-  }
-
   ::view-transition-group(root),
   ::view-transition-old(root),
   ::view-transition-new(root) {

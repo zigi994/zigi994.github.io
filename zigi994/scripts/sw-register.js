@@ -28,6 +28,27 @@
     host === '[::1]';
   if (!secure) return;
 
+  /* Localhost is excluded by default. CI stamps the build id, so a local sw.js
+     keeps the literal __BUILD_ID__ as its cache key: the name never changes,
+     and stale-while-revalidate then hands yesterday's CSS to the person editing
+     it — including headless QA runs, which get one shot and no second reload.
+     Any worker from an earlier session is torn down so existing dev profiles
+     heal themselves. Append ?sw=1 to opt back in and exercise the real thing. */
+  var isLocal = host === 'localhost' || host === '127.0.0.1' ||
+    host === '::1' || host === '[::1]';
+  if (isLocal && location.search.indexOf('sw=1') === -1) {
+    navigator.serviceWorker.getRegistrations()
+      .then(function (regs) {
+        regs.forEach(function (r) { r.unregister(); });
+        if (!window.caches) return;
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      })
+      .catch(function () {});
+    return;
+  }
+
   /* Captured now, not inside the load handler, where currentScript is
      null. Resolving against the script's own URL keeps one file working
      from both / and /work/. */

@@ -176,7 +176,57 @@
 @media (max-width: 560px) {
   .nav__brand span { display: none; }
   .nav__inner { gap: var(--s-4); }
-  .nav__links { gap: 0.9rem; }
+  /* 1.25rem keeps a 44px hit area from bleeding into the next link: the
+     links themselves measure ~26px, so the gap has to exceed 44 - 26. */
+  .nav__links { gap: 1.25rem; }
+}
+
+/* ------------------------------------------------------------
+   Touch targets
+
+   These links are deliberately small type, so the hit area is grown with an
+   overlay instead of padding. Padding on a nav link would stretch the fixed
+   header, and on an inline crumb it would break the baseline rhythm.
+   ------------------------------------------------------------ */
+.nav__brand,
+.chero__crumbs a {
+  position: relative;
+}
+
+.nav__brand::before,
+.nav__link::before,
+.chero__crumbs a::before,
+.hero__cue::before,
+.footer__base a::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 100%;
+  min-width: 44px;
+  height: 44px;
+}
+
+.footer__base a {
+  position: relative;
+}
+
+/* The footer link columns are navigation lists, not prose, so they take real
+   padding. The li spacing comes back down to keep the column from stretching. */
+@media (max-width: 620px) {
+  .footer__col li a {
+    display: inline-block;
+    padding-block: 11px;
+    /* Short CJK labels are only ~30px wide; the inline padding widens the target
+       and the negative margin keeps the column flush on the left. */
+    padding-inline: 7px;
+    margin-inline: -7px;
+  }
+
+  .footer__col li + li { margin-top: 0; }
+
+  .footer__cta { padding-block: var(--s-2); }
 }
 
 /* ============================================================

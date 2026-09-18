@@ -132,7 +132,7 @@ function initHeroField() {
         parseInt(v.slice(5, 7), 16),
       ];
     }
-    return [111, 211, 168];
+    return [238, 92, 54]; // --accent fallback: lacquer vermillion
   };
 
   let rgb = accentRGB();

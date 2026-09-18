@@ -109,6 +109,9 @@ function resize(c, maxEdge) {
   return o;
 }
 
+const SITE = 'zigi994/';
+const QA = 'tools/_qa/';
+
 const JOBS = [
   ['ip-logo.png',        'assets/ip/logo-cut.webp',        248, 900,  'ipLogoCut'],
   ['ip-figures.jpg',     'assets/ip/figures-cut.webp',     242, 1500, 'ipFiguresCut'],
@@ -126,14 +129,14 @@ const JOBS = [
     c = trim(c);
     c = resize(c, maxEdge);
     const blob = await new Promise((r) => c.toBlob(r, 'image/webp', 0.92));
-    await fetch('/_save?name=' + encodeURIComponent(dest), { method: 'POST', body: blob });
+    await fetch('/_save?name=' + encodeURIComponent(SITE + dest), { method: 'POST', body: blob });
     document.getElementById('preview').appendChild(c);
     const tiny = resize(c, 20);
     lqip[JOBS.find((j) => j[1] === dest)[4]] = tiny.toDataURL('image/webp', 0.6);
     log(`${dest}  ${c.width}x${c.height}  ${(blob.size / 1024).toFixed(0)}kb`);
   }
-  await fetch('/_save?name=_tools/cut-lqip.json', { method: 'POST', body: new Blob([JSON.stringify(lqip)]) });
-  await fetch('/_save?name=_tools/CUT_DONE.txt', { method: 'POST', body: new Blob(['ok\n' + out.join('\n')]) });
+  await fetch('/_save?name=' + QA + 'cut-lqip.json', { method: 'POST', body: new Blob([JSON.stringify(lqip)]) });
+  await fetch('/_save?name=' + QA + 'CUT_DONE.txt', { method: 'POST', body: new Blob(['ok\n' + out.join('\n')]) });
   log('--- done ---');
 })();
 </script>

@@ -11,6 +11,12 @@ canvas{background:repeating-conic-gradient(#555 0 25%,#444 0 50%) 0 0/16px 16px;
 const out = [];
 const log = (m) => { out.push(m); document.getElementById('log').textContent = out.join('\n'); };
 
+// The save sink writes REPO-relative names, while dest paths below stay
+// site-relative because that is what gets written into the HTML. Reads use
+// '/' + src, which is already the site root.
+const SITE = 'zigi994/';
+const QA = 'tools/_qa/';
+
 // src, dest, [x,y,w,h] as fractions of the source, maxEdge, lqip key
 const JOBS = [
   ['assets/ip/logo-cut.webp',       'assets/ip/mark-cut.webp',  [0, 0, 1, 0.715], 700,  'ipMarkCut'],
@@ -66,7 +72,7 @@ function trimAlpha(c) {
     }
 
     const blob = await new Promise((r) => c.toBlob(r, 'image/webp', 0.93));
-    await fetch('/_save?name=' + encodeURIComponent(dest), { method: 'POST', body: blob });
+    await fetch('/_save?name=' + encodeURIComponent(SITE + dest), { method: 'POST', body: blob });
     document.getElementById('preview').appendChild(c);
 
     const t = document.createElement('canvas');
@@ -78,8 +84,8 @@ function trimAlpha(c) {
 
     log(`${dest}  ${c.width}x${c.height}  ${(blob.size / 1024).toFixed(0)}kb`);
   }
-  await fetch('/_save?name=_tools/crop-lqip.json', { method: 'POST', body: new Blob([JSON.stringify(lqip)]) });
-  await fetch('/_save?name=_tools/CROP_DONE.txt', { method: 'POST', body: new Blob(['ok\n' + out.join('\n')]) });
+  await fetch('/_save?name=' + QA + 'crop-lqip.json', { method: 'POST', body: new Blob([JSON.stringify(lqip)]) });
+  await fetch('/_save?name=' + QA + 'CROP_DONE.txt', { method: 'POST', body: new Blob(['ok\n' + out.join('\n')]) });
   log('--- done ---');
 })();
 </script>

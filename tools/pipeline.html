@@ -17,7 +17,7 @@
   const meta = {};
 
   async function post(name, blob) {
-    const r = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    const r = await fetch('/_save?name=' + encodeURIComponent(name.startsWith('tools/') ? name : 'zigi994/' + name), { method: 'POST', body: blob });
     if (!r.ok) throw new Error('save failed ' + name + ' ' + r.status);
   }
 
@@ -107,10 +107,10 @@
 
     await post('assets/manifest.json', new Blob([JSON.stringify({ lqip, meta }, null, 1)], { type: 'application/json' }));
     log('— done —');
-    await post('_tools/DONE.txt', new Blob(['ok\n' + lines.join('\n')], { type: 'text/plain' }));
+    await post('tools/_qa/DONE.txt', new Blob(['ok\n' + lines.join('\n')], { type: 'text/plain' }));
   } catch (err) {
     log('ERROR: ' + err.message + '\n' + err.stack);
-    await post('_tools/DONE.txt', new Blob(['error\n' + lines.join('\n')], { type: 'text/plain' }));
+    await post('tools/_qa/DONE.txt', new Blob(['error\n' + lines.join('\n')], { type: 'text/plain' }));
   }
 </script>
 </body>

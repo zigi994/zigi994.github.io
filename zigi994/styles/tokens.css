@@ -21,11 +21,16 @@
   --line: rgba(244, 238, 226, 0.1);
   --line-strong: rgba(244, 238, 226, 0.2);
 
-  /* --- type colour: unbleached paper, never pure white --- */
+  /* --- type colour: unbleached paper, never pure white ---
+         All four tiers carry real text, so all four have to stay legible.
+         The earlier ramp went down to 0.25 alpha, which composites to
+         2.07:1 on --ink-0 — elegant on screen, unreadable in practice.
+         0.54 is the floor that still clears 4.5:1 on --ink-3, the lightest
+         surface any of this sits on, so the ramp is spaced up from there. */
   --fg-0: #f4eee2;
-  --fg-1: rgba(244, 238, 226, 0.66);
-  --fg-2: rgba(244, 238, 226, 0.42);
-  --fg-3: rgba(244, 238, 226, 0.25);
+  --fg-1: rgba(244, 238, 226, 0.78);
+  --fg-2: rgba(244, 238, 226, 0.66);
+  --fg-3: rgba(244, 238, 226, 0.54);
 
   /* --- accent: reassigned per section at runtime.
          Default is lacquer vermillion, the through-line of her work.

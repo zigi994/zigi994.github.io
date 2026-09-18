@@ -162,6 +162,7 @@
 }
 
 .hero__cue {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--s-3);
@@ -565,8 +566,8 @@
 /* --- 灵犀 LINXI --- */
 .poster--linxi {
   background:
-    radial-gradient(70% 60% at 24% 12%, rgba(139, 123, 255, 0.3), transparent 62%),
-    linear-gradient(170deg, #14131f, #0a0a10);
+    radial-gradient(70% 60% at 24% 12%, color-mix(in oklab, var(--accent) 30%, transparent), transparent 62%),
+    linear-gradient(170deg, #1a1712, var(--ink-0));
 }
 
 .linxi-viz {
@@ -620,9 +621,9 @@
   height: 22%;
   min-height: 26px;
   border-radius: var(--r-sm);
-  border: 1px solid rgba(139, 123, 255, 0.5);
-  background: linear-gradient(150deg, rgba(139, 123, 255, 0.24), rgba(139, 123, 255, 0.06));
-  box-shadow: 0 6px 20px -6px rgba(139, 123, 255, 0.5);
+  border: 1px solid color-mix(in oklab, var(--accent) 50%, transparent);
+  background: linear-gradient(150deg, color-mix(in oklab, var(--accent) 24%, transparent), color-mix(in oklab, var(--accent) 6%, transparent));
+  box-shadow: 0 6px 20px -6px color-mix(in oklab, var(--accent) 50%, transparent);
   transition: transform 800ms var(--ease-out-expo);
 }
 
@@ -898,8 +899,12 @@
   left: 0;
   border-radius: var(--r-full);
   background: var(--accent);
-  translate: var(--x, 0) 0;
-  width: var(--w, 0);
+  /* initFluidTabs overwrites both from measured offsets. The fallbacks put the
+     pill under the first tab — the one marked active in the markup — because a
+     zero-width pill leaves that tab's dark label sitting on --ink-3 at 1.26:1.
+     5px is .ftabs' padding; 25% - 4px approximates one of four tabs inside it. */
+  translate: var(--x, 5px) 0;
+  width: var(--w, calc(25% - 4px));
   transition: translate 620ms var(--spring), width 620ms var(--ease-out-expo);
 }
 
@@ -1184,4 +1189,25 @@
   background: var(--accent);
   transform-origin: left;
   scale: var(--p, 0) 1;
+}
+
+/* ------------------------------------------------------------
+   Touch targets in the interaction lab
+
+   These are real controls, so they get real size rather than an overlay. The
+   demo stages are roomy enough at phone width to absorb it.
+   ------------------------------------------------------------ */
+@media (max-width: 620px) {
+  .odo__ctrl button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ftabs__btn { min-height: 44px; }
+
+  .demo__trigger {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
 }
