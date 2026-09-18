@@ -20,6 +20,32 @@
   pointer-events: none;
 }
 
+/* Only script lifts this curtain, so a script that never arrives must not be
+   able to leave an opaque full-bleed panel over the whole homepage. Two
+   independent guards, because there are two ways to lose the script:
+
+   1. Scripting off entirely — html.scripting is set by an inline head script,
+      before first paint, so the curtain simply never renders. It is its own
+      class rather than the .js that motion.js sets, because .js also gates
+      every reveal rule in base.css: setting that one early would mean a
+      failed motion.js fetch hides the content instead of just not animating.
+   2. Scripting on, home.js missing — the bail-out below lifts the curtain on
+      its own, timed just past that file's own 4.2s ceiling so it only ever
+      fires when home.js is genuinely absent. */
+html:not(.scripting) .intro { display: none; }
+
+.intro {
+  animation: intro-bail 600ms var(--ease-in-out-quint) 4600ms forwards;
+}
+
+@keyframes intro-bail {
+  to {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 .intro__inner {
   display: flex;
   align-items: flex-end;

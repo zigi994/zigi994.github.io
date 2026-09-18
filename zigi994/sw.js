@@ -44,7 +44,11 @@ const ASSETS_PATH = new URL('assets/', SCOPE).pathname;
 const CRITICAL = [OFFLINE_URL];
 
 const PRECACHE = [
-  at('index.html'),
+  /* The scope root, not index.html: that is the URL the sitemap declares,
+     the one a visitor types, and the one every in-site link now points at.
+     Caching both would store the homepage twice under two keys and leave
+     whichever one the visitor actually arrived on a miss. */
+  SCOPE,
   at('work/chashi.html'),
   at('work/linxi.html'),
   at('work/lionup.html'),
@@ -175,11 +179,11 @@ async function networkFirst(event) {
     const cached = await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;
 
-    /* A bare directory URL is a different cache key than the
-       index.html that was precached under it. */
-    if (new URL(request.url).pathname.endsWith('/')) {
-      const index = await caches.match(new URL('index.html', request.url).href);
-      if (index) return index;
+    /* The homepage is cached under the directory URL, so an old bookmark or
+       an external link pointing at index.html is a different key. */
+    if (new URL(request.url).pathname.endsWith('/index.html')) {
+      const root = await caches.match(new URL('./', request.url).href);
+      if (root) return root;
     }
 
     const offline = await caches.match(OFFLINE_URL);

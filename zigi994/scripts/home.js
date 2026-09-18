@@ -13,6 +13,25 @@ function initIntro() {
   const intro = document.getElementById("intro");
   if (!intro) return;
 
+  /* The curtain is a first impression, not a page transition. Coming back to
+     the homepage — nav, breadcrumb, or Back — should land on the work rather
+     than on a counter replaying to 100, which prefetch and View Transitions
+     otherwise deliver instantly and then sit behind a black panel.
+     sessionStorage scopes it to the tab, so a genuinely new visit still gets
+     it; the navigation-type check covers private mode, where it throws. */
+  const nav = performance.getEntriesByType("navigation")[0];
+  let seen = false;
+  try {
+    seen = sessionStorage.getItem("zigi:intro") === "1";
+    sessionStorage.setItem("zigi:intro", "1");
+  } catch (e) {
+    /* storage blocked; fall back to the navigation type alone */
+  }
+  if (seen || (nav && nav.type === "back_forward")) {
+    intro.remove();
+    return;
+  }
+
   const out = intro.querySelector("[data-intro-count]");
   const bar = intro.querySelector(".intro__bar span");
 
