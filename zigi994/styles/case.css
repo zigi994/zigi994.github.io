@@ -587,6 +587,11 @@ html:not(.js) .showcase__step { opacity: 1; }
      measures in ch and tunes them by eye for the same reason; this is that
      number tuned, not a different unit. */
   max-width: 62ch;
+  /* Both halves, because the assumption is a short block too and ragged-right
+     CJK strands its tail: quchong's left column broke after 31 of 33 characters
+     and left 松。 alone on a line. Balance rather than pretty -- pretty only
+     lengthens the last line, and at two lines that still reads as a stub. */
+  text-wrap: balance;
 }
 
 .reframe__row--found .reframe__text {
@@ -598,7 +603,6 @@ html:not(.js) .showcase__step { opacity: 1; }
   line-height: 1.4;
   letter-spacing: -0.02em;
   color: var(--fg-0);
-  text-wrap: balance;
 }
 
 @media (max-width: 860px) {
