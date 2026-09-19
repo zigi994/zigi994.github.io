@@ -66,8 +66,17 @@ function initSmoothScroll() {
 
   const maxScroll = () => html.scrollHeight - window.innerHeight;
 
-  function tick() {
-    current = lerp(current, target, 0.1);
+  /* Per-frame smoothing has to be converted into a rate, or the feel is tied to
+     the panel. A flat 0.1 per frame reached 90% of a flick in 184ms on a 144Hz
+     screen and about 366ms at 60Hz -- the same gesture travelling at two
+     different speeds depending on the monitor. Solving for the same 185ms on a
+     60Hz frame gives 0.185, and raising it to dt/16.667 holds that curve at any
+     refresh rate. The faster end is the reference on purpose: it is the one the
+     easing was evidently tuned against. */
+  const EASE_PER_60HZ_FRAME = 0.185;
+
+  function tick(dt) {
+    current = lerp(current, target, 1 - Math.pow(1 - EASE_PER_60HZ_FRAME, dt / (1000 / 60)));
     if (Math.abs(target - current) < 0.12) {
       current = target;
       active = false;
@@ -512,9 +521,40 @@ async function initImages() {
     const key = img.dataset.lqip;
     if (manifest?.lqip && key && manifest.lqip[key]) {
       const frame = img.closest(".frame");
-      if (frame) {
-        frame.style.backgroundImage = `url("${manifest.lqip[key]}")`;
-        if (frame.classList.contains("frame--pad")) frame.style.backgroundSize = "contain";
+
+      /* One placeholder can only stand in for one image. Where a frame holds a
+         composition -- quchong's hero is five phones arranged on a designed
+         gradient -- the LQIP of whichever img happens to come first is not a
+         preview of the frame, and painting it replaces art direction with a
+         blurred fragment of one child. Leave those frames to their backdrop. */
+      const sole = frame && frame.querySelectorAll("img").length === 1;
+
+      if (sole) {
+        /* Longhands, never the `background` shorthand, and never background-image
+           alone. Eleven frames carry an inline `background: linear-gradient(...)`
+           from the markup; that shorthand has already reset size and repeat to
+           auto/repeat, so assigning only background-image left an 8x19 thumbnail
+           tiling several thousand times -- it read as a woven hatch, not as a
+           blurred photo. Setting all four longhands makes this independent of
+           whatever the inline shorthand did.
+
+           The authored gradient is kept as a second layer rather than
+           overwritten: a frame--pad contains its image instead of covering, so
+           without the gradient beneath, the LQIP would sit on bare transparency. */
+        const authored = frame.style.backgroundImage;
+        const lqip = `url("${manifest.lqip[key]}")`;
+        /* A `background: <colour>` shorthand leaves this longhand serialized as
+           the keyword `initial`, not as `none`. Composing against that yields
+           `url(...), initial`, which is not a valid layer list, so the browser
+           discards the whole assignment and the placeholder vanishes without
+           error -- three frames on yuexing lost theirs exactly that way. */
+        const stacked = authored && !/^(?:none|initial|inherit|unset|revert)$/.test(authored.trim());
+        frame.style.backgroundImage = stacked ? `${lqip}, ${authored}` : lqip;
+        frame.style.backgroundRepeat = "no-repeat";
+        frame.style.backgroundPosition = "center";
+        frame.style.backgroundSize = frame.classList.contains("frame--pad")
+          ? stacked ? "contain, cover" : "contain"
+          : "cover";
       }
     }
     if (img.complete && img.naturalWidth) {

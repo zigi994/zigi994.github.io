@@ -124,7 +124,15 @@
 
 .chapter__head {
   display: grid;
-  grid-template-columns: minmax(0, 0.42fr) minmax(0, 1fr);
+  /* A margin column sized to what it holds, not a share of the page. This was
+     minmax(0, 0.42fr), which against the 1680px shell paid out 426px to carry a
+     two-digit number and a two-character word; .chapter__copy's 60ch measure
+     then left a further 500px unused on the right. 926px of 1680 was empty and
+     the copy sat stranded in a band off to one side -- at a glance the void
+     read as an image that had failed to load, which is how it got reported.
+     Clamped rather than fixed so the marker keeps its distance from the text at
+     every width down to the 860px single-column collapse. */
+  grid-template-columns: clamp(64px, 8vw, 132px) minmax(0, 1fr);
   gap: clamp(var(--s-5), 5vw, var(--s-9));
   align-items: start;
   margin-bottom: var(--s-8);
