@@ -452,7 +452,11 @@ html:not(.js) .showcase__step { opacity: 1; }
 .swatch__chip {
   aspect-ratio: 4 / 3;
   border-radius: var(--r-md);
-  background: var(--c);
+  /* --c is authored inline on each chip, all 21 of them. The fallback is here
+     because without one a chip missing its colour paints nothing at all: an
+     invisible swatch beside a caption still naming a material. Failing to a
+     visible empty panel makes that a thing someone notices. */
+  background: var(--c, var(--ink-2));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 
@@ -503,6 +507,109 @@ html:not(.js) .showcase__step { opacity: 1; }
   font-family: var(--font-cn);
   font-size: var(--t-caption);
   color: var(--fg-2);
+}
+
+/* ============================================================
+   Reframe — the pivot a problem chapter turns on
+   ============================================================ */
+
+/* Chapter 01 of every case states a reframe, and on four of the seven it did so
+   in running prose with nothing beside it. The three that read as finished
+   chapters all have a figure: yuexing and mountain-stay carry plates, toast
+   carries a .flow. The four bare ones are the app and concept projects, where
+   there is no photograph to take -- so the argument itself has to be the
+   figure.
+
+   Side by side rather than stacked, because the panel spans the full shell:
+   a two-row version measured 924px of dead space to the right of the shorter
+   line -- the same void that made .chapter__head read as a failed image
+   before it was sized to its contents. Reading order carries the direction
+   that stacking would otherwise have carried. */
+.reframe {
+  margin-block: clamp(var(--s-6), 6vh, var(--s-8));
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--ink-1);
+  display: grid;
+  /* The finding is set larger and gets the wider half, so that both halves
+     finish their last line at roughly the same depth. */
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+}
+
+.reframe__row {
+  padding: clamp(var(--s-5), 3.2vw, var(--s-7));
+  display: grid;
+  gap: clamp(var(--s-3), 1.5vw, var(--s-5));
+  align-content: start;
+}
+
+/* The divider carries the accent instead of --line: the turn from one half to
+   the other is the entire content of the block, so the seam is the diagram.
+   --accent-text rather than --accent because the per-project accents include
+   quchong's mint and toast's pale tones, which against bone draw a rule that
+   cannot be seen -- and an invisible seam is an invisible diagram. The 4% wash
+   behind it stays on the raw accent, where being barely there is the point. */
+.reframe__row--found {
+  border-inline-start: 2px solid var(--accent-text);
+  background: color-mix(in oklab, var(--accent) 4%, var(--ink-1));
+}
+
+.reframe__tag {
+  font-family: var(--font-cn);
+  font-size: var(--t-caption);
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+/* Matches .chero__fact dt and the homepage's 屏幕 Screen pairing: the Latin
+   half is real Fraunces italic, the variation settings reset because the
+   variable axes carry display weights that this size cannot hold. */
+.reframe__tag i {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: normal;
+  letter-spacing: 0;
+  margin-inline-start: 0.4em;
+}
+
+.reframe__row--found .reframe__tag { color: var(--accent-text); }
+
+.reframe__text {
+  font-family: var(--font-cn);
+  font-size: var(--t-body);
+  line-height: 1.62;
+  color: var(--fg-2);
+  /* ~34 CJK characters. One ch is the width of the zero glyph, about half an em,
+     so a CJK measure in ch buys half the characters the number implies -- 34ch
+     held 19 of them and left 297px of the half empty. The site sets its other
+     measures in ch and tunes them by eye for the same reason; this is that
+     number tuned, not a different unit. */
+  max-width: 62ch;
+}
+
+.reframe__row--found .reframe__text {
+  /* Below --t-display-s, which at 38px pushed this to a third line in the
+     narrower half while the .pquote further down the chapter uses that size to
+     make the chapter's one loud statement. */
+  font-size: clamp(1.375rem, 2.1vw, 1.875rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  color: var(--fg-0);
+  text-wrap: balance;
+}
+
+@media (max-width: 860px) {
+  .reframe { grid-template-columns: minmax(0, 1fr); }
+  .reframe__row--found {
+    border-inline-start: 0;
+    /* --accent-text here too, for the reason given above: raw #9db37f against
+       bone measures 1.93:1, the mixed value 5.74:1. Left as var(--accent) this
+       rule quietly undid the fix at every width below 860px. */
+    border-block-start: 2px solid var(--accent-text);
+  }
 }
 
 /* ============================================================

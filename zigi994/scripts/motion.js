@@ -347,25 +347,62 @@ function initCursor() {
   const ring = root.querySelector(".cursor__ring");
   const text = root.querySelector(".cursor__text");
 
+  /* The centre of the viewport is a placeholder, not a position, and nothing may
+     be painted there. Revealing used to be the mouseenter handler's job, and
+     that event was handled without reading its coordinates -- so a pointer
+     already resting over the page when the document loaded got a ring parked
+     at dead centre while the real pointer was somewhere else. Every in-site
+     navigation lands in exactly that state, because the hand does not move off
+     the link it just clicked. The next click then snapped the ring across the
+     screen, which is the jump this was reported as. */
   let mx = window.innerWidth / 2;
   let my = window.innerHeight / 2;
   let dx = mx, dy = my;
   let rx = mx, ry = my;
-  let visible = false;
+  let placed = false;
+  let shown = false;
 
-  window.addEventListener("mousemove", (e) => {
+  const paint = () => {
+    dot.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+  };
+
+  const show = () => {
+    if (shown) return;
+    shown = true;
+    root.style.opacity = "1";
+  };
+
+  /* Any mouse event will do -- they all carry clientX/clientY -- and the first
+     one snaps all four trailing values instead of easing, so the ring never
+     glides in from the placeholder either. */
+  const track = (e) => {
     mx = e.clientX;
     my = e.clientY;
-    if (!visible) {
-      visible = true;
+    if (!placed) {
+      placed = true;
       dx = rx = mx;
       dy = ry = my;
-      root.style.opacity = "1";
+      /* Land the transform in this same task. The ticker would otherwise not run
+         until the next frame, and revealing first left one frame of an opaque
+         ring still drawn on the placeholder -- the jump made small, not gone. */
+      paint();
     }
-  }, { passive: true });
+    show();
+  };
 
-  document.addEventListener("mouseleave", () => { root.style.opacity = "0"; });
-  document.addEventListener("mouseenter", () => { root.style.opacity = "1"; });
+  /* mouseenter does not bubble, so on document it fires only for the document
+     itself: re-entering the window after leaving it. It is listed here rather
+     than given its own position-less handler precisely because that split was
+     the bug. */
+  ["mousemove", "mousedown", "mouseover", "mouseenter"].forEach((ev) => {
+    document.addEventListener(ev, track, { passive: true });
+  });
+
+  document.addEventListener("mouseleave", () => {
+    shown = false;
+    root.style.opacity = "0";
+  });
   window.addEventListener("mousedown", () => root.classList.add("is-down"));
   window.addEventListener("mouseup", () => root.classList.remove("is-down"));
 
@@ -377,8 +414,7 @@ function initCursor() {
     dy = lerp(dy, my, 0.62);
     rx = lerp(rx, mx, 0.16);
     ry = lerp(ry, my, 0.16);
-    dot.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+    paint();
   });
 
   const HOVER = 'a, button, [data-cursor], input, textarea, select, summary, [role="button"]';

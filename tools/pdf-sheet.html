@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>pdf contact sheet</title></head>
+<body style="background:#111;color:#ddd;font:12px ui-monospace,Consolas,monospace">
+<pre id="log">…</pre>
+<script type="module">
+  /* Every artboard of tools/source.pdf on one sheet, so a deck can be read at a
+     glance before deciding which pages are worth extracting.
+       ?cols= &cell=   grid geometry
+       ?out=           REPO-relative save name
+     rasterize.html does one page at a time and pipeline.html only touches the
+     pages it was told about; neither answers "what is actually in here".
+  */
+  import * as pdfjsLib from './pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';
+
+  const log = (m) => { document.getElementById('log').textContent += '\n' + m; };
+  const params = new URLSearchParams(location.search);
+  const cols = Number(params.get('cols') || 6);
+  const cell = Number(params.get('cell') || 300);
+  const out = params.get('out') || 'tools/_qa/pdf-sheet.png';
+
+  try {
+    const doc = await pdfjsLib.getDocument({ url: './source.pdf' }).promise;
+    const n = doc.numPages;
+    const rows = Math.ceil(n / cols);
+    const sheet = document.createElement('canvas');
+    sheet.width = cols * cell;
+    sheet.height = rows * (cell + 22);
+    const sctx = sheet.getContext('2d');
+    sctx.fillStyle = '#2a2a2a';
+    sctx.fillRect(0, 0, sheet.width, sheet.height);
+
+    for (let i = 1; i <= n; i++) {
+      const page = await doc.getPage(i);
+      const base = page.getViewport({ scale: 1 });
+      /* Fit the tall artboard into the cell, then render at that scale rather
+         than rendering big and downscaling — the text in these screens is small
+         enough that the two do not look the same. */
+      const s = Math.min(cell / base.width, cell / base.height);
+      const vp = page.getViewport({ scale: s });
+      const c = document.createElement('canvas');
+      c.width = Math.ceil(vp.width);
+      c.height = Math.ceil(vp.height);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+      const cx = ((i - 1) % cols) * cell;
+      const cy = Math.floor((i - 1) / cols) * (cell + 22);
+      sctx.drawImage(c, cx + (cell - c.width) / 2, cy + 22);
+      sctx.fillStyle = '#8f8';
+      sctx.font = '13px monospace';
+      sctx.fillText('p' + i, cx + 4, cy + 16);
+      log('rendered p' + i);
+    }
+
+    const blob = await new Promise((r) => sheet.toBlob(r, 'image/png'));
+    await fetch('/_save?name=' + encodeURIComponent(out), { method: 'POST', body: blob });
+    log('DONE ' + out + '  (' + n + ' pages)');
+  } catch (err) {
+    log('ERROR: ' + err.message);
+  }
+</script>
+</body>
+</html>

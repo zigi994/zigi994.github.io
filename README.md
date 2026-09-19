@@ -77,10 +77,24 @@ LQIP 占位图，最后写入 `assets/manifest.json`。本机没有 ImageMagick�
 重新生成资源：启动本地服务后依次打开
 `/__tools/pipeline.html`、`/__tools/cutout.html`、`/__tools/crop.html`。
 
+抽取之前先把源文件复制成 `tools/source.pdf`（`.ai` 存盘时勾了 PDF 兼容就能直接读），
+打开 `/__tools/pdf-sheet.html` 看一张总览图 —— 它回答「这个文件里到底有什么」。
+趣宠的源文件有 12 个画板，其中 5 个是空的，而案例页一直写着「12 张界面稿」。
+
 ## 自查
 
 `/__tools/audit.html` 会在多个宽度下逐页检查 JS 报错、失效图片、横向溢出与
-对比度；`/__tools/measure.html` 输出关键元素的实际盒模型。
+对比度。对比度默认只能按祖先背景估算，要拿到真实数值就用
+`tools/audit-drive.ps1` 驱动：它通过 CDP 截图，把文字背后**实际绘制的像素**
+喂回页面，因此渐变、照片、canvas 与混合模式之上的对比度也是准的。
+
+`tools/lint-tokens.ps1` 查的是审计查不到的另一类问题 —— 写错了但正好被后面的
+覆盖规则掩盖住的声明。它有三条规则：浅色页上把 `--accent` 当前景色用（该用
+`--accent-text`）、同一选择器在基础规则与自己的媒体查询里用了不同的 accent
+层级、以及引用了没人声明又没给兜底值的自定义属性。`-SelfTest` 会先拿已知缺陷
+验证规则本身能否命中。退出码等于错误数，可以用来拦提交。
+
+`/__tools/measure.html` 输出关键元素的实际盒模型。
 `tools/shot.ps1` 是无头截图脚本（会自己回收进程和临时配置目录）。
 
 ## 发布
