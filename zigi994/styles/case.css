@@ -338,17 +338,41 @@
   align-content: center;
   gap: var(--s-4);
   padding-block: var(--s-7);
-  opacity: 0.34;
-  transition: opacity var(--d-slow) var(--ease-out-expo);
 }
 
-.showcase__step.is-active { opacity: 1; }
+/* The focus device is colour, not opacity. A composited opacity multiplies into
+   each token's own alpha — --fg-1/2/3 are one ink at 0.82/0.72/0.64 — so the
+   dim compounded twice and the body copy sat at 1.83:1. Sweeping it (see
+   tools/dim-floor.ps1) the first value where all four text roles cleared AA was
+   0.92, by which point nothing read as dimmed: the effect and the requirement
+   ruled each other out. Demoting each role one token tier instead keeps every
+   step legible on its own — worst role 5.1:1 — while the active step still
+   separates, because the label also swaps grey for accent.
 
-/* Only case.js promotes a step, so without scripting every one of them
-   stays dimmed and 23 text runs fall under 4.5:1 — the dimming is a
-   focus device, not a way to hide anything. Matches the .js gating in
-   base.css: nothing that reduces legibility may outlive its script. */
-html:not(.js) .showcase__step { opacity: 1; }
+   Full strength is the base state so that no-JS and the stacked layout below
+   get it without an override; only a scripted, side-by-side stepper demotes. */
+@media (min-width: 901px) {
+  /* Two tiers down, not one. At one tier the heading carried almost no visible
+     difference, and the heading is the largest thing in the step, so it is what
+     the eye reads the focus from -- the label swapping accent for grey is a
+     small cue by itself. --fg-2 is still 6.7:1 here. */
+  html.js .showcase__step:not(.is-active) h3 { color: var(--fg-2); }
+  html.js .showcase__step:not(.is-active) > .label,
+  html.js .showcase__step:not(.is-active) p,
+  html.js .showcase__step:not(.is-active) li { color: var(--fg-3); }
+  html.js .showcase__step:not(.is-active) li::before { background: var(--fg-3); }
+}
+
+.showcase__step > .label,
+.showcase__step h3,
+.showcase__step p,
+.showcase__step li {
+  transition: color var(--d-slow) var(--ease-out-expo);
+}
+
+.showcase__step li::before {
+  transition: background-color var(--d-slow) var(--ease-out-expo);
+}
 
 .showcase__step h3 {
   font-family: var(--font-cn);
@@ -388,7 +412,7 @@ html:not(.js) .showcase__step { opacity: 1; }
 @media (max-width: 900px) {
   .showcase { grid-template-columns: 1fr; }
   .showcase__sticky { height: auto; position: static; margin-bottom: var(--s-7); }
-  .showcase__step { min-height: 0; opacity: 1; padding-block: var(--s-5); }
+  .showcase__step { min-height: 0; padding-block: var(--s-5); }
 }
 
 /* ============================================================
