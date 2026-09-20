@@ -182,7 +182,10 @@
   gap: 4px;
 }
 
-.sleeve__band img { width: 34%; aspect-ratio: 215 / 207; object-fit: contain; }
+/* Ratio matches the lion-head.svg viewBox, so the box is right before the file
+   arrives. It tracks the art, not a round number -- retracing the mark changes
+   it. */
+.sleeve__band img { width: 34%; aspect-ratio: 214.2 / 216.9; object-fit: contain; }
 
 .sleeve__band b {
   font-family: var(--font-cn);

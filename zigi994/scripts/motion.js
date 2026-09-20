@@ -450,6 +450,72 @@ function initCursor() {
 }
 
 /* ------------------------------------------------------------
+   Lion stage — the IP mark as the ground of its own case pages
+   ------------------------------------------------------------ */
+async function initLionStage() {
+  const stage = document.querySelector("[data-lion]");
+  if (!stage) return;
+
+  /* Inlined rather than used as <img> because the sway needs the crest and the
+     brow to be separate elements, and fetched rather than written into the
+     markup because it is 30 KB of path data that the service worker already
+     keeps as one cached file for both pages that want it. */
+  let markup;
+  try {
+    const res = await fetch(stage.dataset.lion, { cache: "force-cache" });
+    if (!res.ok) return;
+    markup = await res.text();
+  } catch {
+    return; // Decorative: a failed fetch has to leave the page as it was.
+  }
+
+  const drift = document.createElement("div");
+  drift.className = "lionstage__drift";
+  const idle = document.createElement("div");
+  idle.className = "lionstage__idle";
+  idle.innerHTML = markup;
+
+  const art = idle.querySelector("svg");
+  if (!art) return;
+  art.classList.add("lionstage__art");
+  /* The stage is already aria-hidden, but the SVG carries no title and must not
+     be a tab stop in any browser that still treats one as focusable. */
+  art.setAttribute("focusable", "false");
+
+  drift.append(idle);
+  stage.append(drift);
+  stage.classList.add("is-ready");
+
+  if (reduceMotion.matches) return;
+
+  /* Drift is the only thing JS moves, and it is the one layer no keyframe
+     touches -- see the note in case.css about why that separation is strict.
+
+     scrollHeight is read on resize rather than per frame: it forces layout, and
+     doing that inside the ticker is how a decorative background starts costing
+     real frames on a 12000px case page. */
+  const DRIFT = 0.09;
+  let travel = 0;
+  const measure = () => {
+    travel = document.documentElement.scrollHeight - window.innerHeight;
+  };
+  measure();
+  window.addEventListener("resize", measure, { passive: true });
+
+  let last = null;
+  ticker.add(() => {
+    const progress = travel > 0 ? clamp(window.scrollY / travel, 0, 1) : 0;
+    // Centred on the page middle, so the mark sits where it was designed to at
+    // half scroll and leans the other way at each end.
+    const y = (0.5 - progress) * DRIFT * window.innerHeight;
+    const next = y.toFixed(2);
+    if (next === last) return; // Idle pages should not rewrite the same matrix.
+    last = next;
+    drift.style.transform = `translate3d(0, ${next}px, 0)`;
+  });
+}
+
+/* ------------------------------------------------------------
    Magnetic elements — subtle pull toward the pointer
    ------------------------------------------------------------ */
 function initMagnetic() {
@@ -815,6 +881,7 @@ function boot() {
   initReveal();
   initImages();
   initCursor();
+  initLionStage();
   initMagnetic();
   initTilt();
   initParallax();

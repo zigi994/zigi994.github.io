@@ -811,3 +811,132 @@
 :root[data-theme="light"] .swatch__chip {
   box-shadow: inset 0 0 0 1px rgba(27, 23, 18, 0.18);
 }
+
+/* ============================================================
+   Lion stage — the IP character as the page's own ground
+
+   Both lion projects get the mark itself behind the whole case, large and
+   cropped by the viewport rather than sitting in a box. It is the traced
+   lion-head.svg, so it can be this big without going soft.
+
+   multiply, not a plain alpha. On bone, a translucent overlay reads as a film
+   laid *on* the page, while multiply reads as pigment that soaked into it —
+   which is the difference between a watermark and a sticker, and the reason
+   this can be subtle and still feel deliberate. It only darkens, so it spends
+   the same contrast budget the hero wash already spends; --lion-ink is what
+   that budget bought, measured rather than picked.
+
+   Every element here owns exactly one transform: the stage positions, the
+   drift layer takes the scroll offset from JS, the idle layer breathes, the art
+   tilts, and the two mane paths sway. Individual transform properties always
+   compose before `transform`, so sharing an element between a keyframe and a
+   JS write is how the custom cursor ended up 200px from the pointer.
+   ============================================================ */
+
+.lionstage {
+  position: fixed;
+  inset: 0;
+  /* Behind the document's own content but still above the page background. */
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  /* Nothing inside can affect layout or paint outside this box, so the whole
+     layer stays a single composited surface while the page scrolls over it. */
+  contain: strict;
+}
+
+.lionstage__drift,
+.lionstage__idle {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.lionstage__art {
+  position: absolute;
+  /* Big enough to be furniture, small enough to still read as a face. An
+     earlier pass ran it to 62vw and hung it 14vw off the edge: at that size the
+     only parts left on screen were the crest and two brow arcs, which read as
+     abstract blobs. The character has to be recognisable as the character.
+     Bounded on both axes so a short landscape window cannot crop the chin. */
+  width: min(46vw, 58vh);
+  height: auto;
+  right: -4vw;
+  top: 50%;
+  translate: 0 -50%;
+  --lion-ink: 0.12;
+  opacity: var(--lion-ink);
+  mix-blend-mode: multiply;
+  will-change: transform;
+}
+
+/* On the dark homepage-style ground the same art has to lighten instead, or
+   multiply against near-black leaves nothing at all. Not used today; here so
+   that dropping the stage onto a dark page degrades to faint rather than to
+   invisible. */
+:root:not([data-theme="light"]) .lionstage__art {
+  mix-blend-mode: screen;
+  --lion-ink: 0.07;
+}
+
+@media (max-width: 720px) {
+  /* On a phone the text owns the full width, so there is no margin for the mark
+     to live in -- it can only sit under the reading column. It goes lighter and
+     further off the edge, showing a shoulder of the head rather than all of it. */
+  .lionstage__art {
+    width: 92vw;
+    right: -30vw;
+    --lion-ink: 0.08;
+  }
+}
+
+/* Three periods that do not divide into each other, so the combined motion
+   takes minutes to repeat and never reads as a loop. */
+@keyframes lion-breathe {
+  from { transform: translateY(-0.6%) scale(1); }
+  to   { transform: translateY(0.6%) scale(1.014); }
+}
+
+@keyframes lion-tilt {
+  from { transform: rotate(-2.1deg); }
+  to   { transform: rotate(2.1deg); }
+}
+
+@keyframes lion-sway {
+  from { transform: rotate(-3.4deg) translateY(-0.5%); }
+  to   { transform: rotate(3.4deg) translateY(0.5%); }
+}
+
+html.js .lionstage.is-ready .lionstage__idle {
+  animation: lion-breathe 9.2s var(--ease-in-out-sine, ease-in-out) infinite alternate;
+}
+
+html.js .lionstage.is-ready .lionstage__art {
+  animation: lion-tilt 13.7s var(--ease-in-out-sine, ease-in-out) infinite alternate;
+}
+
+/* The crest and the brow are the only pale green and the only orange in the
+   mark, so colour separation already gave them their own paths. Lagging them
+   behind the head is what a lion-dance head's fringe actually does; without it
+   the whole thing moves like a decal. transform-box: fill-box so the origin is
+   each path's own centre rather than the viewBox corner. */
+html.js .lionstage.is-ready #ce7ed9f,
+html.js .lionstage.is-ready #cf39800 {
+  transform-box: fill-box;
+  transform-origin: 50% 88%;
+  animation: lion-sway 11.3s var(--ease-in-out-sine, ease-in-out) infinite alternate;
+}
+
+html.js .lionstage.is-ready #cf39800 { animation-delay: -1.6s; }
+html.js .lionstage.is-ready #ce7ed9f { animation-duration: 15.1s; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The mark stays — it is page furniture, not motion — but nothing moves,
+     including the scroll drift, which initLionStage declines to start. */
+  html.js .lionstage.is-ready .lionstage__idle,
+  html.js .lionstage.is-ready .lionstage__art,
+  html.js .lionstage.is-ready #ce7ed9f,
+  html.js .lionstage.is-ready #cf39800 {
+    animation: none;
+  }
+}

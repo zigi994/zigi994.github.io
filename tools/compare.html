@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>compare</title></head>
+<body style="margin:0">
+<div id="row" style="display:flex;align-items:flex-start;gap:8px"></div>
+<pre id="log" style="font:12px monospace;color:#333;padding:8px;margin:0"></pre>
+<script type="module">
+/* Raster source beside its trace at the same size, so the trace can be judged by
+   eye rather than by point count. ?scale= sets the multiple of the source's
+   natural size -- 3 is roughly the worst the site asks of the 388px original. */
+const q = new URLSearchParams(location.search);
+const scale = Number(q.get('scale') || 3);
+// This page is served from /__tools/, the site from /. So the raster source is
+// relative and anything published is an absolute site path.
+const a = q.get('a') || 'src/ip-logo.png';
+const b = q.get('b') || '/assets/ip/lion.svg';
+/* ?bg= exists because a trace of artwork that sat on white hides its own
+   mistakes on white. Anything the background flood fill wrongly kept as an
+   opaque white fill -- the counters inside 醒 and 香 are the obvious candidates,
+   being white regions the border cannot reach -- is invisible until the thing is
+   put on a colour, which is exactly what one of its two uses does. */
+document.body.style.background = q.get('bg') || '#fff';
+const log = (m) => { document.getElementById('log').textContent += m + '\n'; };
+
+// A site-absolute path is served from the site root, anything else from /__tools/.
+const url = (p) => (p.startsWith('/') ? p : './' + p);
+const img = new Image();
+img.src = url(a);
+await img.decode();
+const W = Math.round(img.naturalWidth * scale), H = Math.round(img.naturalHeight * scale);
+
+const res = await fetch(url(b));
+if (!res.ok) { log(`ERROR ${b} -> ${res.status}`); throw new Error(b); }
+const svgText = await res.text();
+const row = document.getElementById('row');
+
+const left = document.createElement('img');
+left.src = url(a);
+left.style.cssText = `width:${W}px;height:${H}px`;
+
+const right = document.createElement('div');
+right.innerHTML = svgText;
+const svg = right.firstElementChild;
+svg.setAttribute('width', W);
+svg.setAttribute('height', H);
+
+row.append(left, right);
+await new Promise((r) => setTimeout(r, 400));
+log(`left: ${a} @${scale}x (${img.naturalWidth}x${img.naturalHeight} source)`);
+log(`right: ${b}  ${(svgText.length / 1024).toFixed(1)} KB, ${(svgText.match(/<path/g) || []).length} paths`);
+log('DONE');
+</script>
+</body>
+</html>

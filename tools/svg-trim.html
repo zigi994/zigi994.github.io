@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>svg-trim</title></head>
+<body style="margin:0;background:#888">
+<pre id="log" style="font:12px monospace;color:#fff;padding:8px;margin:0"></pre>
+<div id="stage"></div>
+<script type="module">
+/* Shrink an SVG's viewBox to its ink.
+
+   A trace inherits the source bitmap's frame, so it carries whatever margin the
+   original screenshot happened to have -- here about 8% of the width on one side
+   and none on the other, which shows up as a logo that looks off-centre in any
+   box it is dropped into. Trimming to the union of the rendered geometry makes
+   the file's edges mean something, and the padding becomes the page's decision
+   rather than a leftover.
+
+     ?in=  ?out=   site-absolute or /__tools/-relative paths
+     ?pad=         margin to re-add, in percent of the trimmed longer side
+     ?square=1     expand the short axis so the viewBox is 1:1
+
+   getBBox is used rather than parsing path data because it is the browser's own
+   answer for where the geometry actually lands, curve control points included. */
+const q = new URLSearchParams(location.search);
+const inp = q.get('in') || '/assets/ip/lion.svg';
+const out = q.get('out') || 'zigi994/assets/ip/lion.svg';
+const pad = Number(q.get('pad') || 0);
+const square = q.get('square') === '1';
+const log = (m) => { document.getElementById('log').textContent += m + '\n'; };
+
+const res = await fetch(inp);
+if (!res.ok) { log(`ERROR ${inp} -> ${res.status}`); throw new Error(inp); }
+let text = await res.text();
+
+const host = document.getElementById('stage');
+host.innerHTML = text;
+const svg = host.firstElementChild;
+const was = svg.getAttribute('viewBox');
+svg.setAttribute('width', '800');
+svg.removeAttribute('height');
+await new Promise((r) => requestAnimationFrame(r));
+
+let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+for (const el of svg.querySelectorAll('path, circle, rect, ellipse, polygon, g')) {
+  let b;
+  try { b = el.getBBox(); } catch { continue; }
+  if (!b || (!b.width && !b.height)) continue;
+  x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y);
+  x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height);
+}
+if (!isFinite(x0)) { log('ERROR no geometry'); throw new Error('empty');
+}
+
+let w = x1 - x0, h = y1 - y0;
+if (pad) {
+  const m = Math.max(w, h) * (pad / 100);
+  x0 -= m; y0 -= m; w += m * 2; h += m * 2;
+}
+if (square) {
+  const s = Math.max(w, h);
+  x0 -= (s - w) / 2; y0 -= (s - h) / 2;
+  w = s; h = s;
+}
+const r = (v) => Math.round(v * 10) / 10;
+const box = `${r(x0)} ${r(y0)} ${r(w)} ${r(h)}`;
+text = text.replace(/viewBox="[^"]*"/, `viewBox="${box}"`);
+
+await fetch('/_save?name=' + encodeURIComponent(out), { method: 'POST', body: new Blob([text], { type: 'image/svg+xml' }) });
+log(`${inp}`);
+log(`  viewBox  ${was}  ->  ${box}`);
+log(`  ink      ${r(x1 - x0)} x ${r(y1 - y0)} before padding`);
+log(`  wrote    ${out}`);
+log('DONE');
+</script>
+</body>
+</html>

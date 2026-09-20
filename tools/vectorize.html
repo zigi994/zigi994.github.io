@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>vectorize</title></head>
+<body style="background:#111;color:#ddd;font:12px ui-monospace,Consolas,monospace;margin:0;padding:16px">
+<pre id="log">?</pre>
+<div id="art"></div>
+<script type="module">
+/* Raster logo -> multi-colour SVG, in the browser, because this machine has no
+   potrace/vtracer/ImageMagick/Python and every other asset job here already
+   runs in headless Chrome.
+
+   The source is a 388x340 *screenshot* of the ???? lion mark -- there is no
+   vector original -- and the site paints it into a 532px box, so on a retina
+   display it is asked for 2.74x the pixels it has. No resample invents that
+   detail; tracing the shapes does, because the artwork is flat colour with hard
+   edges, which is exactly what traces well.
+
+     ?stage=palette   report the colour census and stop
+     ?stage=svg       trace and write the SVG
+     ?src=  ?out=     repo-relative paths
+     ?ss=             supersample factor before masking (default 4)
+     ?eps=            Douglas-Peucker tolerance in source px (default 0.6)
+     ?smooth=         0..1 curve tension, 0 emits polygons (default 0.85)
+     ?minarea=        drop specks smaller than this many source px (default 12)
+
+   Masks are built on a supersampled copy, not on the source grid. Thresholding
+   at native size throws away the one piece of sub-pixel information the source
+   has: an edge pixel that is half orange and half white says the true edge runs
+   through the middle of it. Discarding that and then running a smooth curve
+   through the surviving staircase produced a visible wobble along every edge,
+   and pushed dark strokes heavier -- a 50/50 green/white pixel is a hair closer
+   to the green, so every glyph gained half a pixel on each side. Enlarging with
+   smoothing first puts the boundary where the antialiasing says it is, and the
+   traced coordinates are divided back down at the end.
+
+   Deliberately not one-shot: a single trace over a colour image muddies the
+   palette, because every antialiased edge becomes its own intermediate hex.
+   Each brand colour gets its own binary mask, and every pixel is snapped to the
+   nearest palette entry before masking, so the edges land on one side or the
+   other instead of inventing a third colour. */
+
+const log = (m) => { document.getElementById('log').textContent += '\n' + m; };
+const q = new URLSearchParams(location.search);
+const stage = q.get('stage') || 'palette';
+const src = q.get('src') || 'src/ip-logo.png';
+const out = q.get('out') || 'zigi994/assets/ip/lion.svg';
+/* ?clip=x0,y0,x1,y1 in source pixels keeps only loops centred inside that box.
+
+   Needed because the groups are merged by colour, so dropping the one dark green
+   path to get a head without the wordmark left the glyphs' antialiased rims
+   behind -- those had resolved to cream, and cream is the face. The result was a
+   clean head trailing one stray cream fragment where ? used to be, which then
+   dragged the trimmed viewBox down with it. */
+const CLIP = (q.get('clip') || '').split(',').map(Number);
+const clipped = CLIP.length === 4 && CLIP.every((v) => Number.isFinite(v));
+
+const SS = Number(q.get('ss') || 4);
+const EPS = Number(q.get('eps') || 0.6);
+const SMOOTH = Number(q.get('smooth') ?? 0.85);
+const MIN_AREA = Number(q.get('minarea') || 12);
+
+const img = new Image();
+img.src = './' + src;
+await img.decode();
+const W = img.naturalWidth, H = img.naturalHeight;
+const cv = document.createElement('canvas');
+cv.width = W; cv.height = H;
+const ctx = cv.getContext('2d', { willReadFrequently: true });
+ctx.drawImage(img, 0, 0);
+const px = ctx.getImageData(0, 0, W, H).data;
+log(`source ${src}  ${W}x${H}`);
+
+/* ---------- colour census ----------
+   Bucket at 5 bits per channel first: a screenshot of flat art still has
+   hundreds of near-duplicate hexes from resampling, and the real palette is
+   whatever survives being merged into its neighbours. */
+const bucket = new Map();
+for (let i = 0; i < px.length; i += 4) {
+  if (px[i + 3] < 128) continue;
+  const k = ((px[i] >> 3) << 10) | ((px[i + 1] >> 3) << 5) | (px[i + 2] >> 3);
+  const b = bucket.get(k);
+  if (b) { b.n++; b.r += px[i]; b.g += px[i + 1]; b.b += px[i + 2]; }
+  else bucket.set(k, { n: 1, r: px[i], g: px[i + 1], b: px[i + 2] });
+}
+let cand = [...bucket.values()]
+  .map((b) => ({ n: b.n, rgb: [Math.round(b.r / b.n), Math.round(b.g / b.n), Math.round(b.b / b.n)] }))
+  .sort((a, b) => b.n - a.n);
+
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
+/* The per-pixel searches below run over ~132k pixels times the palette size, and
+   doing that through dist() allocated a throwaway array per pixel per candidate.
+   On an idle machine it finished in seconds; sharing the CPU with another
+   headless Chrome it had not finished in four minutes. Squared distance on
+   scalars needs no allocation and no sqrt, and ordering by it is the same
+   ordering. */
+const nearestTo = (pal, r, g, b) => {
+  let bi = 0, bd = Infinity;
+  for (let k = 0; k < pal.length; k++) {
+    const c = pal[k].rgb;
+    const dr = c[0] - r, dg = c[1] - g, db = c[2] - b;
+    const d = dr * dr + dg * dg + db * db;
+    if (d < bd) { bd = d; bi = k; }
+  }
+  return bi;
+};
+
+// Merge anything within 34 of a brighter-weighted entry already kept. Chosen by
+// looking at the census: the real fills sit 60+ apart, resampling debris ~15.
+const palette = [];
+for (const c of cand) {
+  const near = palette.find((p) => dist(p.rgb, c.rgb) < 34);
+  if (near) { near.n += c.n; continue; }
+  if (c.n < W * H * 0.0015) continue;   // below 0.15% is an edge artefact, not a fill
+  palette.push({ ...c });
+}
+const hex = ([r, g, b]) => '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+
+/* Drop the edge colours that survived bucketing.
+
+   The test is spatial, not chromatic. Asking whether a colour sits between two
+   others in RGB does not work: the pink cheeks land 12 from the line joining the
+   cream face to the red, and the yellow crest 11 from cream-to-orange, because a
+   designer's palette is full of legitimate tints that lie between other tints.
+   It threw away two real fills.
+
+   What actually separates them is that an antialiased colour only ever exists as
+   a one-pixel seam between two regions, so it has no interior: erode its mask by
+   a single pixel and almost nothing is left. A real fill is a blob -- even the
+   smallest one here, a cheek, is a ~20px ellipse -- and mostly survives.
+
+   Dropped entries need no reassignment: every pixel is snapped to the nearest
+   *kept* colour later, which sends seam pixels to whichever side they were
+   closer to all along. */
+// Label once against the full census, then erode per index from that. Rebuilding
+// the mask per colour meant a nearest-colour search over every pixel for every
+// entry, and splicing the palette mid-loop shifted the indices being tested.
+const census = new Int16Array(W * H).fill(-1);
+for (let i = 0, p = 0; i < px.length; i += 4, p++) {
+  if (px[i + 3] < 128) continue;
+  census[p] = nearestTo(palette, px[i], px[i + 1], px[i + 2]);
+}
+const solidity = palette.map(() => ({ before: 0, after: 0 }));
+for (let y = 1; y < H - 1; y++) {
+  for (let x = 1; x < W - 1; x++) {
+    const p = y * W + x;
+    const k = census[p];
+    if (k < 0) continue;
+    const s = solidity[k];
+    s.before++;
+    if (census[p - 1] === k && census[p + 1] === k && census[p - W] === k && census[p + W] === k) s.after++;
+  }
+}
+palette.forEach((p, k) => { p.solid = solidity[k].before ? solidity[k].after / solidity[k].before : 0; });
+const blends = [];
+for (let i = palette.length - 1; i >= 0; i--) {
+  if (palette[i].solid < 0.18) blends.push(...palette.splice(i, 1));
+}
+
+const total = palette.reduce((s, p) => s + p.n, 0);
+log(`\npalette (${palette.length} fills, ${(total / (W * H) * 100).toFixed(1)}% of opaque pixels)`);
+palette.forEach((p, i) => log(`  ${String(i).padStart(2)}  ${hex(p.rgb)}  ${String(p.n).padStart(7)}px  ${(p.n / (W * H) * 100).toFixed(2)}%   solid ${(p.solid * 100).toFixed(0)}%`));
+if (blends.length) {
+  log(`\ndropped as edge blends (${blends.length})`);
+  blends.forEach((p) => log(`  ${hex(p.rgb)}  ${String(p.n).padStart(7)}px  ${(p.n / (W * H) * 100).toFixed(2)}%   solid ${(p.solid * 100).toFixed(0)}%`));
+}
+
+/* Everything from here works on the enlarged copy. The census above wanted the
+   source grid -- colour shares and the one-pixel seam test are both properties
+   of the original sampling -- but boundaries want as much precision as the
+   antialiasing can give. */
+const SW = Math.round(W * SS), SH = Math.round(H * SS);
+const scv = document.createElement('canvas');
+scv.width = SW; scv.height = SH;
+const sctx = scv.getContext('2d', { willReadFrequently: true });
+sctx.imageSmoothingEnabled = true;
+sctx.imageSmoothingQuality = 'high';
+sctx.drawImage(img, 0, 0, SW, SH);
+const spx = sctx.getImageData(0, 0, SW, SH).data;
+log(`\nsupersampled to ${SW}x${SH} (${SS}x)`);
+
+/* Which white is the sheet and which is the drawing.
+
+   Default is that none of it is drawing. The white inside the ears and inside
+   the counters of ? and ? is not white ink, it is the page showing through, so
+   it has to come out transparent -- the cutout this replaces had it that way.
+
+   White stays in the palette as a nearest-colour target and is simply not
+   emitted as a path. That distinction is the whole thing, and two worse versions
+   came first:
+
+     - Flood filling from the border and keeping enclosed white as a fill. Looked
+       perfect on a white page, then put white slugs inside every glyph the moment
+       the mark was laid on the red next-project tile.
+     - Removing white from the palette outright. Every antialiased rim, with no
+       white left to land on, then resolved to the nearest remaining colour --
+       cream -- and the glyphs came back wearing a cream halo.
+
+   Keeping it as a target but not as output is what sends a half-white rim pixel
+   to transparent and a half-cream one to cream, which is what each of them is.
+
+   ?white=interior restores the flood fill, for a mark that really does use white
+   as ink. Nothing here does, so it is not the default. */
+const WHITE_MODE = q.get('white') || 'drop';
+const isNearWhite = (r, g, b) => r > 228 && g > 228 && b > 228;
+const bgWhite = new Uint8Array(SW * SH);
+const isPale = (p) => {
+  const i = p * 4;
+  return spx[i + 3] < 128 || isNearWhite(spx[i], spx[i + 1], spx[i + 2]);
+};
+if (WHITE_MODE === 'interior') {
+  const stack = [];
+  for (let x = 0; x < SW; x++) { stack.push(x, (SH - 1) * SW + x); }
+  for (let y = 0; y < SH; y++) { stack.push(y * SW, y * SW + SW - 1); }
+  while (stack.length) {
+    const p = stack.pop();
+    if (bgWhite[p] || !isPale(p)) continue;
+    bgWhite[p] = 1;
+    const x = p % SW, y = (p - x) / SW;
+    if (x > 0) stack.push(p - 1);
+    if (x < SW - 1) stack.push(p + 1);
+    if (y > 0) stack.push(p - SW);
+    if (y < SH - 1) stack.push(p + SW);
+  }
+}
+const bgCount = bgWhite.reduce((s, v) => s + v, 0);
+log(WHITE_MODE === 'interior'
+  ? `background: ${(bgCount / (SW * SH) * 100).toFixed(1)}% reachable from the border`
+  : 'background: near-white is transparent but stays a nearest-colour target');
+
+if (stage === 'palette') {
+  // Show the quantised result beside the source so the eye can confirm the
+  // palette before any tracing happens.
+  const prev = document.createElement('canvas');
+  prev.width = W * 2; prev.height = H;
+  const pc = prev.getContext('2d');
+  pc.drawImage(cv, 0, 0);
+  const qd = pc.createImageData(W, H);
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i + 3] < 128) { qd.data[i + 3] = 0; continue; }
+    const best = palette[nearestTo(palette, px[i], px[i + 1], px[i + 2])].rgb;
+    qd.data[i] = best[0]; qd.data[i + 1] = best[1]; qd.data[i + 2] = best[2]; qd.data[i + 3] = 255;
+  }
+  pc.putImageData(qd, W, 0);
+  prev.style.cssText = 'background:#fff;max-width:100%;image-rendering:pixelated';
+  document.getElementById('art').appendChild(prev);
+  const blob = await new Promise((r) => prev.toBlob(r, 'image/png'));
+  await fetch('/_save?name=' + encodeURIComponent('tools/_qa/palette.png'), { method: 'POST', body: blob });
+  log('\nwrote tools/_qa/palette.png  (source | quantised)');
+  log('DONE');
+} else {
+  /* ---------- assign, mask, trace ---------- */
+
+  // Nearest-palette label per pixel. -1 = transparent/background.
+  const label = new Int16Array(SW * SH).fill(-1);
+  for (let i = 0, p = 0; i < spx.length; i += 4, p++) {
+    if (spx[i + 3] < 128 || bgWhite[p]) continue;
+    label[p] = nearestTo(palette, spx[i], spx[i + 1], spx[i + 2]);
+  }
+
+  /* Trace every boundary loop of a binary mask.
+
+     Walks the edges between inside and outside pixels rather than the pixel
+     centres, so the loop is the actual shape outline. Every loop is emitted --
+     outer contours and the holes inside them alike -- and the path uses
+     fill-rule: evenodd, which punches the holes out without having to work out
+     which loop encloses which. That matters here: the eye whites sit inside the
+     orange brow, and the counters of ? and ? sit inside their strokes. */
+  const trace = (mask) => {
+    // Directed edges, keyed by start point, so inside is always on the left.
+    const edges = new Map();
+    const key = (x, y) => x + ',' + y;
+    const add = (x1, y1, x2, y2) => {
+      const k = key(x1, y1);
+      if (!edges.has(k)) edges.set(k, []);
+      edges.get(k).push([x2, y2]);
+    };
+    const on = (x, y) => (x >= 0 && y >= 0 && x < SW && y < SH && mask[y * SW + x] === 1);
+    for (let y = 0; y < SH; y++) {
+      for (let x = 0; x < SW; x++) {
+        if (!on(x, y)) continue;
+        if (!on(x, y - 1)) add(x, y, x + 1, y);              // top    ->
+        if (!on(x + 1, y)) add(x + 1, y, x + 1, y + 1);      // right  v
+        if (!on(x, y + 1)) add(x + 1, y + 1, x, y + 1);      // bottom <-
+        if (!on(x - 1, y)) add(x, y + 1, x, y);              // left   ^
+      }
+    }
+    const loops = [];
+    while (edges.size) {
+      const startK = edges.keys().next().value;
+      let [cx, cy] = startK.split(',').map(Number);
+      const loop = [[cx, cy]];
+      for (;;) {
+        const k = key(cx, cy);
+        const outs = edges.get(k);
+        if (!outs || !outs.length) break;
+        // Prefer continuing straight, so the rectilinear staircase chains
+        // predictably instead of zig-zagging between touching corners.
+        let pick = 0;
+        if (outs.length > 1 && loop.length > 1) {
+          const [px0, py0] = loop[loop.length - 2];
+          const dx = cx - px0, dy = cy - py0;
+          const i = outs.findIndex(([nx, ny]) => nx - cx === dx && ny - cy === dy);
+          if (i >= 0) pick = i;
+        }
+        const [nx, ny] = outs.splice(pick, 1)[0];
+        if (!outs.length) edges.delete(k);
+        cx = nx; cy = ny;
+        if (key(cx, cy) === startK) { break; }
+        loop.push([cx, cy]);
+      }
+      if (loop.length > 3) loops.push(loop);
+    }
+    return loops;
+  };
+
+  // Shoelace area, for dropping specks and for reporting.
+  const area = (pts) => {
+    let a = 0;
+    for (let i = 0, n = pts.length; i < n; i++) {
+      const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % n];
+      a += x1 * y2 - x2 * y1;
+    }
+    return Math.abs(a) / 2;
+  };
+
+  // Collinear merge first (cheap, removes most staircase points exactly), then
+  // Douglas-Peucker for the rest.
+  const dedupe = (pts) => {
+    const o = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const n = o.length;
+      if (n >= 2) {
+        const [ax, ay] = o[n - 2], [bx, by] = o[n - 1], [cx, cy] = pts[i];
+        if ((bx - ax) * (cy - by) === (by - ay) * (cx - bx)) { o[n - 1] = pts[i]; continue; }
+      }
+      o.push(pts[i]);
+    }
+    return o;
+  };
+  const rdp = (pts, eps) => {
+    if (pts.length < 3) return pts;
+    let far = 0, fd = -1;
+    const [ax, ay] = pts[0], [bx, by] = pts[pts.length - 1];
+    const L = Math.hypot(bx - ax, by - ay) || 1;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const [x, y] = pts[i];
+      const d = Math.abs((bx - ax) * (ay - y) - (ax - x) * (by - ay)) / L;
+      if (d > fd) { fd = d; far = i; }
+    }
+    if (fd <= eps) return [pts[0], pts[pts.length - 1]];
+    return [...rdp(pts.slice(0, far + 1), eps).slice(0, -1), ...rdp(pts.slice(far), eps)];
+  };
+
+  /* Closed Catmull-Rom through the simplified points, converted to cubics. The
+     artwork is drawn with brush-like curves -- ears, brow, the tail of ? -- and
+     a polygon of a traced pixel edge reads as faceted at the sizes this is
+     shown at. Tension 0 degenerates to the polygon, which is what ?smooth=0
+     is for when checking fidelity. */
+  // One decimal. The viewBox is 388 units across, so a tenth of a unit is finer
+  // than a quarter pixel at the largest size this is ever drawn, and two
+  // decimals was adding a third to the file for nothing.
+  const f = (v) => String(Math.round(v * 10) / 10);
+  const toPath = (pts) => {
+    const n = pts.length;
+    if (n < 3) return '';
+    if (SMOOTH <= 0) {
+      return 'M' + pts.map(([x, y]) => `${f(x)} ${f(y)}`).join('L') + 'Z';
+    }
+    const at = (i) => pts[(i + n) % n];
+    let d = `M${f(at(0)[0])} ${f(at(0)[1])}`;
+    for (let i = 0; i < n; i++) {
+      const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+      const k = SMOOTH / 6;
+      const c1 = [p1[0] + (p2[0] - p0[0]) * k, p1[1] + (p2[1] - p0[1]) * k];
+      const c2 = [p2[0] - (p3[0] - p1[0]) * k, p2[1] - (p3[1] - p1[1]) * k];
+      d += `C${f(c1[0])} ${f(c1[1])},${f(c2[0])} ${f(c2[1])},${f(p2[0])} ${f(p2[1])}`;
+    }
+    return d + 'Z';
+  };
+
+  /* Largest first. Every pixel belongs to exactly one colour, so the regions are
+     disjoint and z-order does not decide what is visible -- but simplification
+     and smoothing move each boundary by a fraction of a pixel, so neighbours no
+     longer tile exactly. Drawing the big shapes first lets the smaller, more
+     detailed one win along a shared edge instead of leaving a hairline of
+     whatever is behind both. */
+  const groups = [];
+  for (let k = 0; k < palette.length; k++) {
+    // Assigned to, never drawn. See the note on WHITE_MODE.
+    if (WHITE_MODE !== 'interior' && isNearWhite(...palette[k].rgb)) continue;
+    const mask = new Uint8Array(SW * SH);
+    let count = 0;
+    for (let p = 0; p < label.length; p++) if (label[p] === k) { mask[p] = 1; count++; }
+    if (!count) continue;
+    // Tolerances are quoted in source pixels; the grid being traced is SS times
+    // finer, so scale into it here and divide the finished points back out.
+    let loops = trace(mask).filter((l) => area(l) >= MIN_AREA * SS * SS);
+    if (clipped) {
+      loops = loops.filter((l) => {
+        let sx = 0, sy = 0;
+        for (const [x, y] of l) { sx += x; sy += y; }
+        const cx = sx / l.length / SS, cy = sy / l.length / SS;
+        return cx >= CLIP[0] && cy >= CLIP[1] && cx <= CLIP[2] && cy <= CLIP[3];
+      });
+    }
+    if (!loops.length) continue;
+    const simplified = loops.map((l) => rdp(dedupe(l), EPS * SS).map(([x, y]) => [x / SS, y / SS]));
+    const d = simplified.map((l) => toPath(l)).filter(Boolean).join('');
+    groups.push({
+      hex: hex(palette[k].rgb), d, loops: loops.length,
+      px: Math.round(count / (SS * SS)), pts: simplified.reduce((s, l) => s + l.length, 0)
+    });
+  }
+  groups.sort((a, b) => b.px - a.px);
+
+  log(`\ntraced ${groups.length} colour groups`);
+  groups.forEach((g) => log(`  ${g.hex}  ${String(g.loops).padStart(3)} loops  ${String(g.pts).padStart(5)} pts  ${g.px}px`));
+
+  /* Each group keeps an id. Splitting by colour happens to split this mark by
+     part -- the crest is the only pale green, the brow and mane the only orange,
+     the wordmark the only dark green -- so the ids are what lets a consumer
+     drive them separately or leave one out, without a second trace. */
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" fill="none">\n` +
+    groups.map((g) => `  <path id="c${g.hex.slice(1)}" fill="${g.hex}" fill-rule="evenodd" d="${g.d}"/>`).join('\n') +
+    `\n</svg>\n`;
+
+  await fetch('/_save?name=' + encodeURIComponent(out), { method: 'POST', body: new Blob([svg], { type: 'image/svg+xml' }) });
+  log(`\nwrote ${out}  ${(svg.length / 1024).toFixed(1)} KB`);
+
+  // Side-by-side proof at 3x, which is roughly the worst case the site asks for.
+  const host = document.getElementById('art');
+  host.style.cssText = 'display:flex;gap:12px;background:#fff;padding:12px;margin-top:12px';
+  const a = new Image(); a.src = './' + src; a.style.cssText = `width:${W * 3}px;image-rendering:auto`;
+  const b = document.createElement('div');
+  b.innerHTML = svg;
+  b.firstElementChild.setAttribute('width', W * 3);
+  b.firstElementChild.setAttribute('height', H * 3);
+  host.append(a, b);
+  await new Promise((r) => setTimeout(r, 300));
+  log('DONE');
+}
+</script>
+</body>
+</html>
