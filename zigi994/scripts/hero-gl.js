@@ -13,17 +13,33 @@
       it, and everything visible after that is a Fresnel term, a
       refracted sample, or a crease. Nothing is emissive.
 
-   2. Containment. The references (resn.co.nz, unseen.co) both put
-      ONE bounded object on a mostly empty ground; neither is a
-      full-viewport noise field. A field that covers every pixel is a
-      texture, and this page's real strength is enormous Chinese type
-      on almost nothing. So the material is gated by a silhouette —
-      a signed distance function — and outside that silhouette the
-      output is *exactly* --ink-0, the same colour as the page body.
-      The empty ground is not a faded field, it is untouched.
+   2. Containment, and then scale. The references (resn.co.nz,
+      unseen.co) both put ONE bounded object on a mostly empty
+      ground; neither is a full-viewport noise field. So the material
+      is gated by a silhouette — a signed distance function — rather
+      than covering every pixel, because a field that covers every
+      pixel is a texture.
 
-   The silhouette also pays for itself: the heavy noise sits behind a
-   branch, so the ~94% of the frame that is empty costs almost nothing.
+      The first version took that too far. It read containment as
+      "small", put a wedge in the right quarter, and cut the material
+      away from the entire headline block, which left about 8% of the
+      frame covered. At that size the rim highlight is the only thing
+      you see, and a bright arc in a corner of flat black is a lens
+      flare. One bounded object still, but the object is now half the
+      picture and the type sits inside it — the headline keep-out
+      holds the material at a fifth rather than taking it to zero.
+
+      Outside the silhouette the ground is the light the body spills
+      onto its surroundings, keyed to distance from the silhouette
+      rather than to a point, so it is still not a radial falloff.
+      That ground used to be bit-exact --ink-0 on the argument that
+      an untouched background cannot seam or halo. It cannot, and it
+      also says there is no space around the object — which is most of
+      why the old frame read as flat.
+
+   The silhouette still pays for itself: the folds, dispersion and
+   crease fields all sit behind a branch, and the spill outside it is
+   two exponentials of a distance already computed.
 
    Standalone on purpose. It does not import motion.js: this layer is
    decorative and must never be able to take the interaction layer
@@ -319,13 +335,23 @@ void main() {
 
 #ifdef FORM_SHARD
   /* A wedge opening off the right edge: the frame crops it, so it reads as a
-     mass too big for the viewport rather than an object floating in it. It is
-     bounded by two half-planes, and the upper one is pitched to pass below
-     the location label rather than through it, with the apex clear of the
-     widest headline line. */
-  vec2 apex = vec2(0.752 * aspect, 0.492);
-  vec2 e1 = normalize(vec2(1.02 * aspect, 0.288) - apex);
-  vec2 e2 = normalize(vec2(1.02 * aspect, 0.730) - apex);
+     mass too big for the viewport rather than an object floating in it.
+
+     The apex used to sit at 0.752 and the right edge span only y 0.288-0.730,
+     which kept the whole thing inside the right quarter. Measured on the
+     rendered frame that was 8% of the viewport, and 8% of a frame is not a
+     mass -- it was a bright sliver in a corner, which is what a lens flare
+     looks like. Containment was the right idea and the scale was wrong: the
+     references put one bounded object on empty ground, but the object is
+     half the picture, not a detail in it.
+
+     So the apex is back near the left margin and the span at the right edge
+     is almost the full height. The headline now sits *inside* the body rather
+     than beside it, which is the whole difference between a material and a
+     decoration -- see the keep-out below, which dims rather than cuts. */
+  vec2 apex = vec2(0.118 * aspect, 0.523);
+  vec2 e1 = normalize(vec2(1.04 * aspect, -0.055) - apex);
+  vec2 e2 = normalize(vec2(1.04 * aspect, 1.052) - apex);
   vec2 n1 = vec2(e1.y, -e1.x);
   vec2 n2 = vec2(-e2.y, e2.x);
 
@@ -344,28 +370,57 @@ void main() {
   float dw = mix(d2, d1, k) + SM * k * (1.0 - k);
 
   /* Noise on the boundary so the two straight edges become a single
-     irregular one; without it this is a triangle. */
-  float warpEdge = fbm3(hp * 1.55 + vec2(0.0, t * 0.024)) * 0.085;
+     irregular one; without it this is a triangle. Amplitude scales with the
+     body: at the old size 0.085 was a visible ruffle, and on a form four
+     times across it would be a barely-there wobble. */
+  float warpEdge = fbm3(hp * 0.92 + vec2(0.0, t * 0.024)) * 0.150;
 
   sd = dw + warpEdge;
   gN = normalize(mix(n2, n1, k));
-  thick = 0.200;
-  soft = 0.020;
+  /* Thickness is what the dome's depth ramp is measured against, so it has to
+     grow with the silhouette. Left at 0.200 the ramp saturated a fifth of the
+     way in and the remaining four fifths were a flat plateau -- a big shape
+     with no surface, which reads worse than the small one did. */
+  thick = 0.520;
+  soft = 0.022;
 #endif
 
   float mask = smoothstep(soft, -soft, sd);
 
-  /* Legibility keep-outs, from the measured layout: the nav strip, the
-     block the headline glyphs actually occupy, and the small location
-     label in the top right. Wide feathers so any interaction is a gentle
-     dimming of the silhouette rather than a straight cut through it. */
+  /* Legibility keep-outs, from the measured layout: the nav strip, the block
+     the headline glyphs actually occupy, and the small location label in the
+     top right. Wide feathers so any interaction is a gentle dimming of the
+     silhouette rather than a straight cut through it.
+
+     The headline is a floor, not a hole. Taking the material to zero there
+     removed the largest region of the frame and left the body as whatever
+     happened to fall outside the type — which, with the old small wedge, was
+     the sliver in the corner. Holding it at a fifth keeps the mass continuous
+     underneath the glyphs, so the type reads as sitting in the material. The
+     two small strips stay hard clears: they carry 12px text, which has no
+     contrast to spare, and they are narrow enough that cutting them costs the
+     composition nothing. */
   mask *= clearOf(sp, vec4(0.000, 0.000, 1.000, 0.055), 0.026);
-  mask *= clearOf(sp, vec4(0.030, 0.385, 0.695, 0.730), 0.045);
+  mask *= mix(0.205, 1.0, clearOf(sp, vec4(0.030, 0.385, 0.695, 0.730), 0.075));
   mask *= clearOf(sp, vec4(0.858, 0.270, 0.962, 0.324), 0.024);
 
-  /* Outside the body the answer is --ink-0 exactly — the same value as the
-     page background, so there is no seam and no faded halo. */
-  vec3 col = u_ink0;
+  /* Outside the body: the light the mass spills onto its surroundings.
+
+     This used to be --ink-0 exactly, on the argument that an untouched ground
+     has no seam and no halo. True, and it was also the reason the frame read
+     as flat black with a bright thing on it. A body this size sits in a
+     space, and a space picks up some of the same light; bit-exact black says
+     there is no space, just a cutout.
+
+     It is a function of distance from the silhouette rather than from a
+     point, so it is not the radial falloff this file otherwise refuses --
+     the shape of it is the shape of the body. Two lengths: a short one for
+     contact, where a real surface would catch the most, and a long one for
+     the room, which is what actually removes the flatness. Both are one exp
+     of a value already computed, so the empty ground stays nearly free. */
+  float away = max(sd, 0.0);
+  float spill = exp(-away * 7.4) * 0.62 + exp(-away * 1.28) * 0.38;
+  vec3 col = mix(u_ink0, mix(u_ink0, u_ink1, 0.62), spill);
 
   if (mask > 0.002) {
     /* --- body ---------------------------------------------------
@@ -383,14 +438,15 @@ void main() {
        shears the coordinate by the previous one, which is advection, but
        two passes at this scale produce the fine marbled filaments the
        composition does not want. A few broad folds is the brief. */
-    /* Frequency is set against the size of the *body*, not the viewport. The
-       body is about a third of the hero's height across, so a base
-       wavelength near 1.0 in hero units put less than half a fold inside it
-       and the interior came out flat black. At 6.2 it holds two or three
-       folds — which is the brief: a couple of legible ones, not twenty
-       strands. The advecting field is deliberately coarser than the folds it
-       shears, so they bend as a group rather than turning to filigree. */
-    vec2 p = hp * 4.4;
+    /* Frequency is set against the size of the *body*, not the viewport, and
+       the brief is a couple of legible folds rather than twenty strands. 4.4
+       was tuned when the body was about a third of the hero's height across;
+       on a form three times that it held eight or nine folds and the interior
+       turned to filigree, which is the stock-render look this file exists to
+       avoid. Scaled down by the same factor the silhouette grew by. The
+       advecting field is deliberately coarser than the folds it shears, so
+       they bend as a group. */
+    vec2 p = hp * 2.05;
     vec2 q = vec2(
       fbm3(p * 0.42 + vec2(0.0, t * 0.060)),
       fbm3(p * 0.42 + vec2(4.3, 1.7) - t * 0.048)
@@ -480,17 +536,25 @@ void main() {
        cst is a crease field thresholded hard to a hairline. Accent
        appears only in these two places and in the Fresnel term — never
        as a fill. */
-    float ringCore = smoothstep(0.0075, 0.0012, -sd);
-    float ringInner = smoothstep(0.026, 0.005, -sd);
+    /* Widths scale with the silhouette for the same reason the fold frequency
+       does. 0.0075 was a jewel-thin edge on a body a third of the hero across;
+       on one that spans the frame it stayed the same 1-2 device pixels while
+       its length tripled, and a constant-width bright line 1400px long is a
+       wire, not a rim. Read as a stray hair crossing the headline. */
+    float ringCore = smoothstep(0.0230, 0.0040, -sd);
+    float ringInner = smoothstep(0.062, 0.012, -sd);
 
     float fold = ridged(wp * 0.30 + vec2(t * 0.035, -t * 0.026));
     float cst = pow(clamp((fold - 0.80) * 4.2, 0.0, 1.0), 3.0);
 
     /* Modulated along its length by the folds so the outline is an edge the
-       light runs along, not a stroked circle. */
-    float along = 0.28 + 0.72 * smoothstep(0.05, 0.85, dens);
+       light runs along, not a stroked circle. The floor is near zero rather
+       than 0.28: at 0.28 the rim never actually breaks, which over this much
+       length is what made it read as one continuous drawn stroke. Now it goes
+       out in places and the edge comes in segments. */
+    float along = 0.06 + 0.94 * smoothstep(0.02, 0.78, dens);
 
-    mat += mix(u_accent, u_paper, 0.25) * ringCore * (0.30 + 0.70 * fresBody) * 0.86 * along;
+    mat += mix(u_accent, u_paper, 0.25) * ringCore * (0.30 + 0.70 * fresBody) * 0.40 * along;
     mat += u_accent * ringInner * fresBody * 0.11 * along;
 
     /* Caustics are not gated on Fresnel alone: light bent inside a body
@@ -501,15 +565,23 @@ void main() {
     mat += u_paper * glint * 0.34;
     mat += mix(u_ink2, u_paper, 0.45) * sheen * 0.050;
 
-    col = mix(u_ink0, mat, mask);
-
-    /* Eight-bit quantisation is brutal across a ramp this dark — the ink
-       surfaces are four levels apart — so break the step with a half-LSB
-       dither. Static, not time-seeded: animated dither over a field this
-       slow reads as video noise. Scaled by the mask so the empty ground
-       stays bit-exact --ink-0. */
-    col += (hash21(gl_FragCoord.xy) - 0.5) * (1.6 / 255.0) * mask;
+    /* From the spilled ground, not from --ink-0. Mixing from flat black here
+       put a step at the silhouette exactly as wide as the spill, so the body
+       sat in a subtle trench. */
+    col = mix(col, mat, mask);
   }
+
+  /* Eight-bit quantisation is brutal across a ramp this dark — the ink
+     surfaces are four levels apart — so break the step with a half-LSB
+     dither. Static, not time-seeded: animated dither over a field this slow
+     reads as video noise.
+
+     Outside the branch and unscaled, now that the ground is a ramp rather
+     than one value. It was multiplied by the mask while the surroundings were
+     bit-exact, which was right then and would now leave the spill — the
+     longest, shallowest ramp in the frame, several hundred pixels per code
+     value — as the one part that bands. */
+  col += (hash21(gl_FragCoord.xy) - 0.5) * (1.6 / 255.0);
 
   gl_FragColor = vec4(max(col, 0.0), 1.0);
 }
@@ -628,13 +700,23 @@ void main() {
     let vw = 0;
     let vh = 0;
 
-    /* The composition is a landscape one: it lives in the empty upper right
-       of a wide hero, and the regions it is denied are expressed as
-       fractions of that hero. On a portrait hero there is no empty upper
-       right — every band across it is carrying type — so the material would
-       be squeezed into the gaps between text blocks, which looks like an
-       accident rather than a composition. On that shape it is not drawn at
-       all. Re-evaluated on every resize, so a rotation recovers it. */
+    /* This used to refuse to draw on anything narrower than 1.15:1, which on
+       every phone in portrait meant the hero was flat --ink-0 and nothing else.
+
+       The reason was sound for the composition that existed then: a small
+       wedge in the empty upper right, with the type's block cut out of it. A
+       portrait hero has no empty upper right — every band across it carries
+       type — so what was left of that wedge were slivers in the gaps between
+       text blocks, which reads as an accident.
+
+       Neither half of that is true now. The body spans the frame instead of
+       sitting in one corner, and the headline dims it rather than cutting a
+       hole in it, so there are no gaps to be squeezed into: the type sits on
+       the material at any aspect. Phones draw one frame and never loop, so
+       this costs a single shaded buffer, not a running rAF.
+
+       Still bounded, because at some point the hero is a letterbox and there
+       is no room for a mass of any shape. Re-evaluated on every resize. */
     let shapeOk = true;
 
     /* Dropped once, permanently, if the first second of frames shows this GPU
@@ -646,7 +728,7 @@ void main() {
       const cssW = Math.max(1, Math.round(rect.width));
       const cssH = Math.max(1, Math.round(rect.height));
 
-      shapeOk = cssW / cssH >= 1.15;
+      shapeOk = cssW / cssH >= 0.34;
 
       const cap = reduceMotion.matches || isCompact() ? 1.25 : 1.75;
       let dpr = Math.min(window.devicePixelRatio || 1, cap) * scale;

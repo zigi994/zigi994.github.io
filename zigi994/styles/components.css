@@ -583,7 +583,21 @@
 .pill--accent {
   border-color: color-mix(in oklab, var(--accent) 42%, transparent);
   color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 9%, transparent);
+  /* Opaque, unlike the base .pill's 60% wash, and the same 9% accent it would
+     have composited to anyway -- every use of this sits directly on --ink-0,
+     which is theme-aware, so flattening against it changes nothing visually.
+
+     It has to be opaque because one of those four uses is the home hero, where
+     the backdrop is an animating WebGL body. At 91% transparent the measured
+     contrast of this 12px accent text fell from 5.59:1 to 4.6:1 when the
+     material grew to fill the frame -- still AA, but a moving backdrop makes
+     contrast a distribution rather than a number, and the audit only samples
+     one frame. Opaque makes it a number again.
+
+     The alternative was another keep-out rectangle in the shader. Those are
+     normalised to the hero box and hand-tuned at one viewport, so they are
+     approximate everywhere else; this is exact at every viewport. */
+  background: color-mix(in oklab, var(--accent) 9%, var(--ink-0));
 }
 
 .pill__dot {
