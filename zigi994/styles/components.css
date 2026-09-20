@@ -44,11 +44,17 @@
   body.has-cursor button { cursor: none; }
 }
 
+/* No transform property here. motion.js composes the whole matrix for these two
+   layers -- position, the centring -50%, and the press scale -- because the
+   individual properties (translate/rotate/scale) always apply *before*
+   `transform`, so anything declared here silently multiplies the coordinates it
+   writes. A `scale: 0.82` on the pressed state moved the ring 202px away from
+   the pointer. Size and shape are still this file's business; the matrix is
+   not. */
 .cursor__dot,
 .cursor__ring {
   position: absolute;
   border-radius: var(--r-full);
-  translate: -50% -50%;
   will-change: transform, width, height;
 }
 
@@ -102,7 +108,8 @@
 
 .cursor.is-labelled .cursor__text { opacity: 1; scale: 1; }
 
-.cursor.is-down .cursor__ring { scale: 0.82; }
+/* The pressed state is motion.js's `press` factor; see the note above the
+   .cursor__dot rule for why it cannot be a `scale` here. */
 
 /* ============================================================
    Navigation

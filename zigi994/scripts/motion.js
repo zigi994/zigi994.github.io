@@ -362,9 +362,20 @@ function initCursor() {
   let placed = false;
   let shown = false;
 
+  /* Press feedback lives here rather than in a CSS `scale`, and the centring
+     -50% is here rather than in a CSS `translate`, because the individual
+     transform properties compose in a fixed order -- translate, rotate, scale,
+     then `transform` -- so a CSS `scale: 0.82` multiplied the coordinates this
+     writes into `transform`. At (1120, 300) the ring rendered at (918, 246):
+     the press threw it 202px up-left, further the further it was from the
+     origin. One element, one transform property, one owner. */
+  let press = 1;
+  let pressTarget = 1;
+
   const paint = () => {
-    dot.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+    const centre = "translate(-50%, -50%)";
+    dot.style.transform = `translate3d(${dx}px, ${dy}px, 0) ${centre} scale(${press})`;
+    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) ${centre} scale(${press})`;
   };
 
   const show = () => {
@@ -403,8 +414,8 @@ function initCursor() {
     shown = false;
     root.style.opacity = "0";
   });
-  window.addEventListener("mousedown", () => root.classList.add("is-down"));
-  window.addEventListener("mouseup", () => root.classList.remove("is-down"));
+  window.addEventListener("mousedown", () => { pressTarget = 0.82; });
+  window.addEventListener("mouseup", () => { pressTarget = 1; });
 
   root.style.opacity = "0";
   root.style.transition = "opacity 220ms linear";
@@ -414,6 +425,7 @@ function initCursor() {
     dy = lerp(dy, my, 0.62);
     rx = lerp(rx, mx, 0.16);
     ry = lerp(ry, my, 0.16);
+    press = lerp(press, pressTarget, 0.34);
     paint();
   });
 
