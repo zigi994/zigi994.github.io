@@ -60,7 +60,6 @@ $cdpPort = 9600 + (Get-Random -Maximum 300)
 $chromeArgs = @(
   '--headless=new'
   "--remote-debugging-port=$cdpPort"
-  '--disable-gpu'
   '--hide-scrollbars'
   '--no-first-run'
   '--no-default-browser-check'
@@ -129,6 +128,12 @@ try {
 
   Send-Cdp 'Page.enable' | Out-Null
   Send-Cdp 'Runtime.enable' | Out-Null
+  # A reusable QA profile must not make reusable QA output: bypass both the
+  # HTTP memory/disk cache and the site's service worker so a capture always
+  # reflects the files currently on disk.
+  Send-Cdp 'Network.enable' | Out-Null
+  Send-Cdp 'Network.setCacheDisabled' @{ cacheDisabled = $true } | Out-Null
+  Send-Cdp 'Network.setBypassServiceWorker' @{ bypass = $true } | Out-Null
   Send-Cdp 'Emulation.setDeviceMetricsOverride' @{
     width = $Width; height = $Height; deviceScaleFactor = $Dpr; mobile = $false
   } | Out-Null

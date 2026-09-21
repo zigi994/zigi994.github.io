@@ -666,7 +666,11 @@ async function initImages() {
         frame.style.backgroundImage = stacked ? `${lqip}, ${authored}` : lqip;
         frame.style.backgroundRepeat = "no-repeat";
         frame.style.backgroundPosition = "center";
-        frame.style.backgroundSize = frame.classList.contains("frame--pad")
+        const containsMedia =
+          frame.classList.contains("frame--pad") ||
+          frame.classList.contains("frame--natural") ||
+          frame.classList.contains("frame--retina");
+        frame.style.backgroundSize = containsMedia
           ? stacked ? "contain, cover" : "contain"
           : "cover";
       }

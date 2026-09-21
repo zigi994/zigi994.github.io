@@ -52,6 +52,12 @@ CJK 字库动辄数 MB，本机也没有 fontTools 可以做子集化。
 设计变量集中在 `zigi994/styles/tokens.css`。每个页面的主题色由
 `<body data-accent>` 决定，滚动到不同区块时平滑过渡。
 
+组件样式按职责拆分：`components.css` 只放全站通用的导航、按钮、媒体框与页脚，
+`home.css` / `case.css` / `concept.css` 只放页面级组合。图片框不再靠每页临时写
+`object-fit`：默认 `.frame` 是有意裁切，`.frame--natural` 保留完整构图，
+`.frame--pad` 用于透明或留白素材，`.frame--retina` 则限制位图最多按 2×
+显示。需要缩放反馈时再叠加 `.frame--zoom`。
+
 ## 缓存策略
 
 GitHub Pages 对所有响应统一下发很短的 `Cache-Control`，而且**无法配置响应头**，
@@ -76,6 +82,18 @@ LQIP 占位图，最后写入 `assets/manifest.json`。本机没有 ImageMagick�
 
 重新生成资源：启动本地服务后依次打开
 `/__tools/pipeline.html`、`/__tools/cutout.html`、`/__tools/crop.html`。
+
+发布用 master 生成响应式切图：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/run-tool.ps1 responsive-assets.html
+```
+
+该任务为 7 张 App 界面生成 480 / 960px 版本，为室内图生成 800 / 1600px
+版本，并把 master、派生尺寸与路径写入 `assets/manifest.json`。HTML 里的
+`srcset` 负责选择；首屏只给一个视觉焦点 `fetchpriority="high"`，其余首屏图
+正常或低优先级，折叠线以下统一懒加载。所有 `<img>` 都写明 `width` / `height`
+以避免解码前布局跳动。
 
 抽取之前先把源文件复制成 `tools/source.pdf`（`.ai` 存盘时勾了 PDF 兼容就能直接读），
 打开 `/__tools/pdf-sheet.html` 看一张总览图 —— 它回答「这个文件里到底有什么」。

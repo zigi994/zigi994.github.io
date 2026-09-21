@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>responsive image variants</title>
+  <style>
+    body { margin: 0; padding: 20px; background: #111; color: #b7e7bb; font: 13px/1.6 ui-monospace, Consolas, monospace; }
+    pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+<pre id="log">starting…</pre>
+<script type="module">
+/* Generate display-size variants from the production masters.
+
+   The masters remain the last srcset candidate and the downloadable source of
+   truth. These derivatives only prevent a 170px phone mockup from downloading a
+   1664px artboard, or a 390px viewport from downloading a 2600px interior
+   render. The job list is deliberately explicit: every derivative has an owner,
+   a known master and a known display role.
+
+   Run with:
+     powershell -File tools/run-tool.ps1 responsive-assets.html
+*/
+
+const jobs = [
+  ...Array.from({ length: 7 }, (_, index) => {
+    const n = String(index + 1).padStart(2, "0");
+    return {
+      key: `screen${n}`,
+      src: `assets/app/screen-${n}.webp`,
+      widths: [480, 960],
+      quality: 0.9,
+    };
+  }),
+  { key: "stayLobby",  src: "assets/interior/stay-lobby.webp",  widths: [800, 1600], quality: 0.88 },
+  { key: "stayLiving", src: "assets/interior/stay-living.webp", widths: [800, 1600], quality: 0.88 },
+  { key: "stayAtrium", src: "assets/interior/stay-atrium.webp", widths: [800, 1600], quality: 0.88 },
+  { key: "stayDining", src: "assets/interior/stay-dining.webp", widths: [800, 1600], quality: 0.88 },
+  { key: "stayBath",   src: "assets/interior/stay-bath.webp",   widths: [800, 1600], quality: 0.88 },
+  { key: "ipFiguresCut", src: "assets/ip/figures-cut.webp", widths: [640], quality: 0.9 },
+  { key: "ipExpressions", src: "assets/ip/expressions.webp", widths: [640], quality: 0.9 },
+];
+
+const lines = [];
+const log = (message) => {
+  lines.push(message);
+  document.getElementById("log").textContent = lines.join("\n");
+};
+
+const save = async (name, blob) => {
+  const response = await fetch(
+    `/_save?name=${encodeURIComponent(`zigi994/${name}`)}`,
+    { method: "POST", body: blob }
+  );
+  if (!response.ok) throw new Error(`save failed: ${name} (${response.status})`);
+};
+
+const toBlob = (canvas, quality) =>
+  new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("WebP encode failed"))),
+      "image/webp",
+      quality
+    );
+  });
+
+const derivativeName = (src, width) =>
+  src.replace(/(\.[^.]+)$/, `-${width}$1`);
+
+try {
+  const current = await fetch("/assets/manifest.json", { cache: "no-store" });
+  const manifest = current.ok ? await current.json() : { lqip: {}, meta: {} };
+  const variants = {};
+
+  for (const job of jobs) {
+    const image = new Image();
+    image.src = `/${job.src}?source=${Date.now()}`;
+    await image.decode();
+
+    const files = [];
+    for (const width of job.widths) {
+      if (width >= image.naturalWidth) continue;
+
+      const height = Math.round(image.naturalHeight * width / image.naturalWidth);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d", { alpha: true });
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(image, 0, 0, width, height);
+
+      const blob = await toBlob(canvas, job.quality);
+      const src = derivativeName(job.src, width);
+      await save(src, blob);
+      files.push({ src, w: width, h: height });
+      log(`${src.padEnd(46)} ${width}×${height}  ${(blob.size / 1024).toFixed(0)} KB`);
+    }
+
+    variants[job.key] = {
+      src: job.src,
+      w: image.naturalWidth,
+      h: image.naturalHeight,
+      files,
+    };
+  }
+
+  manifest.variants = variants;
+  await save(
+    "assets/manifest.json",
+    new Blob([JSON.stringify(manifest)], { type: "application/json" })
+  );
+  await fetch("/_save?name=tools/_qa/RESPONSIVE_DONE.txt", {
+    method: "POST",
+    body: new Blob([`ok\n${lines.join("\n")}`], { type: "text/plain" }),
+  });
+  log("DONE");
+} catch (error) {
+  log(`ERROR: ${error.message}\n${error.stack || ""}`);
+}
+</script>
+</body>
+</html>

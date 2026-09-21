@@ -79,16 +79,37 @@
     </div>
 
     <div class="shell cstage" data-reveal="rise">
-      <div class="frame r-16-9 media-reveal" style="background:linear-gradient(180deg,#151a17,#0b0d0b)">
+      <div class="frame app-overview media-reveal"
+           role="img" aria-labelledby="quchong-overview-caption">
         <div class="hero-screens" aria-hidden="true">
-          <img src="../assets/app/screen-01.webp" alt="" data-lqip="screen01" loading="eager" fetchpriority="high" decoding="async">
-          <img src="../assets/app/screen-03.webp" alt="" data-lqip="screen03" loading="eager" decoding="async">
-          <img src="../assets/app/screen-05.webp" alt="" data-lqip="screen05" loading="eager" decoding="async">
-          <img src="../assets/app/screen-06.webp" alt="" data-lqip="screen06" loading="eager" decoding="async">
-          <img src="../assets/app/screen-07.webp" alt="" data-lqip="screen07" loading="eager" decoding="async">
+          <img src="../assets/app/screen-01-480.webp"
+               srcset="../assets/app/screen-01-480.webp 480w, ../assets/app/screen-01-960.webp 960w, ../assets/app/screen-01.webp 1664w"
+               sizes="(max-width:720px) 15vw, (max-width:1200px) 14vw, 172px"
+               width="1664" height="3600" alt="" data-lqip="screen01"
+               loading="eager" fetchpriority="low" decoding="async">
+          <img src="../assets/app/screen-03-480.webp"
+               srcset="../assets/app/screen-03-480.webp 480w, ../assets/app/screen-03-960.webp 960w, ../assets/app/screen-03.webp 1664w"
+               sizes="(max-width:720px) 15vw, (max-width:1200px) 14vw, 172px"
+               width="1664" height="3600" alt="" data-lqip="screen03"
+               loading="eager" fetchpriority="low" decoding="async">
+          <img src="../assets/app/screen-05-480.webp"
+               srcset="../assets/app/screen-05-480.webp 480w, ../assets/app/screen-05-960.webp 960w, ../assets/app/screen-05.webp 1664w"
+               sizes="(max-width:720px) 16vw, (max-width:1200px) 15vw, 184px"
+               width="1664" height="3600" alt="" data-lqip="screen05"
+               loading="eager" fetchpriority="high" decoding="async">
+          <img src="../assets/app/screen-06-480.webp"
+               srcset="../assets/app/screen-06-480.webp 480w, ../assets/app/screen-06-960.webp 960w, ../assets/app/screen-06.webp 1664w"
+               sizes="(max-width:720px) 15vw, (max-width:1200px) 14vw, 172px"
+               width="1664" height="3600" alt="" data-lqip="screen06"
+               loading="eager" fetchpriority="low" decoding="async">
+          <img src="../assets/app/screen-07-480.webp"
+               srcset="../assets/app/screen-07-480.webp 480w, ../assets/app/screen-07-960.webp 960w, ../assets/app/screen-07.webp 1664w"
+               sizes="(max-width:720px) 15vw, (max-width:1200px) 14vw, 172px"
+               width="1664" height="3600" alt="" data-lqip="screen07"
+               loading="eager" fetchpriority="low" decoding="async">
         </div>
       </div>
-      <p class="caption cn" style="margin-top:var(--s-4)">趣宠 App 主要界面一览：启动、注册、首页、社交、商店。</p>
+      <p class="caption cn" id="quchong-overview-caption" style="margin-top:var(--s-4)">趣宠 App 主要界面一览：启动、注册、首页、社交、商店。</p>
     </div>
   </section>
 
@@ -141,7 +162,11 @@
           <article>
             <span class="daily-chain__step num">01 / CONTEXT</span>
             <div class="daily-chain__frame frame frame--pad">
-              <img src="../assets/app/screen-02.webp" alt="趣宠身份选择页：选择有宠物或无宠物" data-lqip="screen02" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-02-480.webp"
+                   srcset="../assets/app/screen-02-480.webp 480w, ../assets/app/screen-02-960.webp 960w, ../assets/app/screen-02.webp 1664w"
+                   sizes="(max-width:720px) 72vw, 29vw" width="1664" height="3600"
+                   alt="趣宠身份选择页：选择有宠物或无宠物"
+                   data-lqip="screen02" loading="lazy" decoding="async">
             </div>
             <h3 class="cn">先确认「我在照顾谁」</h3>
             <p class="caption cn">身份岔路先消除空状态，后面每次记录都有明确对象。</p>
@@ -149,7 +174,11 @@
           <article>
             <span class="daily-chain__step num">02 / TODAY</span>
             <div class="daily-chain__frame frame frame--pad">
-              <img src="../assets/app/screen-05.webp" alt="趣宠首页：宠物档案与吃饭、睡眠、如厕记录入口" data-lqip="screen05" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-05-480.webp"
+                   srcset="../assets/app/screen-05-480.webp 480w, ../assets/app/screen-05-960.webp 960w, ../assets/app/screen-05.webp 1664w"
+                   sizes="(max-width:720px) 72vw, 29vw" width="1664" height="3600"
+                   alt="趣宠首页：宠物档案与吃饭、睡眠、如厕记录入口"
+                   data-lqip="screen05" loading="lazy" decoding="async">
             </div>
             <h3 class="cn">每天只确认三件事</h3>
             <p class="caption cn">首页把吃、睡、如厕并列，不让记录藏进三级页面。</p>
@@ -157,7 +186,11 @@
           <article>
             <span class="daily-chain__step num">03 / CONFIRM</span>
             <div class="daily-chain__frame daily-chain__frame--done frame frame--pad">
-              <img src="../assets/app/screen-05.webp" alt="基于趣宠首页推演的今日完成状态" data-lqip="screen05" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-05-480.webp"
+                   srcset="../assets/app/screen-05-480.webp 480w, ../assets/app/screen-05-960.webp 960w, ../assets/app/screen-05.webp 1664w"
+                   sizes="(max-width:720px) 72vw, 29vw" width="1664" height="3600"
+                   alt="基于趣宠首页推演的今日完成状态"
+                   data-lqip="screen05" loading="lazy" decoding="async">
               <span class="daily-chain__done"><b>3 / 3</b><em>今日已确认</em></span>
             </div>
             <h3 class="cn">把模糊焦虑关成一个状态</h3>
@@ -228,12 +261,36 @@
           <div class="phone">
             <div class="phone__notch"></div>
             <div class="phone__screen">
-              <img class="is-active" src="../assets/app/screen-01.webp" alt="趣宠启动页，插画里的猫狗围坐，下方是登录与注册按钮" data-lqip="screen01" loading="lazy" decoding="async">
-              <img src="../assets/app/screen-02.webp" alt="选择身份页，提供有宠物与无宠物两个入口" data-lqip="screen02" loading="lazy" decoding="async">
-              <img src="../assets/app/screen-03.webp" alt="注册页，手机号验证码与喜好宠物多选" data-lqip="screen03" loading="lazy" decoding="async">
-              <img src="../assets/app/screen-05.webp" alt="首页，宠物档案卡片与吃睡如厕三条记录入口" data-lqip="screen05" loading="lazy" decoding="async">
-              <img src="../assets/app/screen-06.webp" alt="社交页，好友在线状态与瀑布流动态" data-lqip="screen06" loading="lazy" decoding="async">
-              <img src="../assets/app/screen-07.webp" alt="商店页，八类用品图标与营销卡片" data-lqip="screen07" loading="lazy" decoding="async">
+              <img class="is-active" src="../assets/app/screen-01-480.webp"
+                   srcset="../assets/app/screen-01-480.webp 480w, ../assets/app/screen-01-960.webp 960w, ../assets/app/screen-01.webp 1664w"
+                   sizes="(max-width:900px) 62vw, 284px" width="1664" height="3600"
+                   alt="趣宠启动页，插画里的猫狗围坐，下方是登录与注册按钮"
+                   data-lqip="screen01" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-02-480.webp"
+                   srcset="../assets/app/screen-02-480.webp 480w, ../assets/app/screen-02-960.webp 960w, ../assets/app/screen-02.webp 1664w"
+                   sizes="(max-width:900px) 62vw, 284px" width="1664" height="3600"
+                   alt="选择身份页，提供有宠物与无宠物两个入口"
+                   data-lqip="screen02" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-03-480.webp"
+                   srcset="../assets/app/screen-03-480.webp 480w, ../assets/app/screen-03-960.webp 960w, ../assets/app/screen-03.webp 1664w"
+                   sizes="(max-width:900px) 62vw, 284px" width="1664" height="3600"
+                   alt="注册页，手机号验证码与喜好宠物多选"
+                   data-lqip="screen03" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-05-480.webp"
+                   srcset="../assets/app/screen-05-480.webp 480w, ../assets/app/screen-05-960.webp 960w, ../assets/app/screen-05.webp 1664w"
+                   sizes="(max-width:900px) 62vw, 284px" width="1664" height="3600"
+                   alt="首页，宠物档案卡片与吃睡如厕三条记录入口"
+                   data-lqip="screen05" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-06-480.webp"
+                   srcset="../assets/app/screen-06-480.webp 480w, ../assets/app/screen-06-960.webp 960w, ../assets/app/screen-06.webp 1664w"
+                   sizes="(max-width:900px) 62vw, 284px" width="1664" height="3600"
+                   alt="社交页，好友在线状态与瀑布流动态"
+                   data-lqip="screen06" loading="lazy" decoding="async">
+              <img src="../assets/app/screen-07-480.webp"
+                   srcset="../assets/app/screen-07-480.webp 480w, ../assets/app/screen-07-960.webp 960w, ../assets/app/screen-07.webp 1664w"
+                   sizes="(max-width:900px) 62vw, 284px" width="1664" height="3600"
+                   alt="商店页，八类用品图标与营销卡片"
+                   data-lqip="screen07" loading="lazy" decoding="async">
             </div>
           </div>
         </div>
@@ -358,31 +415,52 @@
     <div class="shell">
       <div class="rail" data-rail data-native-scroll>
         <figure class="rail__item">
-          <div class="frame frame--zoom"><img src="../assets/app/screen-01.webp" alt="启动页" data-lqip="screen01" loading="lazy" decoding="async"></div>
+          <div class="frame frame--zoom"><img src="../assets/app/screen-01-480.webp"
+               srcset="../assets/app/screen-01-480.webp 480w, ../assets/app/screen-01-960.webp 960w, ../assets/app/screen-01.webp 1664w"
+               sizes="(max-width:720px) 72vw, 232px" width="1664" height="3600"
+               alt="启动页" data-lqip="screen01" loading="lazy" decoding="async"></div>
           <figcaption class="rail__cap">01 / 启动</figcaption>
         </figure>
         <figure class="rail__item">
-          <div class="frame frame--zoom"><img src="../assets/app/screen-02.webp" alt="身份岔路页" data-lqip="screen02" loading="lazy" decoding="async"></div>
+          <div class="frame frame--zoom"><img src="../assets/app/screen-02-480.webp"
+               srcset="../assets/app/screen-02-480.webp 480w, ../assets/app/screen-02-960.webp 960w, ../assets/app/screen-02.webp 1664w"
+               sizes="(max-width:720px) 72vw, 232px" width="1664" height="3600"
+               alt="身份岔路页" data-lqip="screen02" loading="lazy" decoding="async"></div>
           <figcaption class="rail__cap">02 / 岔路</figcaption>
         </figure>
         <figure class="rail__item">
-          <div class="frame frame--zoom"><img src="../assets/app/screen-03.webp" alt="注册页" data-lqip="screen03" loading="lazy" decoding="async"></div>
+          <div class="frame frame--zoom"><img src="../assets/app/screen-03-480.webp"
+               srcset="../assets/app/screen-03-480.webp 480w, ../assets/app/screen-03-960.webp 960w, ../assets/app/screen-03.webp 1664w"
+               sizes="(max-width:720px) 72vw, 232px" width="1664" height="3600"
+               alt="注册页" data-lqip="screen03" loading="lazy" decoding="async"></div>
           <figcaption class="rail__cap">03 / 注册</figcaption>
         </figure>
         <figure class="rail__item">
-          <div class="frame frame--zoom"><img src="../assets/app/screen-04.webp" alt="登录页" data-lqip="screen04" loading="lazy" decoding="async"></div>
+          <div class="frame frame--zoom"><img src="../assets/app/screen-04-480.webp"
+               srcset="../assets/app/screen-04-480.webp 480w, ../assets/app/screen-04-960.webp 960w, ../assets/app/screen-04.webp 1664w"
+               sizes="(max-width:720px) 72vw, 232px" width="1664" height="3600"
+               alt="登录页" data-lqip="screen04" loading="lazy" decoding="async"></div>
           <figcaption class="rail__cap">04 / 登录</figcaption>
         </figure>
         <figure class="rail__item">
-          <div class="frame frame--zoom"><img src="../assets/app/screen-05.webp" alt="首页" data-lqip="screen05" loading="lazy" decoding="async"></div>
+          <div class="frame frame--zoom"><img src="../assets/app/screen-05-480.webp"
+               srcset="../assets/app/screen-05-480.webp 480w, ../assets/app/screen-05-960.webp 960w, ../assets/app/screen-05.webp 1664w"
+               sizes="(max-width:720px) 72vw, 232px" width="1664" height="3600"
+               alt="首页" data-lqip="screen05" loading="lazy" decoding="async"></div>
           <figcaption class="rail__cap">05 / 首页</figcaption>
         </figure>
         <figure class="rail__item">
-          <div class="frame frame--zoom"><img src="../assets/app/screen-06.webp" alt="社交页" data-lqip="screen06" loading="lazy" decoding="async"></div>
+          <div class="frame frame--zoom"><img src="../assets/app/screen-06-480.webp"
+               srcset="../assets/app/screen-06-480.webp 480w, ../assets/app/screen-06-960.webp 960w, ../assets/app/screen-06.webp 1664w"
+               sizes="(max-width:720px) 72vw, 232px" width="1664" height="3600"
+               alt="社交页" data-lqip="screen06" loading="lazy" decoding="async"></div>
           <figcaption class="rail__cap">06 / 社交</figcaption>
         </figure>
         <figure class="rail__item">
-          <div class="frame frame--zoom"><img src="../assets/app/screen-07.webp" alt="商店页" data-lqip="screen07" loading="lazy" decoding="async"></div>
+          <div class="frame frame--zoom"><img src="../assets/app/screen-07-480.webp"
+               srcset="../assets/app/screen-07-480.webp 480w, ../assets/app/screen-07-960.webp 960w, ../assets/app/screen-07.webp 1664w"
+               sizes="(max-width:720px) 72vw, 232px" width="1664" height="3600"
+               alt="商店页" data-lqip="screen07" loading="lazy" decoding="async"></div>
           <figcaption class="rail__cap">07 / 商店</figcaption>
         </figure>
       </div>
@@ -431,8 +509,10 @@
         <span class="next__title">粤醒茶香 — 城市 IP 形象系统</span>
       </div>
       <div class="next__thumb frame" style="background:radial-gradient(70% 80% at 50% 20%,#2e2113,#0a0807)">
-        <img src="../assets/ip/figures-cut.webp" alt="" data-lqip="ipFiguresCut" loading="lazy"
-             style="object-fit:contain;padding:8%" decoding="async">
+        <img src="../assets/ip/figures-cut-640.webp"
+             srcset="../assets/ip/figures-cut-640.webp 640w, ../assets/ip/figures-cut.webp 1280w"
+             sizes="160px" width="1280" height="1278" alt="" data-lqip="ipFiguresCut"
+             loading="lazy" style="object-fit:contain;padding:8%" decoding="async">
       </div>
     </a>
   </div>

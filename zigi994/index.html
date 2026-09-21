@@ -58,14 +58,10 @@
        Hero
        ============================================================ -->
   <section class="hero" data-accent="#ee5c36" data-accent-zone="#ee5c36">
-    <!-- The two decorative layers carry their own out-of-flow declaration.
-         Both are full-bleed canvases, so if home.css is ever missing or a
-         deploy behind, in-flow they would push the entire hero off screen —
-         which is exactly what happened once. Documents are always fetched
-         fresh, so an inline rule cannot go stale with the stylesheet. Only
-         position: the opacity reveal has to stay overridable from CSS. -->
-    <canvas class="hero__ink" data-hero-gl aria-hidden="true" style="position:absolute;inset:0"></canvas>
-    <canvas class="hero__field" data-field aria-hidden="true" style="position:absolute;inset:0"></canvas>
+    <!-- Full-bleed and out of flow even if a returning service worker briefly
+         serves an older stylesheet beside this document. -->
+    <canvas class="hero__scale" data-hero-scale aria-hidden="true"
+            style="position:absolute;inset:0"></canvas>
     <div class="glow hero__glow" aria-hidden="true"></div>
 
     <div class="shell hero__inner">
@@ -158,13 +154,22 @@
         <!-- 01 趣宠 -->
         <li class="project project--feature" data-accent="#9db37f">
           <a class="project__link" href="work/quchong.html" data-cursor="查看案例">
-            <div class="project__media frame frame--zoom r-16-10 media-reveal">
+            <div class="project__media frame frame--zoom r-16-10 media-reveal"
+                 role="img" aria-label="趣宠 App 首页、社交与商店界面">
               <div class="phones" aria-hidden="true">
-                <img class="phones__a" src="assets/app/screen-05.webp" alt="" data-lqip="screen05" loading="lazy" decoding="async">
-                <img class="phones__b" src="assets/app/screen-06.webp" alt="" data-lqip="screen06" loading="lazy" decoding="async">
-                <img class="phones__c" src="assets/app/screen-07.webp" alt="" data-lqip="screen07" loading="lazy" decoding="async">
+                <img class="phones__a" src="assets/app/screen-05-480.webp"
+                     srcset="assets/app/screen-05-480.webp 480w, assets/app/screen-05-960.webp 960w, assets/app/screen-05.webp 1664w"
+                     sizes="(max-width:720px) 24vw, 210px" width="1664" height="3600"
+                     alt="" data-lqip="screen05" loading="lazy" decoding="async">
+                <img class="phones__b" src="assets/app/screen-06-480.webp"
+                     srcset="assets/app/screen-06-480.webp 480w, assets/app/screen-06-960.webp 960w, assets/app/screen-06.webp 1664w"
+                     sizes="(max-width:720px) 24vw, 210px" width="1664" height="3600"
+                     alt="" data-lqip="screen06" loading="lazy" decoding="async">
+                <img class="phones__c" src="assets/app/screen-07-480.webp"
+                     srcset="assets/app/screen-07-480.webp 480w, assets/app/screen-07-960.webp 960w, assets/app/screen-07.webp 1664w"
+                     sizes="(max-width:720px) 24vw, 210px" width="1664" height="3600"
+                     alt="" data-lqip="screen07" loading="lazy" decoding="async">
               </div>
-              <img class="sr-only" src="assets/app/screen-05.webp" alt="趣宠 App 首页界面，薄荷绿背景上的宠物档案卡片" data-lqip="screen05" loading="lazy" decoding="async">
             </div>
             <div class="project__body">
               <div class="project__meta">
@@ -182,7 +187,12 @@
         <li class="project project--tall" data-accent="#ec9138">
           <a class="project__link" href="work/yuexing.html" data-cursor="查看案例">
             <div class="project__media frame frame--zoom frame--pad r-4-3 media-reveal" style="background:radial-gradient(72% 78% at 50% 16%,#2c2013,#0c0908)">
-              <img src="assets/ip/figures-cut.webp" alt="粤醒茶香 IP 盲盒手办，戴醒狮头饰的角色坐在茶杯里" data-lqip="ipFiguresCut" loading="lazy" decoding="async">
+              <img src="assets/ip/figures-cut-640.webp"
+                   srcset="assets/ip/figures-cut-640.webp 640w, assets/ip/figures-cut.webp 1280w"
+                   sizes="(max-width:720px) 88vw, (max-width:1080px) 56vw, 640px"
+                   width="1280" height="1278"
+                   alt="粤醒茶香 IP 盲盒手办，戴醒狮头饰的角色坐在茶杯里"
+                   data-lqip="ipFiguresCut" loading="lazy" decoding="async">
             </div>
             <div class="project__body">
               <div class="project__meta">
@@ -203,7 +213,8 @@
               <div class="poster__inner" aria-hidden="true">
                 <span class="poster__kicker">粤醒茶香 × 广州</span>
                 <strong class="poster__head cn">早茶<br>醒了</strong>
-                <img class="poster__mascot" src="assets/ip/front-cut.webp" alt="" loading="lazy" decoding="async">
+                <img class="poster__mascot" src="assets/ip/front-cut.webp" width="424" height="623"
+                     alt="" loading="lazy" decoding="async">
                 <span class="poster__foot">CITY LION-UP · 2026</span>
               </div>
             </div>
@@ -223,7 +234,11 @@
         <li class="project" data-accent="#d08350">
           <a class="project__link" href="work/mountain-stay.html" data-cursor="查看案例">
             <div class="project__media frame frame--zoom r-4-3 media-reveal">
-              <img src="assets/interior/stay-lobby.webp" alt="山居民宿大堂，木构屋檐与波浪形前台" data-lqip="stayLobby" loading="lazy" decoding="async">
+              <img src="assets/interior/stay-lobby-800.webp"
+                   srcset="assets/interior/stay-lobby-800.webp 800w, assets/interior/stay-lobby-1600.webp 1600w, assets/interior/stay-lobby.webp 2600w"
+                   sizes="(max-width:720px) 92vw, (max-width:1080px) 46vw, 640px"
+                   width="2600" height="1950" alt="山居民宿大堂，木构屋檐与波浪形前台"
+                   data-lqip="stayLobby" loading="lazy" decoding="async">
             </div>
             <div class="project__body">
               <div class="project__meta">
@@ -535,6 +550,6 @@
 <script type="module" src="scripts/home.js"></script>
 <script src="scripts/sw-register.js" defer></script>
 <script src="scripts/navigation.js" defer></script>
-<script src="scripts/hero-gl.js" defer></script>
+<script src="scripts/hero-scale.js" defer></script>
 </body>
 </html>

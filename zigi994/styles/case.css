@@ -89,33 +89,66 @@
 
 .cstage .frame { border-radius: var(--r-xl); }
 
-/* Fanned artboards used as a case-study lead image */
+/* 趣宠 overview: a quiet product plinth in the app's own mint system.
+   The hard horizon anchors the devices without adding a decorative texture;
+   the previous near-black gradient made a gentle pet product look like a
+   hardware launch and swallowed the dark phone details. */
+.app-overview {
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(
+    180deg,
+    #e5f0e9 0 72%,
+    #c9ddd1 72% 100%
+  );
+}
+
+.app-overview::before {
+  content: "";
+  position: absolute;
+  inset: 7%;
+  border-top: 1px solid rgba(47, 79, 62, 0.16);
+  border-bottom: 1px solid rgba(47, 79, 62, 0.16);
+  pointer-events: none;
+}
+
+/* Complete artboards, arranged as one product family rather than a dramatic
+   fan. Every screen keeps its authored top and bottom edge in view. */
 .hero-screens {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(6px, 1.4vw, 20px);
-  padding: clamp(18px, 4%, 52px);
+  gap: clamp(7px, 1.25vw, 18px);
+  padding: clamp(18px, 5%, 64px);
 }
 
 .hero-screens img {
-  width: clamp(52px, 14.5%, 172px);
+  width: clamp(54px, 14.8%, 194px);
   height: auto;
-  aspect-ratio: 739 / 1600;
+  aspect-ratio: 1664 / 3600;
   border-radius: clamp(7px, 1.3vw, 16px);
-  box-shadow: var(--shadow-lift);
-  outline: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 22px 42px -24px rgba(47, 79, 62, 0.42),
+    0 3px 10px rgba(47, 79, 62, 0.1);
+  outline: 1px solid rgba(47, 79, 62, 0.17);
   outline-offset: -1px;
   transition: transform 900ms var(--ease-out-expo);
 }
 
-.hero-screens img:nth-child(1) { transform: translateY(7%) rotate(-6deg); }
-.hero-screens img:nth-child(2) { transform: translateY(1%) rotate(-3deg); }
-.hero-screens img:nth-child(3) { transform: translateY(-4%) scale(1.07); z-index: 2; }
-.hero-screens img:nth-child(4) { transform: translateY(1%) rotate(3deg); }
-.hero-screens img:nth-child(5) { transform: translateY(7%) rotate(6deg); }
+.hero-screens img:nth-child(1) { transform: translateY(4%) rotate(-2.4deg); }
+.hero-screens img:nth-child(2) { transform: translateY(1.5%) rotate(-1deg); }
+.hero-screens img:nth-child(3) { transform: translateY(-3%) scale(1.065); z-index: 2; }
+.hero-screens img:nth-child(4) { transform: translateY(1.5%) rotate(1deg); }
+.hero-screens img:nth-child(5) { transform: translateY(4%) rotate(2.4deg); }
+
+@media (max-width: 720px) {
+  .app-overview { aspect-ratio: 4 / 3; }
+  .hero-screens {
+    gap: 1.35%;
+    padding-inline: 4.5%;
+  }
+  .hero-screens img { width: 17%; }
+}
 
 /* ============================================================
    Chapters
@@ -307,13 +340,12 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   opacity: 0;
-  scale: 1.03;
-  transition: opacity 620ms var(--ease-out-quart), scale 900ms var(--ease-out-expo);
+  transition: opacity 620ms var(--ease-out-quart);
 }
 
-.phone__screen img.is-active { opacity: 1; scale: 1; }
+.phone__screen img.is-active { opacity: 1; }
 
 .phone__notch {
   position: absolute;
@@ -446,7 +478,7 @@
 
 .rail__item .frame {
   border-radius: clamp(14px, 2vw, 22px);
-  aspect-ratio: 9 / 19.5;
+  aspect-ratio: 1664 / 3600;
 }
 
 .rail__item img { user-select: none; -webkit-user-drag: none; }
@@ -737,12 +769,12 @@
 }
 
 .daily-chain__frame {
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 1664 / 3600;
   border-radius: var(--r-md);
   background: color-mix(in oklab, var(--accent) 8%, var(--ink-1));
 }
 
-.daily-chain__frame img { object-fit: cover; }
+.daily-chain__frame img { object-fit: contain; }
 
 .daily-chain__frame--done::before {
   content: "";
@@ -1127,10 +1159,6 @@
       they have to go dark or stop existing. The values follow --line
       rather than being reinvented: an artboard's own screenshot is usually
       pale, and a swatch chip can be anything from oak to 2700K light. */
-:root[data-theme="light"] .hero-screens img {
-  outline-color: rgba(27, 23, 18, 0.16);
-}
-
 :root[data-theme="light"] .swatch__chip {
   box-shadow: inset 0 0 0 1px rgba(27, 23, 18, 0.18);
 }

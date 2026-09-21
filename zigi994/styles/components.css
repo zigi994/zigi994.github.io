@@ -596,7 +596,26 @@
   place-items: center;
 }
 
-.frame--pad img { object-fit: contain; }
+.frame.frame--pad img { object-fit: contain; }
+
+/* Media-role contracts.
+
+   `frame--natural` is for authored compositions that must be seen edge to
+   edge; its intrinsic width/height reserves the final ratio before decode.
+   `frame--retina` keeps finite-resolution cutouts at no more than half their
+   source width, so a 2× screen never asks the bitmap for invented pixels.
+   Deliberate editorial crops continue to use the default cover behaviour. */
+.frame--natural img {
+  height: auto;
+  object-fit: contain;
+}
+
+.frame--retina img {
+  width: min(100%, var(--retina-width, 640px));
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
 
 /* Ratio helpers */
 .r-1-1  { aspect-ratio: 1 / 1; }

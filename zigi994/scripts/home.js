@@ -2,120 +2,7 @@
    home.js — hero field and interaction lab
    ============================================================ */
 
-import { ticker, lerp, reduceMotion, finePointer } from "./motion.js";
-
-/* ------------------------------------------------------------
-   Hero dot field
-   A matrix that swells toward the pointer — the page's first
-   demonstration that things here respond to you.
-   ------------------------------------------------------------ */
-function initHeroField() {
-  const canvas = document.querySelector("[data-field]");
-  if (!canvas) return;
-
-  if (reduceMotion.matches) {
-    canvas.style.display = "none";
-    return;
-  }
-
-  const ctx = canvas.getContext("2d", { alpha: true });
-  let dpr = 1, w = 0, h = 0;
-  let cols = 0, rows = 0;
-  const GAP = 30;
-  const RADIUS = 190;
-
-  let mx = -9999, my = -9999;
-  let tx = -9999, ty = -9999;
-  let phase = 0;
-
-  function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const r = canvas.getBoundingClientRect();
-    w = r.width;
-    h = r.height;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cols = Math.ceil(w / GAP) + 1;
-    rows = Math.ceil(h / GAP) + 1;
-  }
-
-  resize();
-  window.addEventListener("resize", resize);
-
-  if (finePointer.matches) {
-    window.addEventListener("mousemove", (e) => {
-      const r = canvas.getBoundingClientRect();
-      tx = e.clientX - r.left;
-      ty = e.clientY - r.top;
-    }, { passive: true });
-
-    document.addEventListener("mouseleave", () => { tx = -9999; ty = -9999; });
-  }
-
-  const accentRGB = () => {
-    const v = getComputedStyle(document.documentElement)
-      .getPropertyValue("--accent").trim();
-    // #rrggbb → r,g,b
-    if (/^#[0-9a-f]{6}$/i.test(v)) {
-      return [
-        parseInt(v.slice(1, 3), 16),
-        parseInt(v.slice(3, 5), 16),
-        parseInt(v.slice(5, 7), 16),
-      ];
-    }
-    return [238, 92, 54]; // --accent fallback: lacquer vermillion
-  };
-
-  let rgb = accentRGB();
-  let rgbCheck = 0;
-
-  ticker.add((dt, now) => {
-    // Idle out of view: the hero is only ~1 viewport tall.
-    if (window.scrollY > h + 200) return;
-
-    mx = lerp(mx, tx, 0.1);
-    my = lerp(my, ty, 0.1);
-    phase = now * 0.0006;
-
-    if (now - rgbCheck > 400) {
-      rgb = accentRGB();
-      rgbCheck = now;
-    }
-
-    ctx.clearRect(0, 0, w, h);
-
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        const x = i * GAP;
-        const y = j * GAP;
-
-        // Slow breathing so the field is alive without a pointer.
-        const drift = Math.sin(phase + i * 0.32 + j * 0.24);
-        let size = 0.85 + drift * 0.28;
-        let alpha = 0.1 + drift * 0.035;
-
-        const dx = x - mx;
-        const dy = y - my;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist < RADIUS) {
-          const f = 1 - dist / RADIUS;
-          const ease = f * f;
-          size += ease * 2.6;
-          alpha += ease * 0.62;
-        }
-
-        if (alpha <= 0.012) continue;
-
-        ctx.beginPath();
-        ctx.arc(x, y, Math.max(0.2, size), 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${Math.min(alpha, 0.9).toFixed(3)})`;
-        ctx.fill();
-      }
-    }
-  });
-}
+import { lerp, reduceMotion } from "./motion.js";
 
 /* ------------------------------------------------------------
    Lab: easing comparison
@@ -418,7 +305,6 @@ function initRipple() {
    Boot
    ------------------------------------------------------------ */
 function boot() {
-  initHeroField();
   initEasingDemo();
   initFluidTabs();
   initPull();

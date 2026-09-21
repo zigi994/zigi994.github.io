@@ -110,17 +110,49 @@ try {
     setTimeout(res, 6000);
   })));
   const dpr = window.devicePixelRatio;
-  return JSON.stringify(imgs.map((i) => {
+  const measured = await Promise.all(imgs.map(async (i) => {
+    const url = i.currentSrc || i.src;
+
+    /* With width-descriptor srcset, HTMLImageElement.naturalWidth is
+       density-corrected to a CSS intrinsic width. It is not the pixel width of
+       the selected file, so using it would report a correctly selected 480px
+       candidate as 160px on a 3x slot. Decode currentSrc without srcset to get
+       the actual bitmap supply. */
+    const raw = new Image();
+    raw.src = url;
+    try { await raw.decode(); } catch {}
+    const naturalWidth = raw.naturalWidth || i.naturalWidth;
+    const naturalHeight = raw.naturalHeight || i.naturalHeight;
+
     const r = i.getBoundingClientRect();
     const cs = getComputedStyle(i);
+    let paintW = r.width, paintH = r.height, crop = 0;
+    const sx = r.width / naturalWidth;
+    const sy = r.height / naturalHeight;
+    if (cs.objectFit === 'contain') {
+      const s = Math.min(sx, sy);
+      paintW = naturalWidth * s;
+      paintH = naturalHeight * s;
+    } else if (cs.objectFit === 'cover') {
+      const s = Math.max(sx, sy);
+      const fullW = naturalWidth * s;
+      const fullH = naturalHeight * s;
+      crop = 1 - Math.min(1, r.width / fullW) * Math.min(1, r.height / fullH);
+    }
+    const path = new URL(url).pathname;
     return {
-      src: (i.currentSrc || i.src).split('/').slice(-2).join('/'),
-      nat: [i.naturalWidth, i.naturalHeight],
+      src: path.split('/').slice(-2).join('/'),
+      nat: [naturalWidth, naturalHeight],
       box: [Math.round(r.width), Math.round(r.height)],
+      paint: [Math.round(paintW), Math.round(paintH)],
       dpr,
-      fit: cs.objectFit
+      fit: cs.objectFit,
+      crop,
+      vector: /\.svg$/i.test(path),
+      declared: i.hasAttribute('width') && i.hasAttribute('height')
     };
-  }).filter((x) => x.nat[0] > 0 && x.box[0] > 0));
+  }));
+  return JSON.stringify(measured.filter((x) => x.nat[0] > 0 && x.box[0] > 0));
 })()
 '@
 
@@ -135,15 +167,19 @@ try {
         foreach ($i in 1..90) { Start-Sleep -Milliseconds 200; if ((Eval 'document.readyState') -eq 'complete') { break } }
         $res = Eval $probe | ConvertFrom-Json
         foreach ($r in @($res)) {
-          # object-fit: cover crops, so the demand is set by whichever axis has
-          # to cover -- taking width alone understates it on tall crops.
-          $sx = $r.box[0] * $r.dpr / $r.nat[0]
-          $sy = $r.box[1] * $r.dpr / $r.nat[1]
-          $starved = if ($r.fit -eq 'cover') { [math]::Max($sx, $sy) } else { $sx }
+          # Use the painted image, not the <img> element's box. A contained
+          # square inside a 16:9 frame owns the full box in CSS but only paints
+          # into its height; counting the empty side bands made every cutout
+          # look 2x softer than it really was. SVG is resolution-independent.
+          $sx = $r.paint[0] * $r.dpr / $r.nat[0]
+          $sy = $r.paint[1] * $r.dpr / $r.nat[1]
+          $starved = if ($r.vector) { 0 } else { [math]::Max($sx, $sy) }
           $all += [pscustomobject]@{
             File = $r.src; Page = if ($p) { $p -replace '^work/|\.html$', '' } else { 'index' }
             Vw = $w; Dpr = $r.dpr; Nat = "$($r.nat[0])x$($r.nat[1])"
-            Box = "$($r.box[0])x$($r.box[1])"; Starved = [math]::Round($starved, 2)
+            Box = "$($r.box[0])x$($r.box[1])"; Paint = "$($r.paint[0])x$($r.paint[1])"
+            Starved = [math]::Round($starved, 2); Crop = [math]::Round($r.crop * 100)
+            Declared = [bool]$r.declared
           }
         }
       }
@@ -159,11 +195,26 @@ try {
   foreach ($w in $worst) {
     $mark = if ($w.Starved -ge $Flag) { '  <-- soft' } else { '' }
     Write-Output ("  {0,-28} {1,10} -> {2,9} @{3}x {4,-8} x{5}{6}" -f `
-      $w.File, $w.Nat, $w.Box, $w.Dpr, $w.Page, $w.Starved, $mark)
+      $w.File, $w.Nat, $w.Paint, $w.Dpr, $w.Page, $w.Starved, $mark)
   }
   $soft = @($worst | Where-Object { $_.Starved -ge $Flag })
   Write-Output ''
   Write-Output "  upscaled files: $($soft.Count) / $($worst.Count)"
+
+  $cropped = @($all | Where-Object { $_.Crop -ge 15 } |
+    Sort-Object Crop -Descending |
+    Group-Object File,Page |
+    ForEach-Object { $_.Group | Select-Object -First 1 })
+  Write-Output ''
+  Write-Output '=== intentional cover crops >= 15% (review composition) ==='
+  foreach ($c in $cropped) {
+    Write-Output ("  {0,-28} {1,-12} {2,3}% cropped  box {3}" -f $c.File, $c.Page, $c.Crop, $c.Box)
+  }
+
+  $missingDimensions = @($all | Where-Object { -not $_.Declared } |
+    Group-Object File | ForEach-Object { $_.Group | Select-Object -First 1 })
+  Write-Output ''
+  Write-Output "  images missing width/height: $($missingDimensions.Count)"
 } finally {
   if ($proc -and -not $proc.HasExited) { $proc.Kill(); $proc.WaitForExit(5000) }
   Remove-Item $profile -Recurse -Force -ErrorAction SilentlyContinue

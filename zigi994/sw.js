@@ -28,13 +28,10 @@ const BUILD_ID = '__BUILD_ID__';
 
 const SHELL_CACHE = 'zigi-shell-' + BUILD_ID;
 
-/* Deliberately unversioned. Image bytes are immutable under these
-   names, so re-downloading ~3 MB of webp on every deploy would be
-   pure waste. Stale images can only happen if a file is replaced
-   in place, which the asset pipeline does not do. */
-/* v2 retires the three removed project images from returning visitors as well as
-   from the repository; activate() deletes the old zigi-media-v1 cache. */
-const MEDIA_CACHE = 'zigi-media-v2';
+/* Deliberately independent from BUILD_ID: unchanged images should survive a
+   CSS-only deploy. Bump this version whenever the asset pipeline rewrites a
+   stable image filename or changes the responsive derivative set. */
+const MEDIA_CACHE = 'zigi-media-v3';
 
 /* Resolved from the worker's own URL so the same file works at the
    domain root and from a subdirectory preview. */
@@ -71,7 +68,7 @@ const PRECACHE = [
 
   at('scripts/motion.js'),
   at('scripts/home.js'),
-  at('scripts/hero-gl.js'),
+  at('scripts/hero-scale.js'),
   at('scripts/case.js'),
   at('scripts/concept.js'),
   at('scripts/navigation.js'),

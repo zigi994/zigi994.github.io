@@ -12,34 +12,17 @@
   isolation: isolate;
 }
 
-.hero__field {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  opacity: 0.9;
-}
-
-/* The home hero carries the ruled grid but no colour wash. A tinted wash
-   over this warm base turned the whole viewport khaki, and a stark opening
-   also sets up more contrast against the tinted case heroes. */
+/* The home hero carries no colour wash. The WebGL chamber supplies its own
+   bounded structure and the rest stays quiet enough for the headline. */
 .hero__glow {
   background: none;
   opacity: 1;
 }
 
 /* ============================================================
-   Hero ink — WebGL refraction ground
-
-   Sits under both existing hero layers rather than replacing either.
-   The dot field above it is the page's first proof that things here
-   respond to the pointer, and the ruled grid above that is the
-   printed-sheet device used site-wide — a rigid 2D grid laid over a
-   moving refraction is what makes the shader read as a material seen
-   through gridded glass instead of as a screensaver.
+   Scale chamber — one WebGL scene, no stacked ambient canvases
    ============================================================ */
-.hero__ink {
+.hero__scale {
   position: absolute;
   inset: 0;
   display: block;
@@ -48,15 +31,13 @@
   z-index: 0;
   pointer-events: none;
 
-  /* Zero until a frame has actually been rendered, so this element can
-     never contribute an undrawn panel over the hero — with scripting off
-     it simply stays invisible. Opacity rather than display because the
-     canvas has to be measurable before the first draw. */
+  /* Zero until a frame has actually rendered. With scripting or WebGL
+     unavailable the typography remains the complete fallback. */
   opacity: 0;
-  transition: opacity 1400ms var(--ease-out-expo);
+  transition: opacity 900ms var(--ease-out-expo);
 }
 
-.hero__ink.is-live { opacity: 1; }
+.hero__scale.is-live { opacity: 1; }
 
 .hero__inner {
   position: relative;
@@ -370,9 +351,7 @@
   justify-content: center;
   gap: clamp(10px, 2vw, 26px);
   padding: clamp(18px, 4%, 48px);
-  background:
-    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 62%),
-    linear-gradient(180deg, var(--ink-2), var(--ink-1));
+  background: linear-gradient(180deg, #e5f0e9 0 72%, #c9ddd1 72% 100%);
 }
 
 /* Two classes deep on purpose: .frame img in components.css is (0,1,1) and
@@ -382,10 +361,10 @@
   height: auto;
   /* Reserve the box before these lazy images decode, so the fan does not
      collapse to zero height and shift the card. */
-  aspect-ratio: 739 / 1600;
+  aspect-ratio: 1664 / 3600;
   border-radius: clamp(8px, 1.6vw, 18px);
-  box-shadow: var(--shadow-lift);
-  outline: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 36px -22px rgba(47, 79, 62, 0.42);
+  outline: 1px solid rgba(47, 79, 62, 0.17);
   outline-offset: -1px;
   transition: transform 900ms var(--ease-out-expo);
 }
