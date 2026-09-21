@@ -16,33 +16,6 @@
     U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-@font-face {
-  font-family: "Fraunces";
-  font-style: normal;
-  font-weight: 300 800;
-  font-display: swap;
-  src: url("../assets/fonts/fraunces-var.woff2") format("woff2-variations");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
-    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
-    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-/* Fraunces ships italic as a separate family, so the roman file above cannot
-   supply it — asking for italic without this would get a mechanical browser
-   slant, which is exactly what a display serif must not have. Subset hard:
-   ASCII only and the weight axis collapsed to 400, which is 28KB against
-   146KB for the full latin italic. opsz stays variable because these labels
-   run from 11px captions up to large figures and a serif needs its optical
-   sizes across that range. */
-@font-face {
-  font-family: "Fraunces";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("../assets/fonts/fraunces-italic-var.woff2") format("woff2-variations");
-  unicode-range: U+20-23, U+25-29, U+2B-3B, U+3F-5A, U+61-7A;
-}
-
 *,
 *::before,
 *::after {
@@ -189,8 +162,8 @@ a {
    Split by script instead, because that is what actually differs:
 
      .label        Chinese, or mixed. Sans, sentence case, a little air.
-     .label--en    Latin only. The italic serif, which is the voice the
-                   case-page spec rows already use.
+     .label--en    Latin paired with a Chinese label. Same sans voice,
+                   separated by spacing rather than a second typeface.
      .label--val   A value the machine produced. Mono earns its keep
                    here and nowhere else.
    ------------------------------------------------------------ */
@@ -202,18 +175,12 @@ a {
   font-weight: 500;
 }
 
-/* Fraunces' italic is subset to ASCII, so any CJK landing in here would
-   fall through to the system Chinese face and get mechanically slanted —
-   put Chinese in plain .label. 13px, not the 11px this tier used to be:
-   an italic serif at 11px is a texture, not letterforms, which is the
-   real reason the old tier was mono. */
 .label--en {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: normal;
-  font-size: 0.8125rem;
-  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
   text-transform: none;
 }
 
@@ -240,48 +207,6 @@ a {
 }
 
 .cn { font-family: var(--font-cn); }
-
-/* Fraunces is reserved for Latin-only runs — the wordmark, figures,
-   English standfirsts. Mixing a serif Latin with a sans CJK inside one
-   headline looks like a fallback bug, so it is never applied to
-   .display-* directly. WONK unlocks the angled, slightly off-axis
-   terminals that keep it from looking like a stock serif. */
-.serif {
-  font-family: var(--font-display);
-  font-variation-settings: "SOFT" 26, "WONK" 1;
-  letter-spacing: -0.015em;
-}
-
-.serif--plain { font-variation-settings: "SOFT" 0, "WONK" 0; }
-
-/* The second voice: a flowing italic serif set against the heavy sans, used on
-   latin subtitles and figures so the two scripts play different roles instead
-   of competing at the same weight.
-
-   Latin runs only. The italic face is subset to ASCII, so any CJK inside this
-   class falls through to the system Chinese font and gets slanted mechanically
-   — the exact artefact the separate italic file exists to avoid. SOFT and WONK
-   are absent from the subset axes, so they go unset rather than inherited from
-   .serif, where they would be silently ignored anyway. */
-.ital {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: normal;
-  letter-spacing: 0;
-}
-
-/* Oversized figures: opsz is driven manually because the browser only
-   infers it from font-size, and these are set far above their optical
-   size on purpose. */
-.figure-xl {
-  font-family: var(--font-display);
-  font-variation-settings: "opsz" 144, "SOFT" 20, "WONK" 1;
-  font-weight: 400;
-  font-variant-numeric: lining-nums tabular-nums;
-  letter-spacing: -0.03em;
-  line-height: 0.86;
-}
 
 /* Optical fix: CJK glyphs are full-width, so display tracking that
    flatters Latin makes Chinese headlines look broken. */

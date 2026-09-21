@@ -48,12 +48,9 @@
   --a-chashi: #aab877; /* 茶叶 */
 
   /* --- type ---
-         Fraunces carries the Latin display and the numerals; its optical
-         and WONK axes give the numbers real character. Bricolage handles
-         UI/body Latin. CJK falls back to the system faces because a
-         subset webfont is not viable without a font toolchain. --- */
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, "Songti SC",
-    "Source Han Serif SC", serif;
+         One chosen Latin voice: Bricolage carries display, body and labels.
+         CJK falls back to the system faces because a subset webfont is not
+         viable without a font toolchain. --- */
   --font-sans: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont,
     "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
     "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -98,12 +95,12 @@
   --max-w: 1680px;
 
   /* --- radii --- */
-  --r-xs: 4px;
-  --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 22px;
-  --r-xl: 32px;
-  --r-2xl: 44px;
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-xl: 12px;
+  --r-2xl: 16px;
   --r-full: 999px;
 
   /* --- easing: expo/quint for UI, a real spring for playful motion --- */
@@ -128,10 +125,10 @@
 
   /* Shadows stay warm-black; a neutral black shadow over warm surfaces
      is the tell-tale sign of a palette that was not mixed by eye. */
-  --shadow-lift: 0 1px 1px rgba(14, 10, 6, 0.34), 0 8px 24px -8px rgba(14, 10, 6, 0.52),
-    0 32px 64px -24px rgba(14, 10, 6, 0.58);
-  --shadow-deep: 0 2px 2px rgba(14, 10, 6, 0.4), 0 24px 48px -12px rgba(14, 10, 6, 0.62),
-    0 64px 120px -32px rgba(14, 10, 6, 0.72);
+  --shadow-lift: 0 1px 2px rgba(14, 10, 6, 0.18),
+    0 8px 20px -12px rgba(14, 10, 6, 0.28);
+  --shadow-deep: 0 2px 4px rgba(14, 10, 6, 0.2),
+    0 18px 36px -24px rgba(14, 10, 6, 0.38);
 }
 
 /* ------------------------------------------------------------
@@ -208,10 +205,10 @@
      alpha: on bone, 0.58 reads as soot. --shadow-deep keeps more weight
      than a light theme normally would, because on these pages it is doing
      real work — holding the dark device mockups off the sheet. */
-  --shadow-lift: 0 1px 1px rgba(46, 38, 26, 0.05),
-    0 8px 24px -8px rgba(46, 38, 26, 0.14), 0 32px 64px -24px rgba(46, 38, 26, 0.18);
-  --shadow-deep: 0 2px 3px rgba(46, 38, 26, 0.07),
-    0 24px 48px -12px rgba(46, 38, 26, 0.2), 0 64px 120px -32px rgba(46, 38, 26, 0.26);
+  --shadow-lift: 0 1px 2px rgba(46, 38, 26, 0.07),
+    0 8px 18px -12px rgba(46, 38, 26, 0.16);
+  --shadow-deep: 0 2px 4px rgba(46, 38, 26, 0.08),
+    0 18px 32px -24px rgba(46, 38, 26, 0.22);
 }
 
 /* --- per-project text-safe accents ---
@@ -283,6 +280,6 @@
    paper cup lifted off a dark studio floor. A light-theme shadow there is
    invisible, so this one scene gets the dark room's shadows back. */
 :root[data-theme="light"] .sleeve {
-  --shadow-lift: 0 1px 1px rgba(14, 10, 6, 0.34),
-    0 8px 24px -8px rgba(14, 10, 6, 0.52), 0 32px 64px -24px rgba(14, 10, 6, 0.58);
+  --shadow-lift: 0 1px 2px rgba(14, 10, 6, 0.18),
+    0 8px 20px -12px rgba(14, 10, 6, 0.28);
 }

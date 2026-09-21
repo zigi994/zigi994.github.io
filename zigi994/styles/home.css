@@ -1,91 +1,4 @@
 /* ============================================================
-   Intro curtain
-   ============================================================ */
-
-.intro {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-overlay);
-  background: var(--ink-0);
-  display: grid;
-  align-content: end;
-  padding: var(--gutter);
-  transition: transform 900ms var(--ease-in-out-quint),
-    opacity 500ms 400ms linear;
-}
-
-.intro.is-done {
-  transform: translate3d(0, -100%, 0);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Only script lifts this curtain, so a script that never arrives must not be
-   able to leave an opaque full-bleed panel over the whole homepage. Two
-   independent guards, because there are two ways to lose the script:
-
-   1. Scripting off entirely — html.scripting is set by an inline head script,
-      before first paint, so the curtain simply never renders. It is its own
-      class rather than the .js that motion.js sets, because .js also gates
-      every reveal rule in base.css: setting that one early would mean a
-      failed motion.js fetch hides the content instead of just not animating.
-   2. Scripting on, home.js missing — the bail-out below lifts the curtain on
-      its own, timed just past that file's own 4.2s ceiling so it only ever
-      fires when home.js is genuinely absent. */
-html:not(.scripting) .intro { display: none; }
-
-.intro {
-  animation: intro-bail 600ms var(--ease-in-out-quint) 4600ms forwards;
-}
-
-@keyframes intro-bail {
-  to {
-    transform: translate3d(0, -100%, 0);
-    opacity: 0;
-    visibility: hidden;
-  }
-}
-
-.intro__inner {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--s-5);
-  padding-bottom: var(--s-4);
-}
-
-.intro__count {
-  font-size: clamp(3rem, 12vw, 9rem);
-  font-weight: 500;
-  letter-spacing: -0.05em;
-  line-height: 0.82;
-}
-
-.intro__count i {
-  font-style: normal;
-  font-size: 0.26em;
-  color: var(--fg-3);
-  margin-left: 0.15em;
-  vertical-align: super;
-}
-
-.intro__bar {
-  height: 2px;
-  background: var(--line);
-  overflow: hidden;
-}
-
-.intro__bar span {
-  display: block;
-  height: 100%;
-  width: 100%;
-  background: var(--accent);
-  transform-origin: left;
-  scale: var(--p, 0) 1;
-  transition: scale 240ms linear;
-}
-
-/* ============================================================
    Hero
    ============================================================ */
 
@@ -160,6 +73,22 @@ html:not(.scripting) .intro { display: none; }
   padding-bottom: clamp(var(--s-7), 8vh, var(--s-9));
 }
 
+.hero__availability {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-family: var(--font-cn);
+  font-size: var(--t-caption);
+  color: var(--fg-1);
+}
+
+.hero__availability::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--accent);
+}
+
 .hero__title {
   display: grid;
   gap: 0.02em;
@@ -187,26 +116,17 @@ html:not(.scripting) .intro { display: none; }
   gap: var(--s-5);
 }
 
-.hero__lede em {
-  font-style: normal;
-  color: var(--fg-0);
-  box-shadow: inset 0 -0.42em 0 color-mix(in oklab, var(--accent) 26%, transparent);
-}
-
 .hero__primary {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   gap: var(--s-3);
-  padding: 0.72em 1.1em;
-  border: 1px solid color-mix(in oklab, var(--accent) 56%, var(--line));
-  border-radius: var(--r-full);
-  background: color-mix(in oklab, var(--accent) 10%, var(--ink-0));
+  padding-block: 0.55em;
+  border-bottom: 1px solid var(--line-strong);
   color: var(--fg-0);
   font-family: var(--font-cn);
   font-size: 0.9375rem;
-  transition: background-color var(--d-base) linear,
-    color var(--d-base) linear, border-color var(--d-base) linear;
+  transition: color var(--d-fast) linear, border-color var(--d-fast) linear;
 }
 
 .hero__primary i {
@@ -217,9 +137,8 @@ html:not(.scripting) .intro { display: none; }
 
 .hero__primary:hover,
 .hero__primary:focus-visible {
-  background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent-ink);
+  color: var(--accent-text);
 }
 
 .hero__primary:hover i,
@@ -259,18 +178,6 @@ html:not(.scripting) .intro { display: none; }
 }
 
 /* ============================================================
-   Marquee strip
-   ============================================================ */
-
-.strip {
-  border-block: 1px solid var(--line);
-  padding-block: var(--s-5);
-  background: var(--ink-1);
-}
-
-.strip .marquee + .marquee { display: none; }
-
-/* ============================================================
    Thesis
    ============================================================ */
 
@@ -296,8 +203,7 @@ html:not(.scripting) .intro { display: none; }
 
 .thesis__body strong {
   color: var(--fg-0);
-  font-weight: 500;
-  box-shadow: inset 0 -0.4em 0 color-mix(in oklab, var(--accent) 22%, transparent);
+  font-weight: 600;
 }
 
 .thesis__body .caption { padding-top: 0.35em; }
@@ -309,29 +215,21 @@ html:not(.scripting) .intro { display: none; }
 .scales {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
+  border-block: 1px solid var(--line);
 }
 
 .scale {
   position: relative;
-  padding: var(--s-6);
-  background: var(--ink-1);
+  padding: var(--s-6) var(--s-6) var(--s-6) 0;
   display: grid;
-  gap: var(--s-3);
+  gap: var(--s-2);
   align-content: start;
-  min-height: 340px;
-  transition: background-color var(--d-slow) var(--ease-out-expo);
+  min-height: 0;
 }
 
-.scale:hover { background: var(--ink-2); }
-
-.scale__num {
-  font-size: 0.75rem;
-  color: var(--fg-3);
+.scale + .scale {
+  padding-left: var(--s-6);
+  border-left: 1px solid var(--line);
 }
 
 .scale__title {
@@ -341,185 +239,30 @@ html:not(.scripting) .intro { display: none; }
   line-height: 1;
 }
 
-/* The English standfirst under each Chinese scale name. This was the first
-   run of Latin given the italic serif, back when the small tier was still
-   uniformly mono and uppercase and the two could not be reconciled. That
-   tier has since been split by script — see .label in base.css — so this is
-   no longer the exception it was; it stays a separate rule only because it
-   is set larger than .label--en, being a standfirst rather than a label. */
 .scale__en {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: normal;
-  font-size: 1.0625rem;
-  letter-spacing: 0;
-  color: var(--accent);
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
 }
 
 .scale p { margin-top: var(--s-2); }
 
-/* --- the three little diagrams --- */
-.scale__viz {
-  margin-top: auto;
-  padding-top: var(--s-6);
-  height: 84px;
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.scale__viz--screen { align-items: stretch; }
-
-.scale__viz--screen span {
-  flex: 1;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-xs);
-  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 18%, transparent), transparent);
-  transition: transform var(--d-slow) var(--ease-out-expo),
-    background-color var(--d-slow) linear;
-}
-
-.scale:hover .scale__viz--screen span:nth-child(1) { transform: translateY(-8px); }
-.scale:hover .scale__viz--screen span:nth-child(2) { transform: translateY(-14px); }
-.scale:hover .scale__viz--screen span:nth-child(3) { transform: translateY(-5px); }
-.scale:hover .scale__viz--screen span:nth-child(4) { transform: translateY(-11px); }
-
-.scale__viz--char { align-items: center; justify-content: flex-start; gap: 10px; }
-
-.scale__viz--char i {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-full);
-  border: 1px solid var(--line-strong);
-  position: relative;
-  transition: transform var(--d-slow) var(--spring);
-}
-
-.scale__viz--char i::before,
-.scale__viz--char i::after {
-  content: "";
-  position: absolute;
-  top: 15px;
-  width: 4px;
-  height: 4px;
-  border-radius: var(--r-full);
-  background: var(--accent);
-}
-
-.scale__viz--char i::before { left: 11px; }
-.scale__viz--char i::after { right: 11px; }
-
-.scale:hover .scale__viz--char i:nth-child(1) { transform: translateY(-6px) rotate(-8deg); }
-.scale:hover .scale__viz--char i:nth-child(2) { transform: translateY(-10px); }
-.scale:hover .scale__viz--char i:nth-child(3) { transform: translateY(-4px) rotate(8deg); }
-
-.scale__viz--space { align-items: flex-end; gap: 4px; }
-
-.scale__viz--space u {
-  flex: 1;
-  height: 100%;
-  border-bottom: 1px solid var(--line-strong);
-  border-left: 1px solid var(--line-strong);
-  transform-origin: bottom;
-  scale: 1 var(--h, 0.4);
-  background: linear-gradient(180deg, transparent, color-mix(in oklab, var(--accent) 14%, transparent));
-  transition: scale var(--d-slow) var(--ease-out-expo);
-}
-
-.scale__viz--space u:nth-child(1) { --h: 0.3; }
-.scale__viz--space u:nth-child(2) { --h: 0.55; }
-.scale__viz--space u:nth-child(3) { --h: 0.85; }
-.scale__viz--space u:nth-child(4) { --h: 0.62; }
-.scale__viz--space u:nth-child(5) { --h: 0.4; }
-
-.scale:hover .scale__viz--space u { scale: 1 1; }
-
 @media (max-width: 900px) {
   .scales { grid-template-columns: 1fr; }
-  .scale { min-height: 0; }
+  .scale { padding: var(--s-5) 0; }
+  .scale + .scale {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
 }
 
 /* ============================================================
    Projects
    ============================================================ */
-
-.lead-cases {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-5);
-  margin-bottom: clamp(var(--s-8), 9vw, var(--s-10));
-  scroll-margin-top: var(--s-9);
-}
-
-.lead-case {
-  border-top: 1px solid var(--line-strong);
-  padding-top: var(--s-4);
-}
-
-.lead-case__link {
-  display: grid;
-  gap: var(--s-5);
-  height: 100%;
-}
-
-.lead-case__media {
-  aspect-ratio: 16 / 10;
-  border-radius: var(--r-md);
-}
-
-.lead-case__copy {
-  display: grid;
-  align-content: start;
-  gap: var(--s-3);
-}
-
-.lead-case__eyebrow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-3);
-  font-family: var(--font-cn);
-  font-size: var(--t-caption);
-  color: var(--fg-3);
-}
-
-.lead-case__eyebrow .num { color: var(--accent-text); }
-
-.lead-case__facts {
-  display: grid;
-  margin-top: var(--s-2);
-  border-top: 1px solid var(--line);
-}
-
-.lead-case__facts > div {
-  display: grid;
-  grid-template-columns: minmax(92px, 0.34fr) minmax(0, 1fr);
-  gap: var(--s-3);
-  padding-block: var(--s-3);
-  border-bottom: 1px solid var(--line);
-}
-
-.lead-case__facts dt {
-  font-size: 0.75rem;
-  color: var(--fg-3);
-}
-
-.lead-case__facts dd {
-  margin: 0;
-  font-family: var(--font-cn);
-  font-size: var(--t-caption);
-  color: var(--fg-1);
-}
-
-.lead-case__link:hover h3,
-.lead-case__link:focus-visible h3 {
-  color: var(--accent-text);
-}
-
-@media (max-width: 860px) {
-  .lead-cases { grid-template-columns: 1fr; }
-}
 
 .projects {
   display: grid;
@@ -557,9 +300,10 @@ html:not(.scripting) .intro { display: none; }
 }
 
 .project__meta .num {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  font-weight: 600;
+  color: var(--accent-text);
 }
 
 .project__title {
@@ -571,13 +315,6 @@ html:not(.scripting) .intro { display: none; }
 .project__link:focus-visible .project__title { color: var(--accent); }
 
 .project__desc { max-width: 52ch; }
-
-.project__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-  margin-top: var(--s-2);
-}
 
 .project__cta {
   display: inline-flex;
@@ -599,9 +336,7 @@ html:not(.scripting) .intro { display: none; }
 }
 
 .project__link:hover .project__cta i,
-.project__link:focus-visible .project__cta i,
-.lead-case__link:hover .project__cta i,
-.lead-case__link:focus-visible .project__cta i {
+.project__link:focus-visible .project__cta i {
   transform: translateX(4px);
 }
 
@@ -660,17 +395,11 @@ html:not(.scripting) .intro { display: none; }
 .phones__c { transform: translateY(4%) rotate(4deg); }
 
 .project__link:hover .phones__a,
-.project__link:focus-visible .phones__a,
-.lead-case__link:hover .phones__a,
-.lead-case__link:focus-visible .phones__a { transform: translateY(1%) rotate(-6.5deg); }
+.project__link:focus-visible .phones__a { transform: translateY(1%) rotate(-6.5deg); }
 .project__link:hover .phones__b,
-.project__link:focus-visible .phones__b,
-.lead-case__link:hover .phones__b,
-.lead-case__link:focus-visible .phones__b { transform: translateY(-8%) scale(1.13); }
+.project__link:focus-visible .phones__b { transform: translateY(-8%) scale(1.13); }
 .project__link:hover .phones__c,
-.project__link:focus-visible .phones__c,
-.lead-case__link:hover .phones__c,
-.lead-case__link:focus-visible .phones__c { transform: translateY(1%) rotate(6.5deg); }
+.project__link:focus-visible .phones__c { transform: translateY(1%) rotate(6.5deg); }
 
 /* ============================================================
    Coded poster visuals (concept projects)
@@ -751,9 +480,7 @@ html:not(.scripting) .intro { display: none; }
 }
 
 .project__link:hover .poster__mascot,
-.project__link:focus-visible .poster__mascot,
-.lead-case__link:hover .poster__mascot,
-.lead-case__link:focus-visible .poster__mascot {
+.project__link:focus-visible .poster__mascot {
   transform: translateY(-8px) rotate(-3deg) scale(1.04);
 }
 
@@ -937,11 +664,8 @@ html:not(.scripting) .intro { display: none; }
 .lab__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
 }
 
 @media (max-width: 1080px) {
@@ -953,15 +677,16 @@ html:not(.scripting) .intro { display: none; }
 }
 
 .demo {
-  background: var(--ink-1);
   padding: var(--s-6);
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: var(--s-5);
-  transition: background-color var(--d-slow) linear;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transition: background-color var(--d-fast) linear;
 }
 
-.demo:hover { background: var(--ink-2); }
+.demo:hover { background: var(--ink-1); }
 
 .demo__head {
   display: flex;
@@ -979,9 +704,9 @@ html:not(.scripting) .intro { display: none; }
 .demo__stage {
   position: relative;
   min-height: 168px;
-  border-radius: var(--r-md);
-  border: 1px dashed var(--line);
-  background: color-mix(in oklab, var(--ink-0) 55%, transparent);
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line);
+  background: transparent;
   padding: var(--s-5);
   overflow: hidden;
 }
@@ -1012,9 +737,9 @@ html:not(.scripting) .intro { display: none; }
   letter-spacing: 0.04em;
   color: var(--fg-2);
   border: 1px solid var(--line);
-  border-radius: var(--r-full);
+  border-radius: var(--r-xs);
   padding: 5px 11px;
-  transition: color var(--d-base) linear, border-color var(--d-base) linear;
+  transition: color var(--d-fast) linear, border-color var(--d-fast) linear;
 }
 
 .demo__trigger:hover { color: var(--accent); border-color: var(--accent); }
@@ -1364,43 +1089,6 @@ html:not(.scripting) .intro { display: none; }
   letter-spacing: -0.015em;
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--s-5);
-  margin-top: var(--s-9);
-  padding-top: var(--s-6);
-  border-top: 1px solid var(--line);
-}
-
-.stat { display: grid; gap: var(--s-2); }
-
-/* Set in Fraunces at a manually-pinned optical size. These figures are the
-   one place on the page where a serif carries real weight, and the WONK axis
-   keeps them from reading as a stock display face. */
-.stat__num {
-  font-family: var(--font-display);
-  font-variation-settings: "opsz" 144, "SOFT" 20, "WONK" 1;
-  font-size: clamp(2.75rem, 6.4vw, 4.75rem);
-  font-weight: 400;
-  font-variant-numeric: lining-nums tabular-nums;
-  letter-spacing: -0.032em;
-  line-height: 0.86;
-}
-
-.stat__num i {
-  font-style: normal;
-  font-size: 0.28em;
-  color: var(--fg-3);
-  margin-left: 0.1em;
-}
-
-.stat__label {
-  font-family: var(--font-cn);
-  font-size: var(--t-caption);
-  color: var(--fg-2);
-}
-
 /* ============================================================
    About
    ============================================================ */
@@ -1412,7 +1100,6 @@ html:not(.scripting) .intro { display: none; }
   align-items: start;
 }
 
-.about__lead .sec-head__meta { margin-bottom: var(--s-4); }
 .about__lead h2 { margin-bottom: var(--s-7); }
 
 .about__side {

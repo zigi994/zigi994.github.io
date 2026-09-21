@@ -121,12 +121,11 @@
   z-index: var(--z-nav);
   padding: var(--s-4) 0;
   transition: transform var(--d-slow) var(--ease-out-expo),
-    background-color var(--d-slow) linear, backdrop-filter var(--d-slow) linear;
+    background-color var(--d-base) linear;
 }
 
 .nav.is-stuck {
-  background: color-mix(in oklab, var(--ink-0) 72%, transparent);
-  backdrop-filter: blur(18px) saturate(1.4);
+  background: var(--ink-0);
   border-bottom: 1px solid var(--line);
 }
 
@@ -152,15 +151,12 @@
 
 .nav__brand b { font-weight: 600; }
 
-/* Latin-only, and it sits beside the wordmark rather than reporting a
-   value, so it takes the italic serif like every other Latin label. */
 .nav__brand span {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: normal;
-  font-size: 0.8125rem;
-  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
   color: var(--fg-2);
 }
 
@@ -559,57 +555,6 @@
 }
 
 /* ============================================================
-   Marquee
-   ============================================================ */
-
-.marquee {
-  --speed: 42s;
-  position: relative;
-  display: flex;
-  overflow: hidden;
-  user-select: none;
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-}
-
-.marquee__track {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: var(--s-7);
-  padding-right: var(--s-7);
-  animation: marquee var(--speed) linear infinite;
-}
-
-.marquee:hover .marquee__track { animation-play-state: paused; }
-
-.marquee--reverse .marquee__track { animation-direction: reverse; }
-
-@keyframes marquee {
-  to { transform: translate3d(-100%, 0, 0); }
-}
-
-.marquee__item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-4);
-  font-size: clamp(1.25rem, 3.4vw, 2.75rem);
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  white-space: nowrap;
-  color: var(--fg-2);
-}
-
-.marquee__item b { color: var(--fg-0); font-weight: 500; }
-
-.marquee__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: var(--r-full);
-  background: var(--accent);
-  flex: none;
-}
-
-/* ============================================================
    Media frame — LQIP fade-in + hover scale
    ============================================================ */
 
@@ -700,15 +645,13 @@
   border-top: 1px solid var(--line);
 }
 
-/* Email / Social / Index / Colophon — four Latin words heading Chinese
-   lists, which is the same job the case-page spec rows do. Same voice. */
 .footer__col h4 {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: normal;
-  font-size: 0.875rem;
-  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--fg-3);
   margin-bottom: var(--s-4);
 }
@@ -747,51 +690,6 @@
   text-align: center;
 }
 
-/* ============================================================
-   Utility bits
-   ============================================================ */
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  padding: 0.42em 0.85em;
-  border: 1px solid var(--line);
-  border-radius: var(--r-full);
-  font-size: var(--t-caption);
-  color: var(--fg-1);
-  background: color-mix(in oklab, var(--ink-2) 60%, transparent);
-  white-space: nowrap;
-}
-
-.pill--accent {
-  border-color: color-mix(in oklab, var(--accent) 42%, transparent);
-  color: var(--accent);
-  /* Opaque, unlike the base .pill's 60% wash, and the same 9% accent it would
-     have composited to anyway -- every use of this sits directly on --ink-0,
-     which is theme-aware, so flattening against it changes nothing visually.
-
-     It has to be opaque because one of those four uses is the home hero, where
-     the backdrop is an animating WebGL body. At 91% transparent the measured
-     contrast of this 12px accent text fell from 5.59:1 to 4.6:1 when the
-     material grew to fill the frame -- still AA, but a moving backdrop makes
-     contrast a distribution rather than a number, and the audit only samples
-     one frame. Opaque makes it a number again.
-
-     The alternative was another keep-out rectangle in the shader. Those are
-     normalised to the hero box and hand-tuned at one viewport, so they are
-     approximate everywhere else; this is exact at every viewport. */
-  background: color-mix(in oklab, var(--accent) 9%, var(--ink-0));
-}
-
-.pill__dot {
-  width: 5px;
-  height: 5px;
-  border-radius: var(--r-full);
-  background: var(--accent);
-  flex: none;
-}
-
 .dl {
   display: grid;
   gap: var(--s-4);
@@ -813,37 +711,29 @@
 
 .dl dd { font-size: 0.9375rem; color: var(--fg-0); }
 
-/* Accent field behind the hero and section transitions.
-   Anchored to the top edge rather than floating as a blurred circle:
-   the soft-blob-in-the-corner is the single fastest way to make a page
-   read as generated. The wash is paired with a fine ruled grid so the
-   space feels set, like a printed sheet. */
+/* A quiet ruled field, with no colour wash. The project art supplies colour. */
 .glow {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--accent) 15%, transparent) 0%,
-    color-mix(in oklab, var(--accent) 4%, transparent) 40%,
-    transparent 74%
-  );
-  transition: background var(--d-slow) linear;
+  background: none;
 }
 
 .glow::after {
   content: "";
   position: absolute;
   inset: 0;
+  /* deslop-ignore-next-line 06 -- this is the site-wide measured grid, not atmosphere. */
   background-image: repeating-linear-gradient(
     90deg,
     var(--line) 0 1px,
     transparent 1px var(--grid-step)
   );
+  /* deslop-ignore-next-line 06 -- the mask only lets the structural grid taper out. */
   -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
   mask-image: linear-gradient(180deg, #000 0%, transparent 76%);
-  opacity: 0.6;
+  opacity: 0.42;
 }
 
 /* ============================================================
@@ -851,7 +741,7 @@
 
    The split is by *job*, not by element: --accent stays the material
    colour wherever it is a field, a wash or a tint under something else
-   (.btn::before, .glow, ::selection, .pill--accent's own backdrop), and
+   (.btn::before, .glow, ::selection), and
    --accent-text takes over wherever the accent has to be read — a glyph,
    a focus ring, or a mark small enough that losing it loses information.
 
@@ -864,7 +754,6 @@
    ============================================================ */
 
 :root[data-theme="light"] .label--accent,
-:root[data-theme="light"] .pill--accent,
 :root[data-theme="light"] .footer__cta:hover i {
   color: var(--accent-text);
 }
@@ -872,10 +761,4 @@
 /* A 2px ring at 2.05:1 is not an indicator. */
 :root[data-theme="light"] :focus-visible {
   outline-color: var(--accent-text);
-}
-
-/* 5–7px marks: at the raw accent these dissolve into the sheet. */
-:root[data-theme="light"] .pill__dot,
-:root[data-theme="light"] .marquee__dot {
-  background: var(--accent-text);
 }

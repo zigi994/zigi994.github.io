@@ -33,6 +33,12 @@
   margin-bottom: var(--s-5);
 }
 
+.case-meta {
+  font-family: var(--font-cn);
+  font-size: var(--t-caption);
+  color: var(--fg-3);
+}
+
 .chero__title {
   font-family: var(--font-cn);
   margin-bottom: var(--s-6);
@@ -42,6 +48,12 @@
 .chero__sub {
   max-width: 54ch;
   margin-bottom: var(--s-8);
+}
+
+.chero__sub em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--fg-0);
 }
 
 .chero__facts {
@@ -54,23 +66,12 @@
 
 .chero__fact { display: grid; gap: 5px; align-content: start; }
 
-/* The one place English gets to be a voice rather than a system label.
-   These five words are the only latin prose in the hero, so they carry
-   the italic serif while the Chinese values under them stay heavy sans —
-   two scripts doing two jobs instead of competing at the same weight.
-   Set in title case, not caps: tracking and uppercase are what make a
-   mono label read as machine output, and both fight an italic.
-   14px because Fraunces' italic letterforms simply do not register at
-   the 11px this used to be, which would buy the font's weight for a
-   texture nobody can see. Still a third smaller than the dd below it,
-   so the hierarchy is unchanged. */
 .chero__fact dt {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: normal;
-  font-size: 0.875rem;
-  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   color: var(--fg-3);
 }
 
@@ -146,11 +147,11 @@
 }
 
 .chapter__idx b {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  color: var(--accent);
-  font-weight: 500;
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  letter-spacing: 0.04em;
+  color: var(--accent-text);
+  font-weight: 600;
 }
 
 .chapter__title {
@@ -171,7 +172,7 @@
 .chapter__copy em {
   font-style: normal;
   color: var(--fg-0);
-  box-shadow: inset 0 -0.4em 0 color-mix(in oklab, var(--accent) 22%, transparent);
+  font-weight: 600;
 }
 
 @media (max-width: 860px) {
@@ -181,12 +182,8 @@
 /* --- pull quote --- */
 .pquote {
   margin-block: clamp(var(--s-7), 8vh, var(--s-9));
-  padding: clamp(var(--s-6), 5vw, var(--s-8));
-  border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  background:
-    radial-gradient(90% 120% at 0% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 62%),
-    var(--ink-1);
+  padding-block: clamp(var(--s-6), 5vw, var(--s-8));
+  border-block: 1px solid var(--line-strong);
 }
 
 .pquote p {
@@ -236,12 +233,12 @@
 }
 
 .fig figcaption b {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  letter-spacing: 0.04em;
+  color: var(--accent-text);
   flex: none;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 @media (max-width: 860px) {
@@ -502,20 +499,20 @@
 
 .specs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--line);
 }
 
 .spec {
-  background: var(--ink-1);
-  padding: var(--s-5);
+  padding: var(--s-5) var(--s-5) var(--s-5) 0;
   display: grid;
   gap: var(--s-2);
   align-content: start;
+}
+
+.spec + .spec {
+  padding-left: var(--s-5);
+  border-left: 1px solid var(--line);
 }
 
 .spec b {
@@ -531,6 +528,25 @@
   font-family: var(--font-cn);
   font-size: var(--t-caption);
   color: var(--fg-2);
+}
+
+@media (max-width: 860px) {
+  .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spec:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .spec:nth-child(n + 3) { border-top: 1px solid var(--line); }
+}
+
+@media (max-width: 520px) {
+  .specs { grid-template-columns: 1fr; }
+  .spec,
+  .spec + .spec {
+    padding: var(--s-4) 0;
+    border-left: 0;
+  }
+  .spec + .spec { border-top: 1px solid var(--line); }
 }
 
 /* ============================================================
@@ -551,10 +567,7 @@
    that stacking would otherwise have carried. */
 .reframe {
   margin-block: clamp(var(--s-6), 6vh, var(--s-8));
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  background: var(--ink-1);
+  border-block: 1px solid var(--line);
   display: grid;
   /* The finding is set larger and gets the wider half, so that both halves
      finish their last line at roughly the same depth. */
@@ -575,8 +588,7 @@
    cannot be seen -- and an invisible seam is an invisible diagram. The 4% wash
    behind it stays on the raw accent, where being barely there is the point. */
 .reframe__row--found {
-  border-inline-start: 2px solid var(--accent-text);
-  background: color-mix(in oklab, var(--accent) 4%, var(--ink-1));
+  border-inline-start: 1px solid var(--line);
 }
 
 .reframe__tag {
@@ -586,19 +598,15 @@
   white-space: nowrap;
 }
 
-/* Matches .chero__fact dt and the homepage's 屏幕 Screen pairing: the Latin
-   half is real Fraunces italic, the variation settings reset because the
-   variable axes carry display weights that this size cannot hold. */
 .reframe__tag i {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: normal;
-  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   margin-inline-start: 0.4em;
 }
 
-.reframe__row--found .reframe__tag { color: var(--accent-text); }
+.reframe__row--found .reframe__tag { color: var(--fg-1); }
 
 .reframe__text {
   font-family: var(--font-cn);
@@ -633,10 +641,7 @@
   .reframe { grid-template-columns: minmax(0, 1fr); }
   .reframe__row--found {
     border-inline-start: 0;
-    /* --accent-text here too, for the reason given above: raw #9db37f against
-       bone measures 1.93:1, the mixed value 5.74:1. Left as var(--accent) this
-       rule quietly undid the fix at every width below 860px. */
-    border-block-start: 2px solid var(--accent-text);
+    border-block-start: 1px solid var(--line);
   }
 }
 
@@ -680,11 +685,11 @@
 }
 
 .flow__node b {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: var(--track-label);
-  color: var(--accent);
-  font-weight: 500;
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  letter-spacing: 0.04em;
+  color: var(--accent-text);
+  font-weight: 600;
 }
 
 .flow__node span {
@@ -725,8 +730,9 @@
 }
 
 .daily-chain__step {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  font-weight: 600;
   color: var(--accent-text);
 }
 
@@ -764,7 +770,7 @@
 }
 
 .daily-chain__done b {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 2rem;
   font-weight: 500;
   line-height: 1;
@@ -792,8 +798,9 @@
 
 .daily-chain figcaption b {
   flex: none;
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  font-weight: 600;
   color: var(--accent-text);
 }
 
@@ -809,10 +816,8 @@
   position: relative;
   min-height: 460px;
   border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  background:
-    radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 44%),
-    var(--ink-1);
+  border-radius: var(--r-md);
+  background: var(--ink-1);
   overflow: hidden;
 }
 
@@ -862,7 +867,7 @@
   gap: 2px;
   padding: var(--s-3);
   border: 1px solid var(--line-strong);
-  border-radius: var(--r-full);
+  border-radius: var(--r-xs);
   background: var(--ink-0);
 }
 
@@ -887,8 +892,9 @@
 }
 
 .character-world__rules .num {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  font-weight: 600;
   color: var(--accent-text);
 }
 
@@ -941,8 +947,9 @@
 }
 
 .human-scale article > .num {
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  font-weight: 600;
   color: var(--accent-text);
 }
 

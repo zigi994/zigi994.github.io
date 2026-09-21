@@ -77,14 +77,9 @@ const PRECACHE = [
   at('scripts/navigation.js'),
   at('scripts/sw-register.js'),
 
-  /* Only the faces the stylesheets actually declare. The Inter files in
-     the same directory are unreferenced leftovers. Fraunces ships italic
-     as a separate family, so the roman file cannot serve it: without the
-     italic here, an offline visitor gets a mechanical slant on exactly
-     the runs the subset exists to render properly. */
+  /* The one Latin face the stylesheets declare. CJK stays on the compact
+     system stack instead of forcing a multi-megabyte webfont download. */
   at('assets/fonts/bricolage-var.woff2'),
-  at('assets/fonts/fraunces-var.woff2'),
-  at('assets/fonts/fraunces-italic-var.woff2'),
 
   at('favicon.svg'),
   at('manifest.webmanifest'),

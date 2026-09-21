@@ -1,95 +1,8 @@
 /* ============================================================
-   home.js — hero field, intro curtain, interaction lab
+   home.js — hero field and interaction lab
    ============================================================ */
 
-import { ticker, lerp, clamp, reduceMotion, finePointer } from "./motion.js";
-
-/* ------------------------------------------------------------
-   Intro curtain
-   Counts real decoded progress where possible, so the number
-   means something instead of faking a load.
-   ------------------------------------------------------------ */
-function initIntro() {
-  const intro = document.getElementById("intro");
-  if (!intro) return;
-
-  /* The curtain is a first impression, not a page transition. Coming back to
-     the homepage — nav, breadcrumb, or Back — should land on the work rather
-     than on a counter replaying to 100, which prefetch and View Transitions
-     otherwise deliver instantly and then sit behind a black panel.
-     sessionStorage scopes it to the tab, so a genuinely new visit still gets
-     it; the navigation-type check covers private mode, where it throws. */
-  const nav = performance.getEntriesByType("navigation")[0];
-  let seen = false;
-  try {
-    seen = sessionStorage.getItem("zigi:intro") === "1";
-    sessionStorage.setItem("zigi:intro", "1");
-  } catch (e) {
-    /* storage blocked; fall back to the navigation type alone */
-  }
-  if (seen || (nav && nav.type === "back_forward")) {
-    intro.remove();
-    return;
-  }
-
-  const out = intro.querySelector("[data-intro-count]");
-  const bar = intro.querySelector(".intro__bar span");
-
-  const finish = () => {
-    intro.classList.add("is-done");
-    document.body.classList.remove("is-locked");
-    setTimeout(() => intro.remove(), 1400);
-  };
-
-  if (reduceMotion.matches) {
-    out.textContent = "100";
-    finish();
-    return;
-  }
-
-  document.body.classList.add("is-locked");
-
-  let shown = 0;
-  let real = 0;
-  const started = performance.now();
-
-  const imgs = [...document.images];
-  const total = Math.max(imgs.length, 1);
-  let done = 0;
-  imgs.forEach((img) => {
-    const mark = () => {
-      done += 1;
-      real = done / total;
-    };
-    if (img.complete) mark();
-    else {
-      img.addEventListener("load", mark, { once: true });
-      img.addEventListener("error", mark, { once: true });
-    }
-  });
-
-  const step = () => {
-    const elapsed = performance.now() - started;
-    // Never outrun the floor, never stall on a slow image.
-    const floor = clamp(elapsed / 1600, 0, 1);
-    const target = Math.max(floor, real);
-    shown = lerp(shown, target, 0.09);
-
-    const pct = Math.min(100, Math.round(shown * 100));
-    out.textContent = String(pct);
-    bar.style.setProperty("--p", (pct / 100).toFixed(3));
-
-    if (pct >= 100 || elapsed > 4200) {
-      out.textContent = "100";
-      bar.style.setProperty("--p", "1");
-      setTimeout(finish, 220);
-      return;
-    }
-    requestAnimationFrame(step);
-  };
-
-  requestAnimationFrame(step);
-}
+import { ticker, lerp, reduceMotion, finePointer } from "./motion.js";
 
 /* ------------------------------------------------------------
    Hero dot field
@@ -505,7 +418,6 @@ function initRipple() {
    Boot
    ------------------------------------------------------------ */
 function boot() {
-  initIntro();
   initHeroField();
   initEasingDemo();
   initFluidTabs();

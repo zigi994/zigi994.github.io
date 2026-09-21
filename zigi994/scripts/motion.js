@@ -844,41 +844,6 @@ function initAccent() {
 }
 
 /* ------------------------------------------------------------
-   Counters
-   ------------------------------------------------------------ */
-function initCounters() {
-  const els = document.querySelectorAll("[data-counter]");
-  if (!els.length) return;
-
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      const el = entry.target;
-      io.unobserve(el);
-
-      const to = Number(el.dataset.counter);
-      const decimals = Number(el.dataset.decimals || 0);
-      if (reduceMotion.matches) {
-        el.textContent = to.toFixed(decimals);
-        return;
-      }
-
-      const dur = Number(el.dataset.duration || 1500);
-      const start = performance.now();
-      const step = (now) => {
-        const t = clamp((now - start) / dur, 0, 1);
-        const eased = 1 - Math.pow(1 - t, 4);
-        el.textContent = (to * eased).toFixed(decimals);
-        if (t < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    });
-  }, { threshold: 0.4 });
-
-  els.forEach((el) => io.observe(el));
-}
-
-/* ------------------------------------------------------------
    Scroll progress bar
    ------------------------------------------------------------ */
 function initProgress() {
@@ -974,7 +939,6 @@ function boot() {
   initTilt();
   initParallax();
   initAccent();
-  initCounters();
   initProgress();
   initClock();
   initDragRail();
