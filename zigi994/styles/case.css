@@ -538,9 +538,9 @@
    ============================================================ */
 
 /* Chapter 01 of every case states a reframe, and on four of the seven it did so
-   in running prose with nothing beside it. The three that read as finished
-   chapters all have a figure: yuexing and mountain-stay carry plates, toast
-   carries a .flow. The four bare ones are the app and concept projects, where
+   in running prose with nothing beside it. The chapters that read as finished
+   already carry a figure: yuexing and mountain-stay use image plates, while
+   the app and concept projects have no photograph to take, so
    there is no photograph to take -- so the argument itself has to be the
    figure.
 
@@ -571,7 +571,7 @@
 /* The divider carries the accent instead of --line: the turn from one half to
    the other is the entire content of the block, so the seam is the diagram.
    --accent-text rather than --accent because the per-project accents include
-   quchong's mint and toast's pale tones, which against bone draw a rule that
+   quchong's mint, which against bone draws a rule that
    cannot be seen -- and an invisible seam is an invisible diagram. The 4% wash
    behind it stays on the raw accent, where being barely there is the point. */
 .reframe__row--found {
@@ -698,6 +698,322 @@
   font-family: var(--font-cn);
   font-size: var(--t-caption);
   color: var(--fg-2);
+}
+
+/* ============================================================
+   Project-specific evidence diagrams
+   ============================================================ */
+
+/* 趣宠: existing screens arranged as a state chain. */
+.daily-chain {
+  display: grid;
+  gap: var(--s-4);
+  margin-block: var(--s-8);
+}
+
+.daily-chain__screens {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-5);
+}
+
+.daily-chain__screens article {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+}
+
+.daily-chain__step {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  color: var(--accent-text);
+}
+
+.daily-chain__frame {
+  aspect-ratio: 9 / 16;
+  border-radius: var(--r-md);
+  background: color-mix(in oklab, var(--accent) 8%, var(--ink-1));
+}
+
+.daily-chain__frame img { object-fit: cover; }
+
+.daily-chain__frame--done::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: color-mix(in oklab, var(--ink-0) 34%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.daily-chain__done {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 2;
+  translate: -50% -50%;
+  min-width: 132px;
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  padding: var(--s-4);
+  border: 1px solid var(--accent-text);
+  border-radius: var(--r-md);
+  background: var(--ink-0);
+  color: var(--fg-0);
+}
+
+.daily-chain__done b {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.daily-chain__done em {
+  font-style: normal;
+  font-family: var(--font-cn);
+  font-size: var(--t-caption);
+}
+
+.daily-chain__screens h3 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.daily-chain figcaption {
+  display: flex;
+  gap: var(--s-3);
+  align-items: baseline;
+  font-family: var(--font-cn);
+  font-size: var(--t-caption);
+  color: var(--fg-2);
+}
+
+.daily-chain figcaption b {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  color: var(--accent-text);
+}
+
+/* 粤醒茶香: an identity system shown as a world, not invented lore. */
+.character-world {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(var(--s-5), 5vw, var(--s-8));
+  align-items: stretch;
+}
+
+.character-world__orbit {
+  position: relative;
+  min-height: 460px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 44%),
+    var(--ink-1);
+  overflow: hidden;
+}
+
+.character-world__orbit::before,
+.character-world__orbit::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.character-world__orbit::after {
+  inset: 26%;
+  border-style: dashed;
+}
+
+.character-world__core {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 2;
+  translate: -50% -50%;
+  width: 34%;
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+}
+
+.character-world__core img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.character-world__core span,
+.character-world__node {
+  font-family: var(--font-cn);
+  font-size: var(--t-caption);
+}
+
+.character-world__node {
+  position: absolute;
+  z-index: 2;
+  min-width: 82px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-full);
+  background: var(--ink-0);
+}
+
+.character-world__node b { font-weight: 500; }
+.character-world__node em { font-style: normal; color: var(--fg-3); }
+.character-world__node--a { left: 9%; top: 16%; }
+.character-world__node--b { right: 8%; top: 20%; }
+.character-world__node--c { right: 10%; bottom: 14%; }
+.character-world__node--d { left: 8%; bottom: 18%; }
+
+.character-world__rules {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.character-world__rules li {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: var(--s-4);
+  padding-block: var(--s-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.character-world__rules .num {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  color: var(--accent-text);
+}
+
+.character-world__rules b {
+  display: block;
+  margin-bottom: var(--s-1);
+  font-family: var(--font-cn);
+  font-weight: 500;
+}
+
+.character-world__rules p {
+  font-family: var(--font-cn);
+  font-size: var(--t-caption);
+  color: var(--fg-2);
+}
+
+/* 山居: body posture is the scale marker; no unsupported dimensions. */
+.human-scale {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.1fr) repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: var(--s-8);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--line);
+}
+
+.human-scale > * {
+  padding: var(--s-5);
+  background: var(--ink-1);
+}
+
+.human-scale__intro {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+}
+
+.human-scale__intro h3 {
+  font-size: var(--t-title);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.human-scale article {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+}
+
+.human-scale article > .num {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  color: var(--accent-text);
+}
+
+.human-scale article h3 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.human-scale__figure {
+  position: relative;
+  height: 116px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.human-scale__figure i {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 18px;
+  height: 74px;
+  translate: -50% 0;
+  border: 1px solid var(--accent-text);
+  border-radius: 12px 12px 3px 3px;
+}
+
+.human-scale__figure i::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -20px;
+  width: 18px;
+  height: 18px;
+  translate: -50% 0;
+  border: 1px solid var(--accent-text);
+  border-radius: 50%;
+  background: var(--ink-1);
+}
+
+.human-scale__figure span {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.human-scale__figure--stand span { top: 22px; }
+.human-scale__figure--sit i { height: 43px; transform: rotate(-16deg); transform-origin: bottom; }
+.human-scale__figure--sit span { top: 52px; }
+.human-scale__figure--touch i { height: 60px; transform: rotate(18deg); transform-origin: bottom; }
+.human-scale__figure--touch span { bottom: 24px; }
+
+@media (max-width: 980px) {
+  .human-scale { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .daily-chain__screens {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: minmax(190px, 72vw);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--s-4);
+  }
+
+  .daily-chain__screens article { scroll-snap-align: start; }
+  .daily-chain figcaption { align-items: flex-start; }
+  .character-world { grid-template-columns: 1fr; }
+  .character-world__orbit { min-height: 390px; }
+  .human-scale { grid-template-columns: 1fr; }
 }
 
 /* ============================================================

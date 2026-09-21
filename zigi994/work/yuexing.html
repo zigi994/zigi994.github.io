@@ -25,15 +25,25 @@
     <a class="nav__brand" href="../" aria-label="zigi, 返回首页">
       <b>zigi</b><span>Interaction&nbsp;Design</span>
     </a>
-    <nav class="nav__links" aria-label="主导航">
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+      <span>菜单</span><i aria-hidden="true"></i>
+    </button>
+    <nav class="nav__links" id="site-menu" aria-label="主导航">
+      <div class="nav__menu-head">
+        <span class="label">导航</span>
+        <button class="nav__close" type="button">关闭</button>
+      </div>
       <a class="nav__link" href="../#work">作品</a>
       <a class="nav__link" href="../#lab">交互实验</a>
       <a class="nav__link" href="../#approach">方法</a>
       <a class="nav__link" href="../#about">关于</a>
-      <a class="nav__link" href="../#contact">联系</a>
+      <a class="nav__link nav__email" href="mailto:1965200384@qq.com">
+        <span>联系邮箱</span><b>1965200384@qq.com</b>
+      </a>
     </nav>
     <span class="nav__clock" data-clock>Guangzhou</span>
   </div>
+  <button class="nav__scrim" type="button" aria-label="关闭菜单" tabindex="-1"></button>
 </header>
 
 <main>
@@ -64,6 +74,7 @@
         <div class="chero__fact"><dt>Motif</dt><dd>醒狮 × 粤式早茶</dd></div>
         <div class="chero__fact"><dt>Tools</dt><dd>Illustrator · AIGC 建模</dd></div>
         <div class="chero__fact"><dt>Year</dt><dd>2025</dd></div>
+        <div class="chero__fact"><dt>Status</dt><dd>形象方案 / 手办概念视觉</dd></div>
       </dl>
     </div>
 
@@ -71,7 +82,7 @@
       <div class="frame frame--pad r-16-9 media-reveal" style="background:radial-gradient(70% 80% at 50% 12%,#332514,#0a0807)">
         <img src="../assets/ip/figures-cut.webp" alt="三只粤醒茶香手办，分别为绿、粉、紫配色，角色戴着醒狮头饰坐在茶杯里，周围有小黄鸭与茶叶" data-lqip="ipFiguresCut" loading="eager" fetchpriority="high" decoding="async">
       </div>
-      <p class="caption cn" style="margin-top:var(--s-4)">衍生手办三配色：茶绿、荷粉、紫芋。</p>
+      <p class="caption cn" style="margin-top:var(--s-4)">手办概念视觉三配色：茶绿、荷粉、紫芋；不代表已量产实物。</p>
     </div>
   </section>
 
@@ -191,16 +202,59 @@
     </div>
   </section>
 
+  <!-- 04 character world -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>04</b><span class="label">角色世界</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">不是多画几张图，而是规定角色如何活着</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              一个角色世界不等于补写一段虚构故事。这里的「世界」是一组可执行边界：
+              <strong>狮头负责身份、五官负责情绪、茶杯负责产品关联、尺度负责使用场景</strong>。
+              四层各司其职，扩展时就不会把角色越画越陌生。
+            </p>
+            <p class="cn" data-reveal>
+              从 24px 的头像到 1.8 米的空间美陈，信息逐层增加：
+              越小越只留轮廓，越大才允许出现身体、杯托与伙伴。
+              <em>不是每个媒介都塞下全部细节，而是让同一身份在不同距离被认出来。</em>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="character-world" data-reveal>
+        <div class="character-world__orbit" aria-hidden="true">
+          <div class="character-world__core">
+            <img src="../assets/ip/lion-head.svg" alt="">
+            <span>身份核</span>
+          </div>
+          <span class="character-world__node character-world__node--a"><b>标志</b><em>轮廓</em></span>
+          <span class="character-world__node character-world__node--b"><b>贴纸</b><em>情绪</em></span>
+          <span class="character-world__node character-world__node--c"><b>手办</b><em>产品线</em></span>
+          <span class="character-world__node character-world__node--d"><b>空间</b><em>身体尺度</em></span>
+        </div>
+        <ol class="character-world__rules">
+          <li><span class="num">01</span><div><b>身份不动</b><p>狮头的三层色带与圆形轮廓在所有媒介中保留。</p></div></li>
+          <li><span class="num">02</span><div><b>情绪可换</b><p>只替换眼睛、嘴和身体动作，头像版与全身版共用语法。</p></div></li>
+          <li><span class="num">03</span><div><b>产品成组</b><p>茶绿、荷粉、紫芋只对应现有三款衍生配色，不扩写虚构销量。</p></div></li>
+          <li><span class="num">04</span><div><b>媒介减法</b><p>距离越远，信息越少；先让人认出，再让人读懂。</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
   <!-- 04 merch -->
   <section class="chapter">
     <div class="shell">
       <div class="chapter__head">
-        <div class="chapter__idx"><b>04</b><span class="label">落地</span></div>
+        <div class="chapter__idx"><b>05</b><span class="label">落地</span></div>
         <div>
           <h2 class="chapter__title display-m reveal-lines">从平面到手里</h2>
           <div class="chapter__copy">
             <p class="cn" data-reveal>
-              形象最终要被握住。衍生手办把「泡在茶里」这件事做成了实体结构：
+              为了验证角色进入实体后的结构，手办概念把「泡在茶里」这件事转成可建模的体量：
               角色半身沉进杯中，杯壁上的爱心与小狮脸随配色变化，
               杯托做成可旋转的底座。
             </p>
@@ -217,7 +271,7 @@
         <div class="frame frame--pad r-21-9 media-reveal" style="background:radial-gradient(60% 90% at 50% 22%,#2e2113,#0a0807)">
           <img src="../assets/ip/figures-cut.webp" alt="三色手办组合展示" data-lqip="ipFiguresCut" loading="lazy" decoding="async">
         </div>
-        <figcaption class="bleed__cap"><b>Fig 04</b><span>衍生手办三配色，对应绿茶 / 荷叶 / 芋香三条产品线。</span></figcaption>
+        <figcaption class="bleed__cap"><b>Fig 04</b><span>手办概念视觉三配色，对应绿茶 / 荷叶 / 芋香三条产品线；尚未量产。</span></figcaption>
       </figure>
     </div>
   </section>
@@ -226,7 +280,7 @@
   <section class="chapter">
     <div class="shell">
       <div class="chapter__head">
-        <div class="chapter__idx"><b>05</b><span class="label">复盘</span></div>
+        <div class="chapter__idx"><b>06</b><span class="label">复盘</span></div>
         <div>
           <h2 class="chapter__title display-m reveal-lines">还差一套动起来的规范</h2>
           <div class="chapter__copy">

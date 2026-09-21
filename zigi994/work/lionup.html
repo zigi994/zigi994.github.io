@@ -26,15 +26,25 @@
     <a class="nav__brand" href="../" aria-label="zigi, 返回首页">
       <b>zigi</b><span>Interaction&nbsp;Design</span>
     </a>
-    <nav class="nav__links" aria-label="主导航">
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+      <span>菜单</span><i aria-hidden="true"></i>
+    </button>
+    <nav class="nav__links" id="site-menu" aria-label="主导航">
+      <div class="nav__menu-head">
+        <span class="label">导航</span>
+        <button class="nav__close" type="button">关闭</button>
+      </div>
       <a class="nav__link" href="../#work">作品</a>
       <a class="nav__link" href="../#lab">交互实验</a>
       <a class="nav__link" href="../#approach">方法</a>
       <a class="nav__link" href="../#about">关于</a>
-      <a class="nav__link" href="../#contact">联系</a>
+      <a class="nav__link nav__email" href="mailto:1965200384@qq.com">
+        <span>联系邮箱</span><b>1965200384@qq.com</b>
+      </a>
     </nav>
     <span class="nav__clock" data-clock>Guangzhou</span>
   </div>
+  <button class="nav__scrim" type="button" aria-label="关闭菜单" tabindex="-1"></button>
 </header>
 
 <main>
@@ -60,16 +70,17 @@
       </p>
 
       <dl class="chero__facts" data-reveal>
-        <div class="chero__fact"><dt>Type</dt><dd>整合品牌战役</dd></div>
+        <div class="chero__fact"><dt>Role</dt><dd>战役概念 / 互动叙事 / 视觉</dd></div>
         <div class="chero__fact"><dt>Touchpoints</dt><dd>OOH · 实体装置 · 社交 · 包装</dd></div>
-        <div class="chero__fact"><dt>Window</dt><dd>春节前后 6 周</dd></div>
+        <div class="chero__fact"><dt>Window</dt><dd>春节前后 6 周（概念设定）</dd></div>
         <div class="chero__fact"><dt>Big idea</dt><dd>广州的早晨有鼓声</dd></div>
+        <div class="chero__fact"><dt>Year</dt><dd>2026</dd></div>
         <div class="chero__fact"><dt>Status</dt><dd>概念 / 未投放</dd></div>
       </dl>
 
       <div class="notice" data-reveal>
         <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v.01M8 7.5v3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        <p>这是一个自主发起的概念方案，用于延展我自己设计的 IP，非商业投放项目。页面中的所有视觉均为代码绘制的版式示意。</p>
+        <p>这是一个自主发起的概念方案，用于延展我自己设计的 IP，非商业投放项目。页面新增组合只重组现有 IP 素材，并以 HTML / CSS / SVG 绘制版式与交互示意。</p>
       </div>
     </div>
 
@@ -95,12 +106,12 @@
       <div class="chapter__head">
         <div class="chapter__idx"><b>01</b><span class="label">洞察</span></div>
         <div>
-          <h2 class="chapter__title display-m reveal-lines">广州人不吃早餐，他们「饮茶」</h2>
+          <h2 class="chapter__title display-m reveal-lines">通勤早晨，不一定发生在茶楼</h2>
           <div class="chapter__copy">
             <p class="cn" data-reveal>
-              「食早茶」不是一顿饭，是一种早晨的社交仪式。
-              但对二三十岁的人来说，这个仪式正在流失——
-              他们的早晨是地铁、电梯和一杯便利店咖啡。
+              这个概念从日常观察而非正式调研出发：
+              「食早茶」是一种早晨的社交仪式，但许多通勤者的真实路径
+              是地铁、电梯和一杯带走的饮品。这里把它当作设计假设，不写成市场结论。
             </p>
             <p class="cn" data-reveal>
               战役不去劝人「回到茶楼」，那不现实。
@@ -144,7 +155,7 @@
             <p class="cn" data-reveal>
               版式统一：<strong>顶部一行小字点明场景，中间两个巨大的汉字，
               角色从右下角探出来</strong>。文案全部两个字——
-              在地铁里，人只有 1.5 秒的注意力，两个字刚好够。
+              这是按通勤中的快速掠读设计：先读动作，再认角色。
             </p>
             <p class="cn" data-reveal>
               底色区分产品线，沿用 IP 的三个衍生配色：
@@ -160,29 +171,51 @@
           <div class="lposter">
             <span class="lposter__kicker">站台 · 6:40 AM</span>
             <strong class="lposter__head cn">早茶<br>醒了</strong>
-            <img class="lposter__mascot" src="../assets/ip/front-cut.webp" alt="" loading="lazy" decoding="async">
+            <img class="lposter__mascot lposter__mascot--wake" src="../assets/ip/front-cut.webp" alt="半身狮童从海报右下角探出，表现刚醒状态" loading="lazy" decoding="async">
             <span class="lposter__foot">01 / AWAKE</span>
           </div>
-          <figcaption class="caption cn">01 — 原味。放在站台，对着刚出地铁的人。</figcaption>
+          <figcaption class="caption cn">01 — 探身。角色刚进入画面，对应「从困到醒」的第一拍。</figcaption>
         </figure>
         <figure>
           <div class="lposter lposter--b">
             <span class="lposter__kicker">写字楼 · 9:15 AM</span>
             <strong class="lposter__head cn">未醒<br>先饮</strong>
-            <img class="lposter__mascot" src="../assets/ip/front-cut.webp" alt="" loading="lazy" decoding="async">
+            <img class="lposter__mascot lposter__mascot--head" src="../assets/ip/lion-head.svg" alt="狮童头像近景，表现正面注视状态" loading="lazy" decoding="async">
             <span class="lposter__foot">02 / GREEN</span>
           </div>
-          <figcaption class="caption cn">02 — 绿茶。放在电梯厅，对着还没开机的人。</figcaption>
+          <figcaption class="caption cn">02 — 注视。只留狮头近景，在电梯厅形成一次正面对视。</figcaption>
         </figure>
         <figure>
           <div class="lposter lposter--c">
             <span class="lposter__kicker">老城区 · 7:20 AM</span>
             <strong class="lposter__head cn">鼓响<br>茶滚</strong>
-            <img class="lposter__mascot" src="../assets/ip/front-cut.webp" alt="" loading="lazy" decoding="async">
+            <img class="lposter__mascot lposter__mascot--group" src="../assets/ip/figures-cut.webp" alt="三只现有配色手办组成群像，表现结伴状态" loading="lazy" decoding="async">
             <span class="lposter__foot">03 / TARO</span>
           </div>
-          <figcaption class="caption cn">03 — 芋香。放在老城街口，对着熟客。</figcaption>
+          <figcaption class="caption cn">03 — 群像。三款现有手办进入同一画面，把单角色扩成同行状态。</figcaption>
         </figure>
+      </div>
+
+      <div class="campaign-cast" data-reveal>
+        <div class="campaign-cast__intro">
+          <span class="label label--accent">同一 IP / 三种传播角色</span>
+          <p class="cn">这里没有凭空增加新角色；群像来自现有头像、半身与三配色手办，只按触点重新分工。</p>
+        </div>
+        <article>
+          <img src="../assets/ip/lion-head.svg" alt="粤醒茶香狮童头像">
+          <span class="num">01</span><h3 class="cn">报时者</h3>
+          <p class="caption cn">头像近景负责远距离识别：先让人看见「醒」。</p>
+        </article>
+        <article>
+          <img src="../assets/ip/front-cut.webp" alt="粤醒茶香半身狮童">
+          <span class="num">02</span><h3 class="cn">引路者</h3>
+          <p class="caption cn">半身动作负责把视线从文案带到杯套与互动入口。</p>
+        </article>
+        <article>
+          <img src="../assets/ip/figures-cut.webp" alt="粤醒茶香三配色手办群像">
+          <span class="num">03</span><h3 class="cn">同行者</h3>
+          <p class="caption cn">三配色群像负责社交与收集场景，强调「一起醒」。</p>
+        </article>
       </div>
     </div>
   </section>
@@ -215,19 +248,34 @@
         </div>
       </div>
 
-      <div class="flow" data-reveal>
-        <div class="flow__node"><b>0ms</b><span>敲鼓</span><em>压感触发</em></div>
-        <div class="flow__node"><b>&lt;100ms</b><span>亮眼</span><em>灯带 + 音效</em></div>
-        <div class="flow__node"><b>300ms</b><span>抬头</span><em>伺服转动 15°</em></div>
-        <div class="flow__node"><b>600ms</b><span>开花</span><em>屏幕动效</em></div>
-        <div class="flow__node"><b>×3</b><span>彩蛋</span><em>雾气 + 运势小票</em></div>
+      <div class="drum-sequence" role="list" aria-label="敲鼓后的反馈时序" data-reveal>
+        <article role="listitem">
+          <div class="drum-sequence__visual drum-sequence__visual--drum" aria-hidden="true"><i></i></div>
+          <span class="num">0ms</span><h3 class="cn">敲鼓</h3><p>压感触发</p>
+        </article>
+        <article role="listitem">
+          <div class="drum-sequence__visual" aria-hidden="true"><img src="../assets/ip/lion-head.svg" alt=""></div>
+          <span class="num">&lt;100ms</span><h3 class="cn">先亮眼</h3><p>即时确认「收到」</p>
+        </article>
+        <article role="listitem">
+          <div class="drum-sequence__visual drum-sequence__visual--lift" aria-hidden="true"><img src="../assets/ip/front-cut.webp" alt=""></div>
+          <span class="num">300ms</span><h3 class="cn">再抬头</h3><p>伺服转动 15°</p>
+        </article>
+        <article role="listitem">
+          <div class="drum-sequence__visual drum-sequence__visual--bloom" aria-hidden="true"><img src="../assets/ip/lion-head.svg" alt=""><i></i></div>
+          <span class="num">600ms</span><h3 class="cn">最后开花</h3><p>屏幕茶花展开</p>
+        </article>
+        <article role="listitem">
+          <div class="drum-sequence__visual drum-sequence__visual--triple" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span class="num">×3</span><h3 class="cn">彩蛋</h3><p>雾气 + 运势小票</p>
+        </article>
       </div>
 
       <div class="specs" data-reveal style="margin-top:var(--s-7)">
         <div class="spec"><b>100<i>ms</i></b><span>反馈延迟上限</span></div>
         <div class="spec"><b>2<i>m</i></b><span>装置高度</span></div>
         <div class="spec"><b>3<i>次</i></b><span>彩蛋触发</span></div>
-        <div class="spec"><b>6<i>周</i></b><span>投放周期</span></div>
+        <div class="spec"><b>6<i>周</i></b><span>概念排期</span></div>
       </div>
     </div>
   </section>
@@ -241,7 +289,7 @@
           <h2 class="chapter__title display-m reveal-lines">杯套和手机里</h2>
           <div class="chapter__copy">
             <p class="cn" data-reveal>
-              杯套是这个战役最便宜也最有效的媒介——它会被人带着走一路。
+              杯套是这个概念里成本较低、也能被人带着走一路的媒介。
               红色腰封 + 角色头像 + 两个字，
               在写字楼电梯里就是一块<strong>移动的小灯箱</strong>。
             </p>
@@ -280,6 +328,19 @@
           <p class="caption cn" style="margin-top:var(--s-3)">Fig 02 — 社交话题墙。发布时间决定配图表情，越早越困。</p>
         </div>
       </div>
+
+      <figure class="emotion-map" data-reveal>
+        <div class="emotion-map__source frame frame--pad">
+          <img src="../assets/ip/expressions.webp" alt="粤醒茶香现有十二种表情系统" data-lqip="ipExpressions" loading="lazy" decoding="async">
+        </div>
+        <ol>
+          <li><time>06:00</time><b class="cn">困</b><span>低能量 / 哭脸与垂眼</span></li>
+          <li><time>07:30</time><b class="cn">回神</b><span>被鼓点叫醒 / 震惊</span></li>
+          <li><time>09:00</time><b class="cn">回应</b><span>进入社交 / 比心</span></li>
+          <li><time>12:00</time><b class="cn">松弛</b><span>回到茶桌 / 大笑</span></li>
+        </ol>
+        <figcaption><b>Fig 03</b><span>社交情绪映射规则。时间只决定调用哪一类现有表情，不代表真实用户数据或已上线机制。</span></figcaption>
+      </figure>
     </div>
   </section>
 
@@ -311,15 +372,15 @@
 
 </main>
 
-<section class="next" data-accent="#cfa063" data-accent-zone="#cfa063">
+<section class="next" data-accent="#d08350" data-accent-zone="#d08350">
   <div class="shell">
-    <a class="next__link" href="toast.html" data-cursor="下一个">
+    <a class="next__link" href="mountain-stay.html" data-cursor="下一个">
       <div>
         <span class="next__label label">下一个项目　04</span>
-        <span class="next__title">TOAST 烘焙所 — 咖啡烘焙空间</span>
+        <span class="next__title">山居 — 新中式民宿</span>
       </div>
       <div class="next__thumb frame">
-        <img src="../assets/interior/cafe-counter.webp" alt="" data-lqip="cafeCounter" loading="lazy" decoding="async">
+        <img src="../assets/interior/stay-lobby.webp" alt="" data-lqip="stayLobby" loading="lazy" decoding="async">
       </div>
     </a>
   </div>

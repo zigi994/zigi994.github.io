@@ -687,13 +687,101 @@ function initNav() {
   const nav = document.querySelector(".nav");
   if (!nav) return;
 
+  const toggle = nav.querySelector(".nav__toggle");
+  const menu = nav.querySelector(".nav__links");
+  const closeButton = nav.querySelector(".nav__close");
+  const scrim = nav.querySelector(".nav__scrim");
+  const mobile = window.matchMedia("(max-width: 560px)");
+  const pageRegions = [...document.querySelectorAll("main, body > .next, body > .footer")];
+  let returnFocus = null;
+
+  const focusables = () => [...menu?.querySelectorAll(
+    'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  ) || []].filter((el) => !el.hidden);
+
+  const setMenuAvailability = (available) => {
+    if (!menu) return;
+    menu.toggleAttribute("inert", !available);
+    if (available) menu.removeAttribute("aria-hidden");
+    else menu.setAttribute("aria-hidden", "true");
+  };
+
+  const closeMenu = (restore = true) => {
+    if (!menu || !toggle) return;
+    const wasOpen = menu.classList.contains("is-open");
+    menu.classList.remove("is-open");
+    toggle.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("is-menu-open");
+    pageRegions.forEach((region) => region.removeAttribute("inert"));
+    if (mobile.matches) setMenuAvailability(false);
+    if (restore && wasOpen && returnFocus instanceof HTMLElement) {
+      requestAnimationFrame(() => returnFocus.focus());
+    }
+  };
+
+  const openMenu = () => {
+    if (!menu || !toggle || !mobile.matches) return;
+    returnFocus = document.activeElement;
+    menu.classList.add("is-open");
+    toggle.setAttribute("aria-expanded", "true");
+    document.body.classList.add("is-menu-open");
+    pageRegions.forEach((region) => region.setAttribute("inert", ""));
+    nav.classList.remove("is-hidden");
+    setMenuAvailability(true);
+    requestAnimationFrame(() => (closeButton || focusables()[0])?.focus());
+  };
+
+  if (toggle && menu && closeButton && scrim) {
+    toggle.addEventListener("click", () => {
+      if (menu.classList.contains("is-open")) closeMenu();
+      else openMenu();
+    });
+    closeButton.addEventListener("click", () => closeMenu());
+    scrim.addEventListener("click", () => closeMenu());
+    menu.querySelectorAll("a[href]").forEach((link) => {
+      link.addEventListener("click", () => closeMenu());
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!menu.classList.contains("is-open")) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeMenu();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
+    const syncMenu = () => {
+      if (mobile.matches) {
+        setMenuAvailability(menu.classList.contains("is-open"));
+      } else {
+        closeMenu(false);
+        setMenuAvailability(true);
+      }
+    };
+    mobile.addEventListener?.("change", syncMenu);
+    syncMenu();
+  }
+
   let last = window.scrollY;
   let ticking = false;
 
   const update = () => {
     const y = window.scrollY;
     nav.classList.toggle("is-stuck", y > 24);
-    const menuOpen = document.body.classList.contains("is-locked");
+    const menuOpen = document.body.classList.contains("is-menu-open");
     nav.classList.toggle("is-hidden", y > 420 && y > last + 4 && !menuOpen);
     last = y;
     ticking = false;

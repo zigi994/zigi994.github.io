@@ -43,7 +43,6 @@
   --a-quchong: #9db37f; /* 茶绿, desaturated so it reads herbal not candy */
   --a-yuexing: #ec9138; /* 狮鬃橙 */
   --a-lionup: #ee5c36; /* 朱红漆 */
-  --a-toast: #cfa063; /* 橡木 + 2700K */
   --a-stay: #d08350; /* 陶土 */
   --a-linxi: #8fa8a2; /* 青瓷釉 — deliberately not the purple every AI tool uses */
   --a-chashi: #aab877; /* 茶叶 */
@@ -156,7 +155,7 @@
 }
 
 /* ============================================================
-   Light scope — the seven case studies
+   Light scope — the six case studies
 
    The home page is the dark room; a case study is the same material
    carried to a window. So this is not an inverted palette, it is the
@@ -225,7 +224,6 @@
      tea green  #9db37f -> #4e6136   6.10:1 / 5.64:1   (was 2.05 / 1.90)
      mane       #ec9138 -> #8a5510   5.56:1 / 5.08:1   (was 2.17 / 1.98)
      lacquer    #ee5c36 -> #a83417   5.94:1 / 5.21:1   (was 3.03 / 2.66)
-     oak        #cfa063 -> #7a5324   6.09:1 / 5.61:1   (was 2.12 / 1.96)
      terracotta #d08350 -> #8f4526   6.18:1 / 5.56:1   (was 2.67 / 2.40)
      celadon    #8fa8a2 -> #456159   6.06:1 / 5.55:1   (was 2.27 / 2.08)
      tea leaf   #a3c46b -> #4f6428   5.91:1 / 5.54:1   (was 1.76 / 1.66)
@@ -236,7 +234,6 @@
 :root[data-theme="light"] [data-accent="#9db37f"] { --accent-text: #4e6136; }
 :root[data-theme="light"] [data-accent="#ec9138"] { --accent-text: #8a5510; }
 :root[data-theme="light"] [data-accent="#ee5c36"] { --accent-text: #a83417; }
-:root[data-theme="light"] [data-accent="#cfa063"] { --accent-text: #7a5324; }
 :root[data-theme="light"] [data-accent="#d08350"] { --accent-text: #8f4526; }
 :root[data-theme="light"] [data-accent="#8fa8a2"] { --accent-text: #456159; }
 :root[data-theme="light"] [data-accent="#a3c46b"] { --accent-text: #4f6428; }

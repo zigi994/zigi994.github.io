@@ -39,7 +39,7 @@
       Launches headless Chrome, installs the pixel-sampling bindings, and points
       it at this page. Everything else is unchanged: the harness still drives
       itself, still writes tools/_qa/audit-*.{json,txt}, still touches
-      AUDIT_DONE.txt when it finishes. Flags: -Page work/toast.html, -Vp mobile.
+      AUDIT_DONE.txt when it finishes. Flags: -Page work/lionup.html, -Vp mobile.
 
    2. ESTIMATED (fallback)
         open http://localhost:8787/__tools/audit.html
@@ -108,16 +108,16 @@ const PAGES = [
   'work/quchong.html',
   'work/yuexing.html',
   'work/lionup.html',
-  'work/toast.html',
   'work/mountain-stay.html',
   'work/linxi.html',
   'work/chashi.html',
 ];
 
 const VIEWPORTS = [
-  { tag: 'desktop', w: 1440, h: 900 },
-  { tag: 'tablet',  w: 834,  h: 1112 },
-  { tag: 'mobile',  w: 390,  h: 844 },
+  { tag: 'desktop',  w: 1440, h: 1000 },
+  { tag: 'laptop',   w: 1024, h: 768 },
+  { tag: 'portrait', w: 768,  h: 1024 },
+  { tag: 'mobile',   w: 390,  h: 844 },
 ];
 
 /* The dark theme's --ink-0, used by the LEGACY backdrop walk as its last resort
@@ -510,6 +510,12 @@ async function analyze(w, d, vp, pageUrl, frameOrigin) {
   const textEls = [];
   const rng = d.createRange();
   for (const el of all) {
+    // Screen-reader-only copy is intentionally clipped to a 1px box. Reporting
+    // that pattern as lost visible text makes every accessible description a
+    // layout failure and incentivises removing the very text assistive tech
+    // needs. Only the explicit utility class is exempt; ordinary clipped text
+    // still fails below.
+    if (el.closest('.sr-only')) continue;
     const txt = directText(el);
     if (!txt) continue;
     const cs = csOf(el);

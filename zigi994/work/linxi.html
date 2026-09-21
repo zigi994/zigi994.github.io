@@ -25,15 +25,25 @@
     <a class="nav__brand" href="../" aria-label="zigi, 返回首页">
       <b>zigi</b><span>Interaction&nbsp;Design</span>
     </a>
-    <nav class="nav__links" aria-label="主导航">
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+      <span>菜单</span><i aria-hidden="true"></i>
+    </button>
+    <nav class="nav__links" id="site-menu" aria-label="主导航">
+      <div class="nav__menu-head">
+        <span class="label">导航</span>
+        <button class="nav__close" type="button">关闭</button>
+      </div>
       <a class="nav__link" href="../#work">作品</a>
       <a class="nav__link" href="../#lab">交互实验</a>
       <a class="nav__link" href="../#approach">方法</a>
       <a class="nav__link" href="../#about">关于</a>
-      <a class="nav__link" href="../#contact">联系</a>
+      <a class="nav__link nav__email" href="mailto:1965200384@qq.com">
+        <span>联系邮箱</span><b>1965200384@qq.com</b>
+      </a>
     </nav>
     <span class="nav__clock" data-clock>Guangzhou</span>
   </div>
+  <button class="nav__scrim" type="button" aria-label="关闭菜单" tabindex="-1"></button>
 </header>
 
 <main>
@@ -46,7 +56,7 @@
       </div>
 
       <div class="chero__kicker">
-        <span class="label label--accent">06　AI 设计 · 工具概念</span>
+        <span class="label label--accent">05　AI 设计 · 工具概念</span>
         <span class="pill pill--accent"><i class="pill__dot"></i>概念方案</span>
       </div>
 
@@ -96,7 +106,8 @@
           <div class="nodeui__canvas">
             <svg class="nodeui__wires" aria-hidden="true"></svg>
 
-            <article class="nnode" style="left:5%;top:9%" data-name="参考 · 醒狮头饰" data-strength="80">
+            <article class="nnode" style="left:5%;top:9%" data-name="参考 · 醒狮头饰" data-strength="80"
+                     role="button" tabindex="0" aria-pressed="false" aria-label="选择参考节点：醒狮头饰">
               <header class="nnode__head">Reference</header>
               <div class="nnode__body">
                 <div class="nnode__thumb"></div>
@@ -104,7 +115,8 @@
               </div>
             </article>
 
-            <article class="nnode" style="left:5%;bottom:9%" data-name="参考 · 茶杯结构" data-strength="55">
+            <article class="nnode" style="left:5%;bottom:9%" data-name="参考 · 茶杯结构" data-strength="55"
+                     role="button" tabindex="0" aria-pressed="false" aria-label="选择参考节点：茶杯结构">
               <header class="nnode__head">Reference</header>
               <div class="nnode__body">
                 <div class="nnode__thumb"></div>
@@ -112,7 +124,8 @@
               </div>
             </article>
 
-            <article class="nnode is-sel" style="left:40%;top:33%" data-name="合成 · 角色主体" data-strength="72">
+            <article class="nnode is-sel" style="left:40%;top:33%" data-name="合成 · 角色主体" data-strength="72"
+                     role="button" tabindex="0" aria-pressed="true" aria-label="选择合成节点：角色主体">
               <header class="nnode__head">Compose</header>
               <div class="nnode__body">
                 <div class="nnode__thumb"></div>
@@ -121,7 +134,8 @@
               </div>
             </article>
 
-            <article class="nnode" style="right:5%;top:33%" data-name="输出 · 三视图" data-strength="90">
+            <article class="nnode" style="right:5%;top:33%" data-name="输出 · 三视图" data-strength="90"
+                     role="button" tabindex="0" aria-pressed="false" aria-label="选择输出节点：三视图">
               <header class="nnode__head">Output</header>
               <div class="nnode__body">
                 <div class="nnode__thumb"></div>
@@ -239,11 +253,49 @@
     </div>
   </section>
 
+  <!-- 03 reversible loop -->
+  <section class="chapter">
+    <div class="shell">
+      <div class="chapter__head">
+        <div class="chapter__idx"><b>03</b><span class="label">闭环</span></div>
+        <div>
+          <h2 class="chapter__title display-m reveal-lines">输入、生成、选择、回溯，是同一条可逆链</h2>
+          <div class="chapter__copy">
+            <p class="cn" data-reveal>
+              对话式工具常把「生成」当作终点。灵犀把它放在中间：
+              输入只定义变化，生成负责展开候选，选择负责收敛，
+              <strong>回溯则保证任何一次选择都不是死路</strong>。
+            </p>
+            <p class="cn" data-reveal>
+              回溯不是撤销。撤销会删除之后发生的事；
+              这里是从旧节点再开一条岔路，原来的结果仍然可见。
+              <em>设计师得到的不是一条聊天记录，而是一张决策地图。</em>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="generation-loop" data-reveal>
+        <ol>
+          <li><span class="num">01</span><b class="cn">输入</b><p>写变化，不重写全部提示词</p></li>
+          <li><span class="num">02</span><b class="cn">生成</b><p>保留输入、参数与输出关系</p></li>
+          <li><span class="num">03</span><b class="cn">并排选择</b><p>比较候选，而不是只看最后一张</p></li>
+          <li><span class="num">04</span><b class="cn">采用</b><p>把认可方向放回主线</p></li>
+          <li class="generation-loop__back"><span class="num">05</span><b class="cn">回溯</b><p>从旧节点开岔路，不覆盖原版</p></li>
+        </ol>
+        <svg viewBox="0 0 800 130" role="img" aria-label="从回溯节点返回输入节点的闭环箭头">
+          <path d="M742 42 C742 104 650 110 400 110 C150 110 58 104 58 42"/>
+          <path d="M49 54 L58 42 L68 54"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
   <!-- 03 version tree -->
   <section class="chapter">
     <div class="shell">
       <div class="chapter__head">
-        <div class="chapter__idx"><b>03</b><span class="label">版本</span></div>
+        <div class="chapter__idx"><b>04</b><span class="label">版本</span></div>
         <div>
           <h2 class="chapter__title display-m reveal-lines">灵感应该有分叉</h2>
           <div class="chapter__copy">
@@ -298,7 +350,7 @@
   <section class="chapter">
     <div class="shell">
       <div class="chapter__head">
-        <div class="chapter__idx"><b>04</b><span class="label">自评</span></div>
+        <div class="chapter__idx"><b>05</b><span class="label">自评</span></div>
         <div>
           <h2 class="chapter__title display-m reveal-lines">节点很强，但也很吓人</h2>
           <div class="chapter__copy">
@@ -327,7 +379,7 @@
   <div class="shell">
     <a class="next__link" href="chashi.html" data-cursor="下一个">
       <div>
-        <span class="next__label label">下一个项目　07</span>
+        <span class="next__label label">下一个项目　06</span>
         <span class="next__title">茶时 CHASHI — 智能茶器 × App</span>
       </div>
       <div class="next__thumb frame" style="background:linear-gradient(155deg,#1a1f16,#0b0d0a)"></div>

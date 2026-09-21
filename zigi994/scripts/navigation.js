@@ -39,8 +39,8 @@
 
   /* ------------------------------------------------------------
      Eligibility
-     Keyed without the hash, so /work/toast.html and
-     /work/toast.html#process are one document, and an in-page
+   Keyed without the hash, so a case URL and its #process variant
+   are one document, and an in-page
      #anchor on the current page resolves to nothing to fetch.
      ------------------------------------------------------------ */
   const key = (url) => url.origin + url.pathname + url.search;

@@ -24,15 +24,25 @@
     <a class="nav__brand" href="../" aria-label="zigi, 返回首页">
       <b>zigi</b><span>Interaction&nbsp;Design</span>
     </a>
-    <nav class="nav__links" aria-label="主导航">
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+      <span>菜单</span><i aria-hidden="true"></i>
+    </button>
+    <nav class="nav__links" id="site-menu" aria-label="主导航">
+      <div class="nav__menu-head">
+        <span class="label">导航</span>
+        <button class="nav__close" type="button">关闭</button>
+      </div>
       <a class="nav__link" href="../#work">作品</a>
       <a class="nav__link" href="../#lab">交互实验</a>
       <a class="nav__link" href="../#approach">方法</a>
       <a class="nav__link" href="../#about">关于</a>
-      <a class="nav__link" href="../#contact">联系</a>
+      <a class="nav__link nav__email" href="mailto:1965200384@qq.com">
+        <span>联系邮箱</span><b>1965200384@qq.com</b>
+      </a>
     </nav>
     <span class="nav__clock" data-clock>Guangzhou</span>
   </div>
+  <button class="nav__scrim" type="button" aria-label="关闭菜单" tabindex="-1"></button>
 </header>
 
 <main>
@@ -126,6 +136,37 @@
         <div class="spec"><b>4</b><span>个一级模块</span></div>
         <div class="spec"><b>2</b><span>次入口即达档案</span></div>
       </div>
+
+      <figure class="daily-chain" data-reveal>
+        <div class="daily-chain__screens">
+          <article>
+            <span class="daily-chain__step num">01 / CONTEXT</span>
+            <div class="daily-chain__frame frame frame--pad">
+              <img src="../assets/app/screen-02.webp" alt="趣宠身份选择页：选择有宠物或无宠物" data-lqip="screen02" loading="lazy" decoding="async">
+            </div>
+            <h3 class="cn">先确认「我在照顾谁」</h3>
+            <p class="caption cn">身份岔路先消除空状态，后面每次记录都有明确对象。</p>
+          </article>
+          <article>
+            <span class="daily-chain__step num">02 / TODAY</span>
+            <div class="daily-chain__frame frame frame--pad">
+              <img src="../assets/app/screen-05.webp" alt="趣宠首页：宠物档案与吃饭、睡眠、如厕记录入口" data-lqip="screen05" loading="lazy" decoding="async">
+            </div>
+            <h3 class="cn">每天只确认三件事</h3>
+            <p class="caption cn">首页把吃、睡、如厕并列，不让记录藏进三级页面。</p>
+          </article>
+          <article>
+            <span class="daily-chain__step num">03 / CONFIRM</span>
+            <div class="daily-chain__frame daily-chain__frame--done frame frame--pad">
+              <img src="../assets/app/screen-05.webp" alt="基于趣宠首页推演的今日完成状态" data-lqip="screen05" loading="lazy" decoding="async">
+              <span class="daily-chain__done"><b>3 / 3</b><em>今日已确认</em></span>
+            </div>
+            <h3 class="cn">把模糊焦虑关成一个状态</h3>
+            <p class="caption cn">完成态由现有首页代码推演，表达下一步逻辑，不冒充已完成界面。</p>
+          </article>
+        </div>
+        <figcaption><b>State chain</b><span>不确定 → 建立宠物上下文 → 看见今天 → 完成确认。前两屏来自现有 7 张界面，第三屏为明确标注的状态推演。</span></figcaption>
+      </figure>
 
       <div class="pquote" data-reveal>
         <p class="cn">把「养得好不好」这个问题，<br>翻译成三条可以每天打勾的线。</p>

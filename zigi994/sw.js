@@ -32,7 +32,9 @@ const SHELL_CACHE = 'zigi-shell-' + BUILD_ID;
    names, so re-downloading ~3 MB of webp on every deploy would be
    pure waste. Stale images can only happen if a file is replaced
    in place, which the asset pipeline does not do. */
-const MEDIA_CACHE = 'zigi-media-v1';
+/* v2 retires the three removed project images from returning visitors as well as
+   from the repository; activate() deletes the old zigi-media-v1 cache. */
+const MEDIA_CACHE = 'zigi-media-v2';
 
 /* Resolved from the worker's own URL so the same file works at the
    domain root and from a subdirectory preview. */
@@ -57,7 +59,6 @@ const PRECACHE = [
   at('work/lionup.html'),
   at('work/mountain-stay.html'),
   at('work/quchong.html'),
-  at('work/toast.html'),
   at('work/yuexing.html'),
 
   at('styles/tokens.css'),

@@ -14,7 +14,7 @@
 
   USAGE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools\audit-drive.ps1
-    powershell -NoProfile -ExecutionPolicy Bypass -File tools\audit-drive.ps1 -Page work/toast.html
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools\audit-drive.ps1 -Page work/lionup.html
     powershell -NoProfile -ExecutionPolicy Bypass -File tools\audit-drive.ps1 -Vp mobile
 
     Needs the dev server up first:
@@ -33,16 +33,16 @@
 param(
   [int]$Port = 8787,          # dev server
   [int]$CdpPort = 9222,       # chrome debugging port
-  [string]$Page = '',         # e.g. work/toast.html
-  [string]$Vp = '',           # desktop | tablet | mobile
+  [string]$Page = '',         # e.g. work/lionup.html
+  [string]$Vp = '',           # desktop | laptop | portrait | mobile
   [int]$TimeoutMin = 45
 )
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
-# The host viewport must fit the tallest frame the harness stages (tablet is
-# 834x1112) at the document origin, so every capture clip lands inside the
+# The host viewport must fit the tallest frame the harness stages (portrait is
+# 768x1024) at the document origin, so every capture clip lands inside the
 # viewport and captureBeyondViewport never has to be involved.
 $HOST_W = 1500
 $HOST_H = 1300

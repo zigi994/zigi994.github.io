@@ -43,15 +43,25 @@
       <b>zigi</b>
       <span>Interaction&nbsp;Design</span>
     </a>
-    <nav class="nav__links" aria-label="主导航">
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+      <span>菜单</span><i aria-hidden="true"></i>
+    </button>
+    <nav class="nav__links" id="site-menu" aria-label="主导航">
+      <div class="nav__menu-head">
+        <span class="label">导航</span>
+        <button class="nav__close" type="button">关闭</button>
+      </div>
       <a class="nav__link" href="#work">作品</a>
       <a class="nav__link" href="#lab">交互实验</a>
       <a class="nav__link" href="#approach">方法</a>
       <a class="nav__link" href="#about">关于</a>
-      <a class="nav__link" href="#contact">联系</a>
+      <a class="nav__link nav__email" href="mailto:1965200384@qq.com">
+        <span>联系邮箱</span><b>1965200384@qq.com</b>
+      </a>
     </nav>
     <span class="nav__clock" data-clock>Guangzhou</span>
   </div>
+  <button class="nav__scrim" type="button" aria-label="关闭菜单" tabindex="-1"></button>
 </header>
 
 <main id="top">
@@ -82,10 +92,15 @@
       </h1>
 
       <div class="hero__foot">
-        <p class="hero__lede lede cn" data-reveal style="--reveal-delay:520ms">
-          我做界面、做角色、也做空间。<br>
-          它们其实是同一件事——设计人与事物<em>相遇的那一刻</em>。
-        </p>
+        <div class="hero__pitch">
+          <p class="hero__lede lede cn" data-reveal style="--reveal-delay:520ms">
+            我做界面、做角色、也做空间。<br>
+            它们其实是同一件事——设计人与事物<em>相遇的那一刻</em>。
+          </p>
+          <a class="hero__primary" href="#lead-cases" data-reveal style="--reveal-delay:600ms">
+            查看精选案例 <i aria-hidden="true">→</i>
+          </a>
+        </div>
 
         <ul class="hero__scales" data-reveal style="--reveal-delay:640ms">
           <li><span class="label">屏幕<i class="label--en">Screen</i></span><em>界面、流程、动效</em></li>
@@ -93,11 +108,6 @@
           <li><span class="label">空间<i class="label--en">Space</i></span><em>场所、动线、光</em></li>
         </ul>
       </div>
-
-      <a class="hero__cue" href="#thesis" data-cursor="Scroll">
-        <span class="label">向下滚动</span>
-        <span class="hero__cue-line" aria-hidden="true"></span>
-      </a>
     </div>
   </section>
 
@@ -178,11 +188,60 @@
         <div>
           <div class="sec-head__meta">
             <span class="label">精选作品</span>
-            <span class="sec-head__count">07</span>
+            <span class="sec-head__count">06</span>
           </div>
-          <h2 class="display-m cn reveal-lines">七个项目，三种尺度</h2>
+          <h2 class="display-m cn reveal-lines">六个项目，三种尺度</h2>
         </div>
         <p class="caption cn" data-reveal>横跨交互、IP、空间、<br>广告与 AIGC 工作流</p>
+      </div>
+
+      <div class="lead-cases" id="lead-cases">
+        <article class="lead-case" data-accent="#9db37f" data-reveal="rise">
+          <a class="lead-case__link" href="work/quchong.html" data-cursor="查看案例">
+            <div class="lead-case__media frame media-reveal">
+              <div class="phones" aria-hidden="true">
+                <img class="phones__a" src="assets/app/screen-05.webp" alt="" data-lqip="screen05" loading="lazy" decoding="async">
+                <img class="phones__b" src="assets/app/screen-06.webp" alt="" data-lqip="screen06" loading="lazy" decoding="async">
+                <img class="phones__c" src="assets/app/screen-07.webp" alt="" data-lqip="screen07" loading="lazy" decoding="async">
+              </div>
+            </div>
+            <div class="lead-case__copy">
+              <div class="lead-case__eyebrow"><span class="num">Lead 01</span><span>屏幕尺度</span></div>
+              <h3 class="display-s cn">趣宠：把不确定变成每日确认</h3>
+              <p class="caption cn">从 6 位养宠新手访谈出发，把产品重心从「逛与买」转向养宠日志。</p>
+              <dl class="lead-case__facts">
+                <div><dt>角色 / 年份</dt><dd>交互、视觉、原型 / 2025</dd></div>
+                <div><dt>平台 / 范围</dt><dd>iOS 390×844pt / 7 张界面、4 个主模块</dd></div>
+                <div><dt>关键决定</dt><dd>日志先于社区与商城；首页并列吃、睡、如厕三个每日入口。</dd></div>
+              </dl>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
+            </div>
+          </a>
+        </article>
+
+        <article class="lead-case" data-accent="#ee5c36" data-reveal="rise">
+          <a class="lead-case__link" href="work/lionup.html" data-cursor="查看案例">
+            <div class="lead-case__media frame poster poster--lion media-reveal">
+              <div class="poster__inner" aria-hidden="true">
+                <span class="poster__kicker">概念战役 · 未投放</span>
+                <strong class="poster__head cn">把早晨<br>叫醒</strong>
+                <img class="poster__mascot" src="assets/ip/front-cut.webp" alt="" loading="lazy" decoding="async">
+                <span class="poster__foot">OOH · 装置 · 社交 · 包装</span>
+              </div>
+            </div>
+            <div class="lead-case__copy">
+              <div class="lead-case__eyebrow"><span class="num">Lead 02</span><span>角色 × 空间</span></div>
+              <h3 class="display-s cn">城市醒狮计划：让 IP 进入真实早晨</h3>
+              <p class="caption cn">自主概念方案，以「醒」连接醒狮、早茶与通勤场景，不把概念包装成真实投放。</p>
+              <dl class="lead-case__facts">
+                <div><dt>角色 / 年份</dt><dd>战役概念、互动叙事 / 2026</dd></div>
+                <div><dt>触点 / 范围</dt><dd>OOH、实体装置、社交、包装 / 3 张海报</dd></div>
+                <div><dt>关键决定</dt><dd>不劝人回茶楼，把茶楼的劲儿搬到通勤路线。</dd></div>
+              </dl>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
+            </div>
+          </a>
+        </article>
       </div>
     </div>
 
@@ -214,6 +273,7 @@
                 <span class="pill">养宠日志</span>
                 <span class="pill">同城社交</span>
               </div>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
             </div>
           </a>
         </li>
@@ -236,6 +296,7 @@
                 <span class="pill">表情系统</span>
                 <span class="pill">衍生品</span>
               </div>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
             </div>
           </a>
         </li>
@@ -264,33 +325,12 @@
                 <span class="pill">线下互动</span>
                 <span class="pill">社交传播</span>
               </div>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
             </div>
           </a>
         </li>
 
-        <!-- 04 TOAST -->
-        <li class="project" data-accent="#cfa063">
-          <a class="project__link" href="work/toast.html" data-cursor="查看案例">
-            <div class="project__media frame frame--zoom r-4-3 media-reveal">
-              <img src="assets/interior/cafe-counter.webp" alt="TOAST 烘焙所室内，暖光下的木格栅墙与面包展示柜" data-lqip="cafeCounter" loading="lazy" decoding="async">
-            </div>
-            <div class="project__body">
-              <div class="project__meta">
-                <span class="num">04</span>
-                <span class="label">室内设计、商业空间</span>
-              </div>
-              <h3 class="project__title title cn">TOAST 烘焙所 — 咖啡烘焙空间</h3>
-              <p class="project__desc caption cn">一间 60㎡ 的街角店。用一道枯山水把排队与堂食分开，让等待也成为风景的一部分。</p>
-              <div class="project__tags">
-                <span class="pill">60㎡</span>
-                <span class="pill">枯山水</span>
-                <span class="pill">动线分流</span>
-              </div>
-            </div>
-          </a>
-        </li>
-
-        <!-- 05 山居 -->
+        <!-- 04 山居 -->
         <li class="project" data-accent="#d08350">
           <a class="project__link" href="work/mountain-stay.html" data-cursor="查看案例">
             <div class="project__media frame frame--zoom r-4-3 media-reveal">
@@ -298,7 +338,7 @@
             </div>
             <div class="project__body">
               <div class="project__meta">
-                <span class="num">05</span>
+                <span class="num">04</span>
                 <span class="label">室内设计、民宿</span>
               </div>
               <h3 class="project__title title cn">山居 — 新中式民宿</h3>
@@ -308,11 +348,12 @@
                 <span class="pill">原生木构</span>
                 <span class="pill">五个场景</span>
               </div>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
             </div>
           </a>
         </li>
 
-        <!-- 06 灵犀 -->
+        <!-- 05 灵犀 -->
         <li class="project" data-accent="#8fa8a2">
           <a class="project__link" href="work/linxi.html" data-cursor="查看案例">
             <div class="project__media frame r-4-3 media-reveal poster poster--linxi">
@@ -332,7 +373,7 @@
             </div>
             <div class="project__body">
               <div class="project__meta">
-                <span class="num">06</span>
+                <span class="num">05</span>
                 <span class="label">AI 设计、工具概念</span>
                 <span class="pill">概念</span>
               </div>
@@ -343,11 +384,12 @@
                 <span class="pill">版本分叉</span>
                 <span class="pill">工作流</span>
               </div>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
             </div>
           </a>
         </li>
 
-        <!-- 07 茶时 -->
+        <!-- 06 茶时 -->
         <li class="project" data-accent="#a3c46b">
           <a class="project__link" href="work/chashi.html" data-cursor="查看案例">
             <div class="project__media frame r-4-3 media-reveal poster poster--chashi">
@@ -366,7 +408,7 @@
             </div>
             <div class="project__body">
               <div class="project__meta">
-                <span class="num">07</span>
+                <span class="num">06</span>
                 <span class="label">交互设计、软硬结合</span>
                 <span class="pill">概念</span>
               </div>
@@ -377,6 +419,7 @@
                 <span class="pill">光反馈</span>
                 <span class="pill">无屏优先</span>
               </div>
+              <span class="project__cta">查看案例 <i aria-hidden="true">→</i></span>
             </div>
           </a>
         </li>
@@ -398,7 +441,7 @@
           </div>
           <h2 class="display-m cn reveal-lines">可以上手的动效小样</h2>
         </div>
-        <p class="caption cn" data-reveal>下面每一块都是真实运行的代码，<br>不是截图。请把光标放上去。</p>
+        <p class="caption cn" data-reveal>下面每一块都是真实运行的代码，<br>可用鼠标、触摸或键盘操作。</p>
       </div>
 
       <div class="lab__grid">
@@ -425,11 +468,12 @@
             <span class="label label--en">Affordance</span>
           </header>
           <div class="demo__stage demo__stage--center">
-            <span class="magnet" data-magnetic="0.34">
+            <button class="magnet" type="button" data-magnetic="0.34" aria-describedby="magnet-status">
               <span class="magnet__inner">按我</span>
-            </span>
+            </button>
+            <span class="demo__status" id="magnet-status" aria-live="polite">鼠标靠近、轻触或按空格</span>
           </div>
-          <p class="demo__note caption cn">按钮在光标靠近时轻微迎上来。位移不超过 12px，却让点击命中率与「被回应感」明显上升。</p>
+          <p class="demo__note caption cn">鼠标靠近时迎上来；触摸或键盘按下时压缩再回弹。三种输入得到同一种确认。</p>
         </article>
 
         <!-- Elastic tabs -->
@@ -439,15 +483,21 @@
             <span class="label label--en">Continuity</span>
           </header>
           <div class="demo__stage demo__stage--center">
-            <div class="ftabs" role="tablist" data-ftabs>
+            <div class="ftabs" role="tablist" aria-label="趣宠页面示例" data-ftabs>
               <span class="ftabs__pill" aria-hidden="true"></span>
-              <button class="ftabs__btn is-active" role="tab" aria-selected="true">主页</button>
-              <button class="ftabs__btn" role="tab" aria-selected="false">社交</button>
-              <button class="ftabs__btn" role="tab" aria-selected="false">商店</button>
-              <button class="ftabs__btn" role="tab" aria-selected="false">我的</button>
+              <button class="ftabs__btn is-active" id="tab-home" role="tab" aria-selected="true" aria-controls="panel-home" tabindex="0">主页</button>
+              <button class="ftabs__btn" id="tab-social" role="tab" aria-selected="false" aria-controls="panel-social" tabindex="-1">社交</button>
+              <button class="ftabs__btn" id="tab-shop" role="tab" aria-selected="false" aria-controls="panel-shop" tabindex="-1">商店</button>
+              <button class="ftabs__btn" id="tab-mine" role="tab" aria-selected="false" aria-controls="panel-mine" tabindex="-1">我的</button>
+            </div>
+            <div class="ftabs__panels">
+              <p id="panel-home" role="tabpanel" aria-labelledby="tab-home">今天的照顾记录</p>
+              <p id="panel-social" role="tabpanel" aria-labelledby="tab-social" hidden>同城与好友动态</p>
+              <p id="panel-shop" role="tabpanel" aria-labelledby="tab-shop" hidden>用品与补货提醒</p>
+              <p id="panel-mine" role="tabpanel" aria-labelledby="tab-mine" hidden>宠物档案与设置</p>
             </div>
           </div>
-          <p class="demo__note caption cn">高亮块不是消失再出现，而是滑过去——它替用户记住了「我从哪里来」。取自趣宠的底部导航。</p>
+          <p class="demo__note caption cn">点击、触摸，或用方向键与 Home / End 切换；高亮块滑过去，替用户保留来路。</p>
         </article>
 
         <!-- Pull to refresh -->
@@ -457,12 +507,14 @@
             <span class="label label--en">Physics</span>
           </header>
           <div class="demo__stage demo__stage--center">
-            <div class="pull" data-pull>
+            <div class="pull" data-pull tabindex="0" role="button" aria-describedby="pull-help pull-status">
               <div class="pull__hint"><span class="label" data-pull-label>向下拖动</span></div>
               <div class="pull__sheet"><i></i><i></i><i></i></div>
             </div>
+            <span class="sr-only" id="pull-help">向下拖动，或按 Enter 和空格触发刷新</span>
+            <span class="demo__status" id="pull-status" aria-live="polite">等待操作</span>
           </div>
-          <p class="demo__note caption cn">位移随手指递减，松手后弹回。阻尼曲线是界面「有重量」的来源。可拖动。</p>
+          <p class="demo__note caption cn">位移随指针递减，页面仍可正常滚动；Enter / 空格提供等价触发。</p>
         </article>
 
         <!-- Counter -->
@@ -490,9 +542,10 @@
             <span class="label label--en">Delight</span>
           </header>
           <div class="demo__stage demo__stage--center">
-            <div class="ripple" data-ripple>
-              <span class="ripple__hint label">在此区域点击</span>
-            </div>
+            <button class="ripple" type="button" data-ripple aria-describedby="ripple-status">
+              <span class="ripple__hint label">点击、轻触或按 Enter</span>
+            </button>
+            <span class="demo__status" id="ripple-status" aria-live="polite">等待触点</span>
           </div>
           <p class="demo__note caption cn">从落点扩散的涟漪确认了「系统收到了」。在趣宠里它是一枚小小的爪印。</p>
         </article>
@@ -542,11 +595,11 @@
           <span class="stat__label cn">设计领域</span>
         </div>
         <div class="stat" data-reveal>
-          <b class="stat__num num"><span data-counter="7">0</span></b>
+          <b class="stat__num num"><span data-counter="6">0</span></b>
           <span class="stat__label cn">精选项目</span>
         </div>
         <div class="stat" data-reveal>
-          <b class="stat__num num"><span data-counter="12">0</span></b>
+          <b class="stat__num num"><span data-counter="7">0</span></b>
           <span class="stat__label cn">界面稿</span>
         </div>
         <div class="stat" data-reveal>
@@ -602,28 +655,21 @@
 <footer class="footer" id="contact" data-accent="#ee5c36" data-accent-zone="#ee5c36">
   <div class="shell">
     <div class="sec-head__meta"><span class="label">联系</span></div>
-    <a class="footer__cta cn" href="mailto:hello@example.com" data-cursor="写邮件">
-      说个想法吧 <i aria-hidden="true">→</i>
+    <a class="footer__cta cn" href="mailto:1965200384@qq.com" data-cursor="写邮件">
+      把问题说具体 <i aria-hidden="true">→</i>
     </a>
 
     <div class="footer__grid">
       <div class="footer__col">
         <h4>Email</h4>
-        <p><a class="tlink" href="mailto:hello@example.com">hello@example.com</a></p>
-      </div>
-      <div class="footer__col">
-        <h4>Social</h4>
-        <ul>
-          <li><a class="tlink" href="#">小红书</a></li>
-          <li><a class="tlink" href="#">Behance</a></li>
-          <li><a class="tlink" href="#">站酷 ZCOOL</a></li>
-        </ul>
+        <p><a class="tlink" href="mailto:1965200384@qq.com">1965200384@qq.com</a></p>
       </div>
       <div class="footer__col">
         <h4>Index</h4>
         <ul>
           <li><a class="tlink" href="#work">作品</a></li>
           <li><a class="tlink" href="#lab">交互实验</a></li>
+          <li><a class="tlink" href="#approach">方法</a></li>
           <li><a class="tlink" href="#about">关于</a></li>
         </ul>
       </div>

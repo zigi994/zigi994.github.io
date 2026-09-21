@@ -3,6 +3,7 @@
    ============================================================ */
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 /* ------------------------------------------------------------
    灵犀: node canvas — select nodes, retarget wires, run prompt
@@ -18,6 +19,7 @@ function initNodeUI() {
   const input = root.querySelector(".nodeui__prompt input");
   const send = root.querySelector(".nodeui__send");
   const strength = root.querySelector("[data-strength]");
+  const strengthOut = strength?.closest(".nodeui__slider")?.querySelector("em:last-child");
 
   // Wires are redrawn from live geometry so they stay attached on resize.
   const LINKS = [[0, 2], [1, 2], [2, 3]];
@@ -39,12 +41,26 @@ function initNodeUI() {
   }
 
   const select = (node) => {
-    nodes.forEach((n) => n.classList.toggle("is-sel", n === node));
+    nodes.forEach((n) => {
+      const on = n === node;
+      n.classList.toggle("is-sel", on);
+      n.setAttribute("aria-pressed", String(on));
+    });
     if (insp) insp.textContent = node.dataset.name || "节点";
-    if (strength) strength.value = node.dataset.strength || 60;
+    if (strength) {
+      strength.value = node.dataset.strength || 60;
+      if (strengthOut) strengthOut.textContent = strength.value;
+    }
   };
 
-  nodes.forEach((n) => n.addEventListener("click", () => select(n)));
+  nodes.forEach((n) => {
+    n.addEventListener("click", () => select(n));
+    n.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      select(n);
+    });
+  });
   if (nodes[2]) select(nodes[2]);
 
   strength?.addEventListener("input", () => {
@@ -52,6 +68,7 @@ function initNodeUI() {
     const bar = sel?.querySelector(".nnode__bar i");
     if (bar) bar.style.setProperty("--v", `${strength.value}%`);
     if (sel) sel.dataset.strength = strength.value;
+    if (strengthOut) strengthOut.textContent = strength.value;
   });
 
   const run = () => {
@@ -61,10 +78,12 @@ function initNodeUI() {
     const label = sel?.querySelector(".nnode__label");
     if (text && label) {
       label.textContent = text.slice(0, 18);
-      sel.animate(
-        [{ transform: "scale(1)" }, { transform: "scale(1.05)" }, { transform: "scale(1)" }],
-        { duration: 520, easing: "cubic-bezier(.34,1.56,.64,1)" }
-      );
+      if (!reduceMotion.matches) {
+        sel.animate(
+          [{ transform: "scale(1)" }, { transform: "scale(1.05)" }, { transform: "scale(1)" }],
+          { duration: 520, easing: "cubic-bezier(.34,1.56,.64,1)" }
+        );
+      }
       input.value = "";
     }
   };
@@ -73,10 +92,14 @@ function initNodeUI() {
   input?.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
 
   root.querySelectorAll(".nodeui__chip").forEach((chip) => {
+    chip.setAttribute("aria-pressed", String(chip.classList.contains("is-on")));
     chip.addEventListener("click", () => {
       const group = chip.closest(".nodeui__group");
-      group?.querySelectorAll(".nodeui__chip").forEach((c) => c.classList.remove("is-on"));
-      chip.classList.add("is-on");
+      group?.querySelectorAll(".nodeui__chip").forEach((c) => {
+        const on = c === chip;
+        c.classList.toggle("is-on", on);
+        c.setAttribute("aria-pressed", String(on));
+      });
     });
   });
 
@@ -142,8 +165,14 @@ function initDevice() {
     if (note) {
       const hit = NOTES.find(([lo, hi]) => temp >= lo && temp < hi);
       note.textContent = hit ? hit[2] : "";
+      ring.setAttribute("aria-valuetext", `${Math.round(temp)} 摄氏度，${hit ? hit[2] : ""}`);
     }
-    presets.forEach((b) => b.classList.toggle("is-on", Number(b.dataset.temp) === Math.round(temp)));
+    ring.setAttribute("aria-valuenow", String(Math.round(temp)));
+    presets.forEach((b) => {
+      const on = Number(b.dataset.temp) === Math.round(temp);
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
   }
 
   function fromPointer(e) {
@@ -181,6 +210,11 @@ function initDevice() {
   presets.forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = Number(btn.dataset.temp);
+      if (reduceMotion.matches) {
+        temp = target;
+        render();
+        return;
+      }
       const from = temp;
       const t0 = performance.now();
       const step = (now) => {

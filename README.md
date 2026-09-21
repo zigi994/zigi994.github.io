@@ -4,7 +4,7 @@
 
 <https://zigi994.github.io>
 
-跨越三种尺度的七个项目——屏幕、角色、空间。首页有一个可交互的「交互实验」区，
+跨越三种尺度的六个项目——屏幕、角色、空间。首页有一个可交互的「交互实验」区，
 案例页里的 AI 工作台与智能茶器都是可以直接操作的原型。
 
 ## 本地预览
@@ -28,7 +28,7 @@ powershell -ExecutionPolicy Bypass -File tools/serve.ps1 -Port 8787
 ```
 zigi994/              发布的站点（GitHub Actions 直接上传这个目录）
   index.html          首页：hero / 宣言 / 作品索引 / 交互实验 / 关于
-  work/*.html         七个案例详情页
+  work/*.html         六个案例详情页
   styles/             tokens · base · components · home · case · concept · transitions
   scripts/            motion（通用动效）· home · case · concept · navigation · sw-register
   assets/             压缩后的 WebP、可变字体、manifest.json（内含 LQIP 占位图）
@@ -60,7 +60,8 @@ GitHub Pages 对所有响应统一下发很短的 `Cache-Control`，而且**无�
 
 - **HTML 走 network-first**，失败才回落到缓存，最后是离线页。绝不能对 HTML 用
   cache-first，否则每次发布后都会看到旧页面。
-- **CSS / JS / 字体走 stale-while-revalidate**，按构建号分版本。
+- **CSS / JS 走 network-first**，确保与当前 HTML 属于同一版本。
+- **字体 / 图标 / manifest 走 stale-while-revalidate**，按构建号分版本。
 - **图片走 cache-first**，放在独立的长期缓存里，发版时不清空——文件名稳定、
   内容不会变。
 
