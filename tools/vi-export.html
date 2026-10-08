@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>vi export</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  import * as pdfjsLib from './pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';
+
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (s) => { lines.push(s); logEl.textContent = lines.join('\n'); };
+
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + name + ' ' + res.status);
+  }
+
+  function toBlob(canvas, type, q) {
+    return new Promise((ok) => canvas.toBlob(ok, type, q));
+  }
+
+  function isOrange(p) {
+    return p[0] > 180 && p[1] > 60 && p[1] < 210 && p[2] < 120 && p[0] > p[1] && p[1] > p[2];
+  }
+
+  function trimFooter(src) {
+    const w = src.width;
+    const h = src.height;
+    const ctx = src.getContext('2d');
+    const x = Math.floor(w * 0.5);
+    let bar = -1;
+    for (let y = h - 1; y > h * 0.62; y--) {
+      if (isOrange(ctx.getImageData(x, y, 1, 1).data)) { bar = y; break; }
+    }
+    if (bar < 0) return src;
+    const left = ctx.getImageData(Math.floor(w * 0.08), bar, 1, 1).data;
+    const right = ctx.getImageData(Math.floor(w * 0.92), bar, 1, 1).data;
+    if (!isOrange(left) || !isOrange(right)) return src;
+    let cut = bar;
+    for (let y = bar; y > h * 0.55; y--) {
+      if (!isOrange(ctx.getImageData(x, y, 1, 1).data)) { cut = y + 1; break; }
+    }
+    if (h - cut < 12) return src;
+    const out = document.createElement('canvas');
+    out.width = w;
+    out.height = Math.max(1, cut - 2);
+    out.getContext('2d').drawImage(src, 0, 0);
+    return out;
+  }
+
+  function extract(src, opts) {
+    const w = src.width;
+    const h = src.height;
+    const ctx = src.getContext('2d');
+    const data = ctx.getImageData(0, 0, w, h).data;
+    const ink = new Uint8Array(w * h);
+    const limitY = Math.floor(h * (opts.limit || 1));
+    for (let y = 0; y < limitY; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        if (r > 248 && g > 248 && b > 248) continue;
+        ink[y * w + x] = 1;
+      }
+    }
+    const seen = new Uint8Array(w * h);
+    const boxes = [];
+    const stack = [];
+    for (let y = 0; y < limitY; y++) {
+      for (let x = 0; x < w; x++) {
+        const start = y * w + x;
+        if (!ink[start] || seen[start]) continue;
+        let minX = x, maxX = x, minY = y, maxY = y, area = 0;
+        stack.length = 0;
+        stack.push(start);
+        seen[start] = 1;
+        while (stack.length) {
+          const p = stack.pop();
+          const py = (p / w) | 0;
+          const px = p - py * w;
+          area++;
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+          const nbs = [p - 1, p + 1, p - w, p + w];
+          for (let k = 0; k < 4; k++) {
+            const n = nbs[k];
+            if (n < 0 || n >= w * limitY) continue;
+            if ((k === 0 && px === 0) || (k === 1 && px === w - 1)) continue;
+            if (!ink[n] || seen[n]) continue;
+            seen[n] = 1;
+            stack.push(n);
+          }
+        }
+        if (area < (opts.minArea || 600)) continue;
+        boxes.push({ minX, minY, maxX, maxY, area });
+      }
+    }
+    const gap = opts.gap || 18;
+    let merged = true;
+    while (merged) {
+      merged = false;
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i], b = boxes[j];
+          const near = a.minX - gap <= b.maxX && b.minX - gap <= a.maxX
+            && a.minY - gap <= b.maxY && b.minY - gap <= a.maxY;
+          if (!near) continue;
+          a.minX = Math.min(a.minX, b.minX);
+          a.minY = Math.min(a.minY, b.minY);
+          a.maxX = Math.max(a.maxX, b.maxX);
+          a.maxY = Math.max(a.maxY, b.maxY);
+          a.area += b.area;
+          boxes.splice(j, 1);
+          merged = true;
+          break;
+        }
+        if (merged) break;
+      }
+    }
+    boxes.sort((a, b) => (a.minY - b.minY) || (a.minX - b.minX));
+    return boxes.filter((b) => (b.maxX - b.minX) > 24 && (b.maxY - b.minY) > 24);
+  }
+
+  async function saveStickers(src, prefix) {
+    const boxes = extract(src, { minArea: 900, gap: 22, limit: 0.9 });
+    log(prefix + ' parts ' + boxes.length);
+    const pad = 10;
+    let n = 0;
+    for (const box of boxes) {
+      const bw = box.maxX - box.minX + 1;
+      const bh = box.maxY - box.minY + 1;
+      if (bw > src.width * 0.55 || bw < 120 || bh < 120) {
+        log(prefix + ' skip ' + bw + 'x' + bh);
+        continue;
+      }
+      n++;
+      const c = document.createElement('canvas');
+      c.width = bw + pad * 2;
+      c.height = bh + pad * 2;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(src, box.minX, box.minY, bw, bh, pad, pad, bw, bh);
+      const img = ctx.getImageData(0, 0, c.width, c.height);
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] > 236 && d[i + 1] > 236 && d[i + 2] > 236) d[i + 3] = 0;
+      }
+      const kill = new Uint8Array(c.width * c.height);
+      for (let y = 3; y < c.height - 3; y++) {
+        for (let x = 0; x < c.width; x++) {
+          const i = (y * c.width + x) * 4;
+          if (d[i + 3] < 40) continue;
+          const gray = Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]) < 26
+            && d[i] < 175;
+          if (!gray) continue;
+          const up = ((y - 3) * c.width + x) * 4;
+          const dn = ((y + 3) * c.width + x) * 4;
+          if (d[up + 3] < 30 && d[dn + 3] < 30) kill[y * c.width + x] = 1;
+        }
+      }
+      for (let p = 0; p < kill.length; p++) if (kill[p]) d[p * 4 + 3] = 0;
+      ctx.putImageData(img, 0, 0);
+      const name = 'zigi994/assets/ip/yx/' + prefix + '-' + String(n).padStart(2, '0') + '.png';
+      await post(name, await toBlob(c, 'image/png'));
+      log(prefix + ' ' + n + ' ' + c.width + 'x' + c.height + ' @' + box.minX + ',' + box.minY);
+    }
+  }
+
+  async function render(doc, pageNum, maxEdge) {
+    const page = await doc.getPage(pageNum);
+    const base = page.getViewport({ scale: 1 });
+    const scale = maxEdge / Math.max(base.width, base.height);
+    const vp = page.getViewport({ scale });
+    const c = document.createElement('canvas');
+    c.width = Math.round(vp.width);
+    c.height = Math.round(vp.height);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    return c;
+  }
+
+  try {
+    log('open');
+    const doc = await pdfjsLib.getDocument({ url: './source.pdf' }).promise;
+    log('pages ' + doc.numPages);
+    for (let i = 1; i <= doc.numPages; i++) {
+      const raw = await render(doc, i, 1500);
+      const board = trimFooter(raw);
+      const n = String(i).padStart(2, '0');
+      await post('zigi994/assets/ip/yx/b-' + n + '.webp', await toBlob(board, 'image/webp', 0.84));
+      log('board ' + n + ' ' + board.width + 'x' + board.height);
+    }
+    const faces = trimFooter(await render(doc, 12, 2400));
+    await saveStickers(faces, 'face');
+    const dyes = trimFooter(await render(doc, 19, 2000));
+    await saveStickers(dyes, 'dye');
+    const cups = trimFooter(await render(doc, 23, 2000));
+    await saveStickers(cups, 'cup');
+    log('DONE');
+  } catch (err) {
+    log('ERROR: ' + (err && err.stack ? err.stack : err));
+  }
+</script>
+</body>
+</html>

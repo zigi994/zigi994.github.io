@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>yx scrub</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (s) => { lines.push(s); logEl.textContent = lines.join('\n'); };
+
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + name + ' ' + res.status);
+  }
+  const toBlob = (c) => new Promise((ok) => c.toBlob(ok, 'image/png'));
+
+  function load(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(src));
+      img.src = src;
+    });
+  }
+
+  function boxes(img, minArea) {
+    const w = img.width;
+    const h = img.height;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    const ink = new Uint8Array(w * h);
+    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+      if (data[i] > 248 && data[i + 1] > 248 && data[i + 2] > 248) continue;
+      ink[p] = 1;
+    }
+    const seen = new Uint8Array(w * h);
+    const found = [];
+    const stack = [];
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const start = y * w + x;
+        if (!ink[start] || seen[start]) continue;
+        let minX = x, maxX = x, minY = y, maxY = y, area = 0;
+        stack.length = 0;
+        stack.push(start);
+        seen[start] = 1;
+        while (stack.length) {
+          const p = stack.pop();
+          const py = (p / w) | 0;
+          const px = p - py * w;
+          area++;
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+          if (px > 0 && ink[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
+          if (px < w - 1 && ink[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
+          if (py > 0 && ink[p - w] && !seen[p - w]) { seen[p - w] = 1; stack.push(p - w); }
+          if (py < h - 1 && ink[p + w] && !seen[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+        }
+        if (area >= minArea) found.push({ minX, minY, maxX, maxY });
+      }
+    }
+    found.sort((a, b) => (a.minY - b.minY) || (a.minX - b.minX));
+    return { canvas: c, found };
+  }
+
+  function crop(src, box) {
+    const pad = 10;
+    const bw = box.maxX - box.minX + 1;
+    const bh = box.maxY - box.minY + 1;
+    const c = document.createElement('canvas');
+    c.width = bw + pad * 2;
+    c.height = bh + pad * 2;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(src, box.minX, box.minY, bw, bh, pad, pad, bw, bh);
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 242 && d[i + 1] > 242 && d[i + 2] > 242) d[i + 3] = 0;
+    }
+    ctx.putImageData(img, 0, 0);
+    return c;
+  }
+
+  function scrubGuides(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width;
+    const h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const n = w * h;
+    const ink = new Uint8Array(n);
+    const gray = new Uint8Array(n);
+    const paint = new Uint8Array(n);
+    const lumOf = new Uint16Array(n);
+    for (let p = 0, i = 0; p < n; p++, i += 4) {
+      if (d[i + 3] < 40) continue;
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const lum = (r + g + b) / 3;
+      lumOf[p] = lum;
+      const sat = max - min;
+      if (sat < 40 && lum < 72) ink[p] = 1;
+      else if (sat <= 16 && lum >= 78 && lum <= 246) gray[p] = 1;
+      else paint[p] = 1;
+    }
+    const vlen = new Uint16Array(n);
+    for (let x = 0; x < w; x++) {
+      let y = 0;
+      while (y < h) {
+        if (!ink[y * w + x]) { y++; continue; }
+        let y1 = y;
+        while (y1 < h && ink[y1 * w + x]) y1++;
+        const len = y1 - y;
+        for (let yy = y; yy < y1; yy++) vlen[yy * w + x] = len;
+        y = y1;
+      }
+    }
+    const guideRow = new Uint8Array(h);
+    const paintN = new Uint16Array(h);
+    for (let y = 0; y < h; y++) {
+      let grays = 0, paints = 0, g0 = w, g1 = 0;
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (paint[p]) paints++;
+        if (gray[p]) {
+          grays++;
+          if (x < g0) g0 = x;
+          if (x > g1) g1 = x;
+        }
+      }
+      paintN[y] = paints;
+      if (grays >= 12 && (g1 - g0) > w * 0.32) guideRow[y] = 1;
+    }
+    const seedRow = guideRow.slice();
+    for (let y = 1; y < h - 1; y++) {
+      if (guideRow[y]) continue;
+      if (!seedRow[y - 1] && !seedRow[y + 1]) continue;
+      let extra = 0;
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (gray[p] || (ink[p] && vlen[p] <= 8)) extra++;
+      }
+      if (extra >= 10) guideRow[y] = 1;
+    }
+    const kill = new Uint8Array(n);
+    for (let y = 0; y < h; y++) {
+      if (!guideRow[y]) continue;
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (gray[p]) kill[p] = 1;
+        else if (ink[p] && vlen[p] <= 12) kill[p] = 1;
+      }
+    }
+    const guideCol = new Uint8Array(w);
+    for (let x = 0; x < w; x++) {
+      let hits = 0;
+      for (let y = 0; y < h; y++) {
+        if (guideRow[y] || paintN[y] > 8) continue;
+        if (gray[y * w + x] || (ink[y * w + x] && vlen[y * w + x] <= 5)) hits++;
+      }
+      if (hits >= 4) guideCol[x] = 1;
+    }
+    for (let x = 0; x < w; x++) {
+      if (!guideCol[x]) continue;
+      for (let y = 0; y < h; y++) {
+        const p = y * w + x;
+        if (gray[p]) { kill[p] = 1; continue; }
+        if (!ink[p] || vlen[p] > 5) continue;
+        let x0 = x, x1 = x;
+        while (x0 > 0 && (ink[y * w + x0 - 1] || gray[y * w + x0 - 1])) x0--;
+        while (x1 < w - 1 && (ink[y * w + x1 + 1] || gray[y * w + x1 + 1])) x1++;
+        if (x1 - x0 + 1 <= 8) kill[p] = 1;
+      }
+    }
+    const halo = new Uint8Array(n);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (!kill[p]) continue;
+        for (const q of [p - w, p + w]) {
+          if (kill[q] || paint[q]) continue;
+          const i = q * 4;
+          if (d[i + 3] < 30) continue;
+          const max = Math.max(d[i], d[i + 1], d[i + 2]);
+          const min = Math.min(d[i], d[i + 1], d[i + 2]);
+          if (max - min < 30) halo[q] = 1;
+        }
+      }
+    }
+    for (let p = 0; p < n; p++) if (halo[p]) kill[p] = 1;
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (!kill[p]) continue;
+        const horiz = guideRow[y] === 1;
+        const vert = guideCol[x] === 1 && !horiz;
+        let src = -1;
+        for (let r = 1; r <= 14 && src < 0; r++) {
+          const cands = horiz || !vert ? [[x, y - r], [x, y + r]] : [[x - r, y], [x + r, y]];
+          for (const [nx, ny] of cands) {
+            if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+            const q = ny * w + nx;
+            if (kill[q] || d[q * 4 + 3] < 200) continue;
+            const sr = d[q * 4], sg = d[q * 4 + 1], sb = d[q * 4 + 2];
+            const smax = Math.max(sr, sg, sb), smin = Math.min(sr, sg, sb);
+            const slum = (sr + sg + sb) / 3;
+            if (smax - smin <= 22 && slum < 210) continue;
+            src = q;
+            break;
+          }
+        }
+        const i = p * 4;
+        if (src >= 0) {
+          const j = src * 4;
+          d[i] = d[j]; d[i + 1] = d[j + 1]; d[i + 2] = d[j + 2]; d[i + 3] = 255;
+        } else {
+          d[i + 3] = 0;
+        }
+      }
+    }
+    for (let pass = 0; pass < 3; pass++) {
+      const copy = new Uint8ClampedArray(d);
+      for (let y = 6; y < h - 6; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          if (copy[i + 3] < 200) continue;
+          const max = Math.max(copy[i], copy[i + 1], copy[i + 2]);
+          const min = Math.min(copy[i], copy[i + 1], copy[i + 2]);
+          const lum = (copy[i] + copy[i + 1] + copy[i + 2]) / 3;
+          if (lum < 55 || lum > 180 || max - min > 46) continue;
+          const up = ((y - 6) * w + x) * 4;
+          const dn = ((y + 6) * w + x) * 4;
+          if (copy[up + 3] < 200 || copy[dn + 3] < 200) continue;
+          const ul = (copy[up] + copy[up + 1] + copy[up + 2]) / 3;
+          const dl = (copy[dn] + copy[dn + 1] + copy[dn + 2]) / 3;
+          if (ul < lum + 48 || dl < lum + 48) continue;
+          const src = ul > dl ? up : dn;
+          d[i] = copy[src];
+          d[i + 1] = copy[src + 1];
+          d[i + 2] = copy[src + 2];
+          d[i + 3] = 255;
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    const rows = [];
+    const cols = [];
+    guideRow.forEach((v, i) => { if (v) rows.push(i); });
+    guideCol.forEach((v, i) => { if (v) cols.push(i); });
+    return { rows, cols };
+  }
+
+  function floodWhite(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width;
+    const h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const white = (i) => d[i + 3] > 200 && d[i] > 246 && d[i + 1] > 246 && d[i + 2] > 246;
+    const seen = new Uint8Array(w * h);
+    const stack = [];
+    const seed = (x, y) => {
+      const p = y * w + x;
+      if (seen[p] || !white(p * 4)) return;
+      seen[p] = 1;
+      stack.push(p);
+    };
+    for (let x = 0; x < w; x++) { seed(x, 0); seed(x, h - 1); }
+    for (let y = 0; y < h; y++) { seed(0, y); seed(w - 1, y); }
+    while (stack.length) {
+      const p = stack.pop();
+      d[p * 4 + 3] = 0;
+      const py = (p / w) | 0;
+      const px = p - py * w;
+      if (px > 0) seed(px - 1, py);
+      if (px < w - 1) seed(px + 1, py);
+      if (py > 0) seed(px, py - 1);
+      if (py < h - 1) seed(px, py + 1);
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  try {
+    log('scrub');
+    const board = await load('/assets/ip/yx/b-18.webp');
+    const { canvas, found } = boxes(board, 3000);
+    let n = 0;
+    for (const box of found) {
+      const bw = box.maxX - box.minX;
+      const bh = box.maxY - box.minY;
+      if (bh < 40 || bw < 40 || bw > board.width * 0.72) continue;
+      n++;
+      const cut = crop(canvas, box);
+      const info = scrubGuides(cut);
+      const name = 'zigi994/assets/ip/yx/flat-' + String(n).padStart(2, '0') + '.png';
+      await post(name, await toBlob(cut));
+      log('flat-0' + n + ' ' + cut.width + 'x' + cut.height + ' rows ' + info.rows.join(',') + ' cols ' + info.cols.join(','));
+    }
+    for (const file of ['dye-01.png', 'dye-02.png', 'dye-03.png']) {
+      const img = await load('/assets/ip/yx/' + file);
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      const info = scrubGuides(c);
+      await post('zigi994/assets/ip/yx/' + file, await toBlob(c));
+      log(file + ' rows ' + info.rows.length + ' cols ' + info.cols.length);
+    }
+    for (const file of ['bag-01.png', 'bag-02.png', 'bag-03.png']) {
+      const img = await load('/assets/ip/yx/' + file);
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      floodWhite(c);
+      await post('zigi994/assets/ip/yx/' + file, await toBlob(c));
+      log(file + ' keyed ' + c.width + 'x' + c.height);
+    }
+    log('DONE');
+  } catch (err) {
+    log('ERROR: ' + (err.stack || err.message));
+  }
+</script>
+</body>
+</html>

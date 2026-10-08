@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>yx sharp</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  import * as pdfjsLib from './pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (s) => { lines.push(s); logEl.textContent = lines.join('\n'); };
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + name);
+  }
+  const toPng = (c) => new Promise((ok) => c.toBlob(ok, 'image/png'));
+
+  function sat(d, i) {
+    return Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
+  }
+  function lum(d, i) {
+    return (d[i] + d[i + 1] + d[i + 2]) / 3;
+  }
+  function isSkin(d, i) {
+    if (d[i + 3] < 200) return false;
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    const l = (r + g + b) / 3;
+    const s = Math.max(r, g, b) - Math.min(r, g, b);
+    return l > 208 && s > 26 && s < 100 && r >= g && g >= b;
+  }
+
+  async function renderPage(doc, pageNum) {
+    const page = await doc.getPage(pageNum);
+    const base = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale: 3200 / Math.max(base.width, base.height) });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(vp.width);
+    canvas.height = Math.round(vp.height);
+    await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport: vp }).promise;
+    return canvas;
+  }
+
+  function components(canvas) {
+    const w = canvas.width, h = canvas.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const data = ctx.getImageData(0, 0, w, h).data;
+    const ink = new Uint8Array(w * h);
+    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+      if (data[i] > 248 && data[i + 1] > 248 && data[i + 2] > 248) continue;
+      ink[p] = 1;
+    }
+    const seen = new Uint8Array(w * h);
+    const found = [];
+    const stack = [];
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const start = y * w + x;
+        if (!ink[start] || seen[start]) continue;
+        let minX = x, maxX = x, minY = y, maxY = y, area = 0;
+        stack.length = 0;
+        stack.push(start);
+        seen[start] = 1;
+        while (stack.length) {
+          const p = stack.pop();
+          const py = (p / w) | 0;
+          const px = p - py * w;
+          area++;
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+          if (px > 0 && ink[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
+          if (px < w - 1 && ink[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
+          if (py > 0 && ink[p - w] && !seen[p - w]) { seen[p - w] = 1; stack.push(p - w); }
+          if (py < h - 1 && ink[p + w] && !seen[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+        }
+        found.push({ minX, minY, maxX, maxY, area });
+      }
+    }
+    return found;
+  }
+
+  function cropOf(src, box, pad) {
+    const bw = box.maxX - box.minX + 1;
+    const bh = box.maxY - box.minY + 1;
+    const c = document.createElement('canvas');
+    c.width = bw + pad * 2;
+    c.height = bh + pad * 2;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(src, box.minX, box.minY, bw, bh, pad, pad, bw, bh);
+    return c;
+  }
+
+  function read(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  }
+
+  function keyAndGuides(canvas) {
+    const img = read(canvas);
+    const d = img.data;
+    const w = canvas.width, h = canvas.height;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 244 && d[i + 1] > 244 && d[i + 2] > 244) d[i + 3] = 0;
+    }
+    const darkAt = (i) => d[i + 3] > 150 && sat(d, i) < 32 && lum(d, i) < 110;
+    const rows = [];
+    const edge = Math.round(w * 0.16);
+    for (let y = 0; y < h; y++) {
+      let left = 0, right = 0, mid = 0;
+      for (let x = 0; x < w; x++) {
+        if (!darkAt((y * w + x) * 4)) continue;
+        if (x < edge) left++;
+        else if (x >= w - edge) right++;
+        else mid++;
+      }
+      if (left >= 8 && right >= 8 && mid >= 10) rows.push(y);
+    }
+    const rowSet = new Uint8Array(h);
+    rows.forEach((y) => { rowSet[y] = 1; if (y > 0) rowSet[y - 1] = 1; if (y < h - 1) rowSet[y + 1] = 1; });
+    const skinAt = (x, y, dy) => {
+      for (let r = 2; r <= 16; r++) {
+        const ny = y + dy * r;
+        if (ny < 0 || ny >= h) return null;
+        const i = (ny * w + x) * 4;
+        if (d[i + 3] < 40) return null;
+        if (rowSet[ny] && sat(d, i) < 36 && lum(d, i) < 180) continue;
+        if (isSkin(d, i)) return [d[i], d[i + 1], d[i + 2]];
+        if (lum(d, i) < 80) return null;
+      }
+      return null;
+    };
+    let cleared = 0, filled = 0;
+    for (let y = 0; y < h; y++) {
+      if (!rowSet[y]) continue;
+      for (let x = 1; x < w - 1; x++) {
+        const i = (y * w + x) * 4;
+        if (d[i + 3] < 40) continue;
+        const l = lum(d, i);
+        const s = sat(d, i);
+        if (l > 200 || s > 42) continue;
+        const up = skinAt(x, y, -1);
+        const dn = skinAt(x, y, 1);
+        if (up && dn) {
+          d[i] = (up[0] + dn[0]) >> 1;
+          d[i + 1] = (up[1] + dn[1]) >> 1;
+          d[i + 2] = (up[2] + dn[2]) >> 1;
+          d[i + 3] = 255;
+          filled++;
+        } else if (!up && !dn) {
+          d[i + 3] = 0;
+          cleared++;
+        } else if (l > 78) {
+          const tone = up || dn;
+          d[i] = tone[0]; d[i + 1] = tone[1]; d[i + 2] = tone[2]; d[i + 3] = 255;
+          filled++;
+        }
+      }
+    }
+    for (let pass = 0; pass < 2; pass++) {
+      const copy = new Uint8ClampedArray(d);
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const i = (y * w + x) * 4;
+          if (copy[i + 3] < 40) continue;
+          const edgePx = copy[i - 4 + 3] < 30 || copy[i + 4 + 3] < 30 || copy[i - w * 4 + 3] < 30 || copy[i + w * 4 + 3] < 30;
+          if (!edgePx) continue;
+          const min = Math.min(copy[i], copy[i + 1], copy[i + 2]);
+          if (sat(copy, i) > 28 || lum(copy, i) < 150 || min < 188) continue;
+          let ink = false;
+          for (let dy = -2; dy <= 2 && !ink; dy++) {
+            for (let dx = -2; dx <= 2; dx++) {
+              const q = ((y + dy) * w + (x + dx)) * 4;
+              if (copy[q + 3] > 180 && lum(copy, q) < 70) ink = true;
+            }
+          }
+          if (ink) { d[i + 3] = 0; cleared++; }
+        }
+      }
+    }
+    canvas.getContext('2d').putImageData(img, 0, 0);
+    return { rows: rows.length, cleared, filled, w, h };
+  }
+
+  function keyPhoto(canvas) {
+    const img = read(canvas);
+    const d = img.data;
+    const w = canvas.width, h = canvas.height, n = w * h;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 246 && d[i + 1] > 246 && d[i + 2] > 246) d[i + 3] = 0;
+    }
+    const pale = new Uint8Array(n);
+    for (let p = 0, i = 0; p < n; p++, i += 4) {
+      if (d[i + 3] < 40) continue;
+      const min = Math.min(d[i], d[i + 1], d[i + 2]);
+      if (min > 186 && sat(d, i) < 36 && lum(d, i) > 196) pale[p] = 1;
+    }
+    const dist = new Int16Array(n);
+    dist.fill(99);
+    const stack = [];
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        if (!pale[p]) continue;
+        const i = p * 4;
+        if (d[i - 4 + 3] < 30 || d[i + 4 + 3] < 30 || d[i - w * 4 + 3] < 30 || d[i + w * 4 + 3] < 30) {
+          dist[p] = 0;
+          stack.push(p);
+        }
+      }
+    }
+    let head = 0;
+    while (head < stack.length) {
+      const p = stack[head++];
+      if (dist[p] >= 3) continue;
+      const x = p % w;
+      for (const q of [p - 1, p + 1, p - w, p + w]) {
+        if (q < 0 || q >= n || !pale[q] || dist[q] <= dist[p] + 1) continue;
+        if (Math.abs((q % w) - x) > 1) continue;
+        dist[q] = dist[p] + 1;
+        stack.push(q);
+      }
+    }
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        if (dist[p] > 3) continue;
+        let src = -1;
+        for (let r = 1; r <= 10 && src < 0; r++) {
+          for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+            const q = ny * w + nx;
+            if (d[q * 4 + 3] > 200 && !pale[q]) { src = q; break; }
+          }
+        }
+        if (src < 0) continue;
+        const i = p * 4, j = src * 4;
+        d[i] = d[j]; d[i + 1] = d[j + 1]; d[i + 2] = d[j + 2];
+      }
+    }
+    for (let pass = 0; pass < 4; pass++) {
+      const copy = new Uint8ClampedArray(d);
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const i = (y * w + x) * 4;
+          if (copy[i + 3] < 40) continue;
+          if (copy[i - 4 + 3] > 30 && copy[i + 4 + 3] > 30 && copy[i - w * 4 + 3] > 30 && copy[i + w * 4 + 3] > 30) continue;
+          const min = Math.min(copy[i], copy[i + 1], copy[i + 2]);
+          if (min > 220 && sat(copy, i) < 24) d[i + 3] = 0;
+        }
+      }
+    }
+    canvas.getContext('2d').putImageData(img, 0, 0);
+  }
+
+  try {
+    log('sharp');
+    const doc = await pdfjsLib.getDocument({ url: './_qa/vi.pdf' }).promise;
+    const board = await renderPage(doc, 19);
+    const figs = components(board)
+      .filter((b) => {
+        const bw = b.maxX - b.minX, bh = b.maxY - b.minY;
+        const cy = (b.minY + b.maxY) / 2;
+        return bh > 280 && bw > 120 && bw < board.width * 0.4 && cy < board.height * 0.82 && b.area > 12000;
+      })
+      .sort((a, b) => a.minX - b.minX);
+    log('figures ' + figs.length);
+    const names = ['dye-02.png', 'dye-03.png', 'dye-01.png'];
+    for (let idx = 0; idx < Math.min(3, figs.length); idx++) {
+      const cut = cropOf(board, figs[idx], 28);
+      const info = keyAndGuides(cut);
+      log(names[idx] + ' ' + info.w + 'x' + info.h + ' rows ' + info.rows + ' clear ' + info.cleared + ' fill ' + info.filled);
+      await post('zigi994/assets/ip/yx/' + names[idx], await toPng(cut));
+      const preview = document.createElement('canvas');
+      preview.width = Math.round(cut.width * 0.55);
+      preview.height = Math.round(cut.height * 0.55);
+      const g = preview.getContext('2d');
+      g.fillStyle = '#12110d';
+      g.fillRect(0, 0, preview.width, preview.height);
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(cut, 0, 0, preview.width, preview.height);
+      await post('tools/_qa/sharp-' + names[idx].replace('.png', '.jpg'), await new Promise((ok) => preview.toBlob(ok, 'image/jpeg', 0.9)));
+    }
+    const cups = await renderPage(doc, 21);
+    const parts = components(cups).filter((b) => {
+      const bw = b.maxX - b.minX, bh = b.maxY - b.minY;
+      const cy = (b.minY + b.maxY) / 2;
+      const cx = (b.minX + b.maxX) / 2;
+      if (cy < cups.height * 0.16 || cy > cups.height * 0.8) return false;
+      if (bh < 36 && bw > 280) return false;
+      if (b.area < 180) return false;
+      return cx > cups.width * 0.12;
+    });
+    let minX = cups.width, minY = cups.height, maxX = 0, maxY = 0;
+    parts.forEach((b) => {
+      if (b.minX < minX) minX = b.minX;
+      if (b.minY < minY) minY = b.minY;
+      if (b.maxX > maxX) maxX = b.maxX;
+      if (b.maxY > maxY) maxY = b.maxY;
+    });
+    const cup = cropOf(cups, { minX, minY, maxX, maxY }, 18);
+    keyPhoto(cup);
+    log('cup ' + cup.width + 'x' + cup.height + ' parts ' + parts.length);
+    await post('zigi994/assets/ip/yx/cup3d-trio.png', await toPng(cup));
+    log('DONE');
+  } catch (err) {
+    log('ERROR: ' + (err.stack || err.message));
+  }
+</script>
+</body>
+</html>

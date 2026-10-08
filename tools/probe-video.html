@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>probe video</title>
+</head>
+<body>
+<pre id="log">starting</pre>
+<video id="v" src="/assets/ip/hero-ip.mp4" muted playsinline crossorigin="anonymous"></video>
+<script type="module">
+const logEl = document.getElementById("log");
+const lines = [];
+const log = (m) => { lines.push(m); logEl.textContent = lines.join("\n"); };
+const video = document.getElementById("v");
+const save = async (name, blob) => {
+  const response = await fetch(`/_save?name=${encodeURIComponent(name)}`, { method: "POST", body: blob });
+  if (!response.ok) throw new Error("save " + response.status);
+};
+try {
+  await new Promise((resolve, reject) => {
+    video.addEventListener("loadedmetadata", resolve, { once: true });
+    video.addEventListener("error", () => reject(new Error("video error")), { once: true });
+  });
+  log(`meta ${video.videoWidth}x${video.videoHeight} ${video.duration.toFixed(2)}s`);
+  video.playbackRate = 1;
+  await video.play();
+  const marks = [0.4, 1.4, 2.4, 3.4];
+  for (const t of marks) {
+    const start = performance.now();
+    while (video.currentTime < t && performance.now() - start < 5000) {
+      await new Promise((resolve) => setTimeout(resolve, 40));
+    }
+    log(`t=${video.currentTime.toFixed(2)} ready=${video.readyState}`);
+    const canvas = document.createElement("canvas");
+    const w = 480;
+    const h = Math.round(w * video.videoHeight / video.videoWidth);
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d").drawImage(video, 0, 0, w, h);
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("png"))), "image/png");
+    });
+    const name = `tools/_qa/vi/frame-${Math.round(t * 100)}.png`;
+    await save(name, blob);
+    log(`saved ${name} ${w}x${h}`);
+  }
+  log("DONE");
+} catch (error) {
+  log("ERROR " + error.message);
+}
+</script>
+</body>
+</html>

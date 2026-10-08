@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>yx cut</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (s) => { lines.push(s); logEl.textContent = lines.join('\n'); };
+
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + name + ' ' + res.status);
+  }
+  const toBlob = (c, type, q) => new Promise((ok) => c.toBlob(ok, type, q));
+
+  function load(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(src));
+      img.src = src;
+    });
+  }
+
+  function boxes(img, minArea) {
+    const w = img.width;
+    const h = img.height;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    const ink = new Uint8Array(w * h);
+    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+      if (data[i] > 248 && data[i + 1] > 248 && data[i + 2] > 248) continue;
+      ink[p] = 1;
+    }
+    const seen = new Uint8Array(w * h);
+    const found = [];
+    const stack = [];
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const start = y * w + x;
+        if (!ink[start] || seen[start]) continue;
+        let minX = x, maxX = x, minY = y, maxY = y, area = 0;
+        stack.length = 0;
+        stack.push(start);
+        seen[start] = 1;
+        while (stack.length) {
+          const p = stack.pop();
+          const py = (p / w) | 0;
+          const px = p - py * w;
+          area++;
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+          if (px > 0 && ink[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
+          if (px < w - 1 && ink[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
+          if (py > 0 && ink[p - w] && !seen[p - w]) { seen[p - w] = 1; stack.push(p - w); }
+          if (py < h - 1 && ink[p + w] && !seen[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+        }
+        if (area < minArea) continue;
+        found.push({ minX, minY, maxX, maxY, area });
+      }
+    }
+    found.sort((a, b) => (a.minY - b.minY) || (a.minX - b.minX));
+    return { canvas: c, found };
+  }
+
+  function keyWhite(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 242 && d[i + 1] > 242 && d[i + 2] > 242) d[i + 3] = 0;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  async function saveBox(srcCanvas, box, name, key) {
+    const pad = 8;
+    const bw = box.maxX - box.minX + 1;
+    const bh = box.maxY - box.minY + 1;
+    const c = document.createElement('canvas');
+    c.width = bw + pad * 2;
+    c.height = bh + pad * 2;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(srcCanvas, box.minX, box.minY, bw, bh, pad, pad, bw, bh);
+    if (key) keyWhite(ctx, c.width, c.height);
+    await post(name, await toBlob(c, 'image/png'));
+    log(name.split('/').pop() + ' ' + c.width + 'x' + c.height);
+  }
+
+  async function cut(file, prefix, opts) {
+    const img = await load('/assets/ip/yx/' + file);
+    const { canvas, found } = boxes(img, opts.min || 2500);
+    const wide = img.width * (opts.wide || 0.72);
+    let n = 0;
+    for (const box of found) {
+      const bw = box.maxX - box.minX;
+      const bh = box.maxY - box.minY;
+      if (bh < 40 || bw < 40) continue;
+      if (bw > wide && opts.split) {
+        const slice = Math.round(bw / opts.split);
+        for (let s = 0; s < opts.split; s++) {
+          n++;
+          const part = {
+            minX: box.minX + s * slice,
+            maxX: box.minX + (s + 1) * slice - 1,
+            minY: box.minY,
+            maxY: box.maxY
+          };
+          await saveBox(canvas, part, 'zigi994/assets/ip/yx/' + prefix + '-' + String(n).padStart(2, '0') + '.png', opts.key);
+        }
+        continue;
+      }
+      if (bw > wide && !opts.keepWide) continue;
+      n++;
+      await saveBox(canvas, box, 'zigi994/assets/ip/yx/' + prefix + '-' + String(n).padStart(2, '0') + '.png', opts.key);
+    }
+    log(prefix + ' n=' + n + ' raw=' + found.length);
+  }
+
+  async function colors() {
+    const img = await load('/assets/ip/yx/b-05.webp');
+    const { canvas, found } = boxes(img, 2000);
+    const ctx = canvas.getContext('2d');
+    const swatches = found
+      .map((b) => {
+        const bw = b.maxX - b.minX;
+        const bh = b.maxY - b.minY;
+        if (bw < bh * 2) return null;
+        const p = ctx.getImageData(b.minX + (bw >> 1), b.minY + (bh >> 1), 1, 1).data;
+        return '#' + [p[0], p[1], p[2]].map((v) => v.toString(16).padStart(2, '0')).join('');
+      })
+      .filter(Boolean);
+    log('colors ' + swatches.join(' '));
+  }
+
+  try {
+    log('cut');
+    await cut('b-03.webp', 'mark', { key: true, min: 4000 });
+    await cut('b-09.webp', 'ink', { key: true, min: 4000 });
+    await cut('b-08.webp', 'rev', { key: false, min: 8000, keepWide: true });
+    await cut('b-06.webp', 'word', { key: true, min: 1500 });
+    await cut('b-10.webp', 'pat', { key: false, min: 4000 });
+    await cut('b-18.webp', 'flat', { key: true, min: 3000 });
+    await cut('b-13.webp', 'solid', { key: true, min: 3000, split: 3 });
+    await cut('b-20.webp', 'post', { key: false, min: 4000 });
+    await cut('b-14.webp', 'bag', { key: false, min: 4000 });
+    await cut('b-22.webp', 'sign', { key: false, min: 8000 });
+    await cut('b-16.webp', 'sku', { key: true, min: 1800 });
+    await cut('b-15.webp', 'pack', { key: false, min: 4000 });
+    await cut('b-21.webp', 'trio', { key: true, min: 2500 });
+    await colors();
+    log('DONE');
+  } catch (err) {
+    log('ERROR: ' + (err.stack || err.message));
+  }
+</script>
+</body>
+</html>

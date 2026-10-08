@@ -4,6 +4,8 @@
 
 function initShowcase() {
   document.querySelectorAll("[data-showcase]").forEach((root) => {
+    if (root.dataset.showcaseBound) return;
+    root.dataset.showcaseBound = "1";
     const screens = [...root.querySelectorAll(".phone__screen img")];
     const steps = [...root.querySelectorAll(".showcase__step")];
     if (!screens.length || !steps.length) return;
@@ -39,16 +41,17 @@ function initShowcase() {
     };
 
     window.addEventListener("scroll", () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(update);
-      }
+      if (!root.isConnected || ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
     }, { passive: true });
 
     window.addEventListener("resize", update);
     update();
   });
 }
+
+document.addEventListener("case:mount", initShowcase);
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initShowcase);

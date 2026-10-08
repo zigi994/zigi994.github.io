@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>yx trio</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  const logEl = document.getElementById('log');
+  const log = (s) => { logEl.textContent += '\n' + s; };
+  const toBlob = (c, type) => new Promise((ok) => c.toBlob(ok, type || 'image/png'));
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + res.status);
+  }
+  function load(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(src));
+      img.src = src;
+    });
+  }
+  try {
+    const img = await load('/assets/ip/yx/b-21.webp');
+    log('size ' + img.width + 'x' + img.height);
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    const w = c.width, h = c.height;
+    const ink = new Uint8Array(w * h);
+    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+      if (data[i] > 246 && data[i + 1] > 246 && data[i + 2] > 246) continue;
+      ink[p] = 1;
+    }
+    const seen = new Uint8Array(w * h);
+    const found = [];
+    const stack = [];
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const start = y * w + x;
+        if (!ink[start] || seen[start]) continue;
+        let minX = x, maxX = x, minY = y, maxY = y, area = 0;
+        stack.length = 0; stack.push(start); seen[start] = 1;
+        while (stack.length) {
+          const p = stack.pop();
+          const py = (p / w) | 0, px = p - py * w;
+          area++;
+          if (px < minX) minX = px; if (px > maxX) maxX = px;
+          if (py < minY) minY = py; if (py > maxY) maxY = py;
+          if (px > 0 && ink[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
+          if (px < w - 1 && ink[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
+          if (py > 0 && ink[p - w] && !seen[p - w]) { seen[p - w] = 1; stack.push(p - w); }
+          if (py < h - 1 && ink[p + w] && !seen[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+        }
+        if (area > 4000) found.push({ minX, minY, maxX, maxY, area });
+      }
+    }
+    found.sort((a, b) => b.area - a.area);
+    found.slice(0, 8).forEach((b, i) => log('box ' + i + ' ' + b.minX + ',' + b.minY + ' ' + (b.maxX - b.minX) + 'x' + (b.maxY - b.minY) + ' a' + b.area));
+    async function saveBox(box, name) {
+      const pad = 8;
+      const bw = box.maxX - box.minX + 1;
+      const bh = box.maxY - box.minY + 1;
+      const out = document.createElement('canvas');
+      out.width = bw + pad * 2;
+      out.height = bh + pad * 2;
+      const octx = out.getContext('2d');
+      octx.drawImage(c, box.minX, box.minY, bw, bh, pad, pad, bw, bh);
+      const imgd = octx.getImageData(0, 0, out.width, out.height);
+      const d = imgd.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] > 244 && d[i + 1] > 244 && d[i + 2] > 244) d[i + 3] = 0;
+      }
+      octx.putImageData(imgd, 0, 0);
+      await post(name, await toBlob(out));
+      log(name.split('/').pop() + ' ' + out.width + 'x' + out.height);
+    }
+    function hueBox(test) {
+      const mask = new Uint8Array(w * h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          if (data[i] > 246 && data[i + 1] > 246 && data[i + 2] > 246) continue;
+          if (test(data[i], data[i + 1], data[i + 2])) mask[y * w + x] = 1;
+        }
+      }
+      const seen = new Uint8Array(w * h);
+      const parts = [];
+      const stack = [];
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const start = y * w + x;
+          if (!mask[start] || seen[start]) continue;
+          let minX = x, maxX = x, minY = y, maxY = y, area = 0;
+          stack.length = 0; stack.push(start); seen[start] = 1;
+          while (stack.length) {
+            const p = stack.pop();
+            const py = (p / w) | 0, px = p - py * w;
+            area++;
+            if (px < minX) minX = px; if (px > maxX) maxX = px;
+            if (py < minY) minY = py; if (py > maxY) maxY = py;
+            if (px > 0 && mask[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
+            if (px < w - 1 && mask[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
+            if (py > 0 && mask[p - w] && !seen[p - w]) { seen[p - w] = 1; stack.push(p - w); }
+            if (py < h - 1 && mask[p + w] && !seen[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+          }
+          if (area > 600) parts.push({ minX, minY, maxX, maxY, area });
+        }
+      }
+      parts.sort((a, b) => b.area - a.area);
+      if (!parts.length) return { minX: 0, minY: 0, maxX: 10, maxY: 10, area: 0 };
+      const seed = parts[0];
+      let minX = seed.minX, minY = seed.minY, maxX = seed.maxX, maxY = seed.maxY, area = seed.area;
+      for (const part of parts.slice(1)) {
+        const near = part.maxX >= minX - 90 && part.minX <= maxX + 90 && part.maxY >= minY - 90 && part.minY <= maxY + 90;
+        if (!near) continue;
+        minX = Math.min(minX, part.minX); minY = Math.min(minY, part.minY);
+        maxX = Math.max(maxX, part.maxX); maxY = Math.max(maxY, part.maxY);
+        area += part.area;
+      }
+      return {
+        minX: Math.max(0, minX - 28),
+        minY: Math.max(0, minY - 36),
+        maxX: Math.min(w - 1, maxX + 28),
+        maxY: Math.min(h - 1, maxY + 18),
+        area
+      };
+    }
+    const green = hueBox((r, g, b) => g > 185 && g > r + 12 && g > b && r > 140 && r < 230 && b > 120 && b < 210);
+    const pink = hueBox((r, g, b) => r > 215 && g > 140 && g < 205 && b > 155 && b < 220 && r > g + 20 && r > b);
+    const purple = hueBox((r, g, b) => b > 175 && r > 150 && r < 215 && g > 130 && g < 195 && b > r && b > g + 10);
+    log('green ' + green.minX + ',' + green.minY + ' ' + (green.maxX - green.minX) + 'x' + (green.maxY - green.minY));
+    log('pink ' + pink.minX + ',' + pink.minY + ' ' + (pink.maxX - pink.minX) + 'x' + (pink.maxY - pink.minY));
+    log('purple ' + purple.minX + ',' + purple.minY + ' ' + (purple.maxX - purple.minX) + 'x' + (purple.maxY - purple.minY));
+    const grow = (box, top, side, right) => ({
+      minX: Math.max(0, box.minX - side),
+      minY: Math.max(0, box.minY - top),
+      maxX: Math.min(w - 1, box.maxX + (right == null ? side : right)),
+      maxY: box.maxY
+    });
+    const union = {
+      minX: Math.max(0, Math.min(found[0].minX, found[1].minX) - 24),
+      minY: Math.max(0, Math.min(found[0].minY, found[1].minY) - 28),
+      maxX: Math.min(w - 1, Math.max(found[0].maxX, found[1].maxX) + 70),
+      maxY: Math.min(h - 1, Math.max(found[0].maxY, found[1].maxY) + 6)
+    };
+    await saveBox(union, 'zigi994/assets/ip/yx/cup3d-trio.png');
+    await saveBox(grow(green, 230, 70), 'zigi994/assets/ip/yx/cup3d-green.png');
+    await saveBox(grow(pink, 80, 8, 0), 'zigi994/assets/ip/yx/cup3d-pink.png');
+    await saveBox(grow(purple, 220, 36), 'zigi994/assets/ip/yx/cup3d-purple.png');
+    const prev = document.createElement('canvas');
+    prev.width = 900; prev.height = Math.round(900 * h / w);
+    prev.getContext('2d').drawImage(img, 0, 0, prev.width, prev.height);
+    await post('tools/_qa/b21.jpg', await toBlob(prev, 'image/jpeg'));
+    log('DONE');
+  } catch (err) {
+    log('ERROR ' + (err.stack || err.message));
+  }
+</script>
+</body>
+</html>

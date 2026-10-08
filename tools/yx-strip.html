@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>yx strip</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (s) => { lines.push(s); logEl.textContent = lines.join('\n'); };
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + name);
+  }
+  const toPng = (c) => new Promise((ok) => c.toBlob(ok, 'image/png'));
+  function load(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(src));
+      img.src = src;
+    });
+  }
+  function sat(d, i) {
+    return Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
+  }
+  function lum(d, i) {
+    return (d[i] + d[i + 1] + d[i + 2]) / 3;
+  }
+  function isSkin(d, i) {
+    if (d[i + 3] < 200) return false;
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    const l = (r + g + b) / 3;
+    const s = Math.max(r, g, b) - Math.min(r, g, b);
+    return l > 200 && s > 24 && s < 110 && r + 4 >= g && g + 4 >= b;
+  }
+
+  function strip(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const span = new Int16Array(h * 2);
+    for (let y = 0; y < h; y++) {
+      let x0 = -1, x1 = -1;
+      for (let x = 0; x < w; x++) {
+        if (d[(y * w + x) * 4 + 3] > 40) {
+          if (x0 < 0) x0 = x;
+          x1 = x;
+        }
+      }
+      span[y * 2] = x0;
+      span[y * 2 + 1] = x1;
+    }
+    const widthAt = (y) => (span[y * 2] < 0 ? 0 : span[y * 2 + 1] - span[y * 2]);
+    const mark = new Uint8Array(h);
+    for (let y = 8; y < h - 8; y++) {
+      const width = widthAt(y);
+      if (width < 40) continue;
+      const above = widthAt(y - 7);
+      const below = widthAt(y + 7);
+      const widerAbove = above > 20 && width > above + 64;
+      const widerBelow = below > 20 && width > below + 64;
+      const offBottom = below === 0 && widerAbove;
+      if (widerAbove && (widerBelow || offBottom)) mark[y] = 1;
+    }
+    let removed = 0, filled = 0, rows = 0;
+    for (let y = 0; y < h; y++) if (mark[y]) rows++;
+    const skinNear = (x, y) => {
+      for (const dy of [-10, -8, 8, 10, -14, 14]) {
+        const ny = y + dy;
+        if (ny < 0 || ny >= h || mark[ny]) continue;
+        const i = (ny * w + x) * 4;
+        if (isSkin(d, i)) return [d[i], d[i + 1], d[i + 2]];
+      }
+      return null;
+    };
+    for (let y = 0; y < h; y++) {
+      if (!mark[y]) continue;
+      let ref = y + 8;
+      if (ref >= h || mark[ref] || span[ref * 2] < 0) ref = y - 8;
+      const bodyL = span[ref * 2] + 6;
+      const bodyR = span[ref * 2 + 1] - 6;
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        if (d[i + 3] < 40) continue;
+        if (x < bodyL || x > bodyR) {
+          d[i + 3] = 0;
+          removed++;
+          continue;
+        }
+        const l = lum(d, i);
+        const s = sat(d, i);
+        if (l > 188 && s > 22) continue;
+        const tone = skinNear(x, y);
+        if (!tone) continue;
+        d[i] = tone[0]; d[i + 1] = tone[1]; d[i + 2] = tone[2]; d[i + 3] = 255;
+        filled++;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return { rows, removed, filled, w, h };
+  }
+
+  function dropPale(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height, n = w * h;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const ink = new Uint8Array(n);
+    for (let p = 0, i = 0; p < n; p++, i += 4) if (d[i + 3] > 20) ink[p] = 1;
+    const seen = new Uint8Array(n);
+    const stack = [];
+    let dropped = 0;
+    for (let start = 0; start < n; start++) {
+      if (!ink[start] || seen[start]) continue;
+      const cells = [];
+      stack.length = 0;
+      stack.push(start);
+      seen[start] = 1;
+      while (stack.length) {
+        const p = stack.pop();
+        cells.push(p);
+        const y = (p / w) | 0, x = p - y * w;
+        if (x > 0 && ink[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
+        if (x < w - 1 && ink[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
+        if (y > 0 && ink[p - w] && !seen[p - w]) { seen[p - w] = 1; stack.push(p - w); }
+        if (y < h - 1 && ink[p + w] && !seen[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+      }
+      if (cells.length > 14000) continue;
+      let lumSum = 0, satSum = 0;
+      for (const p of cells) {
+        const i = p * 4;
+        lumSum += (d[i] + d[i + 1] + d[i + 2]) / 3;
+        satSum += sat(d, i);
+      }
+      if (lumSum / cells.length < 185 || satSum / cells.length > 32) continue;
+      for (const p of cells) d[p * 4 + 3] = 0;
+      dropped += cells.length;
+    }
+    ctx.putImageData(img, 0, 0);
+    return dropped;
+  }
+
+  try {
+    log('strip');
+    for (const file of []) {
+      const img = await load('/assets/ip/yx/' + file + '?fresh=' + Date.now());
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      const info = strip(c);
+      await post('zigi994/assets/ip/yx/' + file, await toPng(c));
+      const preview = document.createElement('canvas');
+      preview.width = Math.round(c.width * 0.5);
+      preview.height = Math.round(c.height * 0.5);
+      const g = preview.getContext('2d');
+      g.fillStyle = '#12110d';
+      g.fillRect(0, 0, preview.width, preview.height);
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(c, 0, 0, preview.width, preview.height);
+      await post('tools/_qa/sharp-' + file.replace('.png', '.jpg'), await new Promise((ok) => preview.toBlob(ok, 'image/jpeg', 0.9)));
+      log(file + ' rows ' + info.rows + ' out ' + info.removed + ' fill ' + info.filled + ' ' + info.w + 'x' + info.h);
+    }
+    const cupImg = await load('/assets/ip/yx/cup3d-trio.png?fresh=' + Date.now());
+    const cup = document.createElement('canvas');
+    cup.width = cupImg.width; cup.height = cupImg.height;
+    const cctx = cup.getContext('2d', { willReadFrequently: true });
+    cctx.drawImage(cupImg, 0, 0);
+    const cimg = cctx.getImageData(0, 0, cup.width, cup.height);
+    const cd = cimg.data;
+    let cut = 0;
+    for (let y = 0; y < 320; y++) {
+      for (let x = 0; x < 520; x++) {
+        const i = (y * cup.width + x) * 4;
+        if (cd[i + 3] > 0) { cd[i + 3] = 0; cut++; }
+      }
+    }
+    cctx.putImageData(cimg, 0, 0);
+    const pale = dropPale(cup);
+    log('pale ' + pale);
+    await post('zigi994/assets/ip/yx/cup3d-trio.png', await toPng(cup));
+    log('cup title cleared ' + cut);
+    log('DONE');
+  } catch (err) {
+    log('ERROR: ' + (err.stack || err.message));
+  }
+</script>
+</body>
+</html>

@@ -51,15 +51,10 @@ const PRECACHE = [
      Caching both would store the homepage twice under two keys and leave
      whichever one the visitor actually arrived on a miss. */
   SCOPE,
-  at('work/chashi.html'),
-  at('work/linxi.html'),
-  at('work/lionup.html'),
-  at('work/mountain-stay.html'),
-  at('work/quchong.html'),
-  at('work/yuexing.html'),
 
   at('styles/tokens.css'),
   at('styles/base.css'),
+  at('styles/type-cn.css'),
   at('styles/components.css'),
   at('styles/home.css'),
   at('styles/case.css'),
@@ -68,15 +63,16 @@ const PRECACHE = [
 
   at('scripts/motion.js'),
   at('scripts/home.js'),
-  at('scripts/hero-scale.js'),
+  at('scripts/hero-ip.js'),
   at('scripts/case.js'),
   at('scripts/concept.js'),
   at('scripts/navigation.js'),
   at('scripts/sw-register.js'),
 
-  /* The one Latin face the stylesheets declare. CJK stays on the compact
-     system stack instead of forcing a multi-megabyte webfont download. */
+  /* Latin variable face, plus the Chinese display serif declared in
+     type-cn.css. The serif files load with the stylesheet, not here. */
   at('assets/fonts/bricolage-var.woff2'),
+  at('assets/fonts/cherry-bomb-one.woff2'),
 
   at('favicon.svg'),
   at('manifest.webmanifest'),

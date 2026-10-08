@@ -162,7 +162,7 @@
    neutral grey. Bone, not paper-white; warm near-black, not #000.
    ============================================================ */
 
-:root[data-theme="light"] {
+:is(:root, .case-sheet)[data-theme="light"] {
   /* Form controls and the scrollbar follow the page, not the OS. */
   color-scheme: light;
 
@@ -228,13 +228,13 @@
    Keyed on the attribute rather than the page because the accent is
    authored there — one map covers <body>, .next and .footer, which each
    carry a different one. */
-:root[data-theme="light"] [data-accent="#9db37f"] { --accent-text: #4e6136; }
-:root[data-theme="light"] [data-accent="#ec9138"] { --accent-text: #8a5510; }
-:root[data-theme="light"] [data-accent="#ee5c36"] { --accent-text: #a83417; }
-:root[data-theme="light"] [data-accent="#d08350"] { --accent-text: #8f4526; }
-:root[data-theme="light"] [data-accent="#8fa8a2"] { --accent-text: #456159; }
-:root[data-theme="light"] [data-accent="#a3c46b"] { --accent-text: #4f6428; }
-:root[data-theme="light"] [data-accent="#aab877"] { --accent-text: #55622c; }
+:is(:root, .case-sheet)[data-theme="light"] [data-accent="#9db37f"] { --accent-text: #4e6136; }
+:is(:root, .case-sheet)[data-theme="light"] [data-accent="#ec9138"] { --accent-text: #8a5510; }
+:is(:root, .case-sheet)[data-theme="light"] [data-accent="#ee5c36"] { --accent-text: #a83417; }
+:is(:root, .case-sheet)[data-theme="light"] [data-accent="#d08350"] { --accent-text: #8f4526; }
+:is(:root, .case-sheet)[data-theme="light"] [data-accent="#8fa8a2"] { --accent-text: #456159; }
+:is(:root, .case-sheet)[data-theme="light"] [data-accent="#a3c46b"] { --accent-text: #4f6428; }
+:is(:root, .case-sheet)[data-theme="light"] [data-accent="#aab877"] { --accent-text: #55622c; }
 
 /* ------------------------------------------------------------
    Dark objects on the light sheet
@@ -252,11 +252,11 @@
    phone and the node editor is what holds them off the sheet at all.
    The one exception is handled below.
    ------------------------------------------------------------ */
-:root[data-theme="light"] .ooh,
-:root[data-theme="light"] .sleeve,
-:root[data-theme="light"] .spost,
-:root[data-theme="light"] .nodeui,
-:root[data-theme="light"] .device {
+:is(:root, .case-sheet)[data-theme="light"] .ooh,
+:is(:root, .case-sheet)[data-theme="light"] .sleeve,
+:is(:root, .case-sheet)[data-theme="light"] .spost,
+:is(:root, .case-sheet)[data-theme="light"] .nodeui,
+:is(:root, .case-sheet)[data-theme="light"] .device {
   --ink-0: #12110d;
   --ink-1: #191713;
   --ink-2: #211e18;
@@ -279,7 +279,7 @@
 /* .sleeve__cup is the only shadow *inside* one of those scenes — a pale
    paper cup lifted off a dark studio floor. A light-theme shadow there is
    invisible, so this one scene gets the dark room's shadows back. */
-:root[data-theme="light"] .sleeve {
+:is(:root, .case-sheet)[data-theme="light"] .sleeve {
   --shadow-lift: 0 1px 2px rgba(14, 10, 6, 0.18),
     0 8px 20px -12px rgba(14, 10, 6, 0.28);
 }

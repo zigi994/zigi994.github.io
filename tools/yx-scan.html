@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>yx scan</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + name);
+  }
+  const toBlob = (c) => new Promise((ok) => c.toBlob(ok, 'image/png'));
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (s) => { lines.push(s); logEl.textContent = lines.join('\n'); };
+  function load(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(src));
+      img.src = src;
+    });
+  }
+  function sat(d, i) {
+    return Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
+  }
+  function lum(d, i) {
+    return (d[i] + d[i + 1] + d[i + 2]) / 3;
+  }
+  function side(d, w, h, x, y, dy) {
+    for (let r = 2; r <= 6; r++) {
+      const ny = y + dy * r;
+      if (ny < 0 || ny >= h) return 'empty';
+      const i = (ny * w + x) * 4;
+      if (d[i + 3] < 40) return 'empty';
+      if (sat(d, i) > 28) return 'color';
+      if (lum(d, i) < 70) return 'ink';
+    }
+    return 'pale';
+  }
+
+  try {
+    for (const name of ['dye-02.png', 'flat-02.png', 'cup3d-trio.png']) {
+      const img = await load('/assets/ip/yx/' + name + '?scan=1');
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const d = ctx.getImageData(0, 0, c.width, c.height).data;
+      const w = c.width, h = c.height;
+      let halo = 0, darkRuns = 0;
+      const samples = [];
+      const rowGray = [];
+      for (let y = 2; y < h - 2; y++) {
+        let gray = 0;
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          if (d[i + 3] > 180 && sat(d, i) < 16 && lum(d, i) > 80 && lum(d, i) < 210) gray++;
+        }
+        if (gray >= 8) rowGray.push(y + ':' + gray);
+        let run = 0, x0 = 0, ink = 0;
+        for (let x = 0; x <= w; x++) {
+          const i = (y * w + x) * 4;
+          const on = x < w && d[i + 3] > 180 && sat(d, i) < 22 && lum(d, i) < 95;
+          if (on) {
+            if (!run) x0 = x;
+            run++;
+            if (lum(d, i) < 70) ink++;
+          } else if (run) {
+            if (run >= 10) {
+              const mid = x0 + (run >> 1);
+              const up = side(d, w, h, mid, y, -1);
+              const dn = side(d, w, h, mid, y, 1);
+              if (up !== 'ink' || dn !== 'ink') {
+                darkRuns++;
+                if (y > 110 && samples.length < 24) samples.push(y + ':' + x0 + '+' + run + ' ' + up + '/' + dn);
+              }
+            }
+            run = 0;
+          }
+          if (x > 0 && x < w - 1 && y > 0 && y < h - 1 && d[i + 3] > 200) {
+            const edge = d[i - 4 + 3] < 30 || d[i + 4 + 3] < 30 || d[i - w * 4 + 3] < 30 || d[i + w * 4 + 3] < 30;
+            if (edge) {
+              const min = Math.min(d[i], d[i + 1], d[i + 2]);
+              const max = Math.max(d[i], d[i + 1], d[i + 2]);
+              if (min > 200 && max - min < 30) halo++;
+            }
+          }
+        }
+      }
+      log(name + ' ' + w + 'x' + h + ' halo ' + halo + ' runs ' + darkRuns);
+      log('  low ' + samples.join(' ; '));
+      log('  gray ' + rowGray.slice(0, 40).join(' '));
+      if (name === 'dye-02.png' || name === 'cup3d-trio.png') {
+        const out = document.createElement('canvas');
+        const scale = name === 'cup3d-trio.png' ? 1 : 2;
+        out.width = w * scale; out.height = h * scale;
+        const g = out.getContext('2d');
+        g.imageSmoothingEnabled = false;
+        g.fillStyle = '#12110d';
+        g.fillRect(0, 0, out.width, out.height);
+        const src = ctx.getImageData(0, 0, w, h);
+        const paint = ctx.createImageData(w, h);
+        paint.data.set(src.data);
+        const pd = paint.data;
+        let marked = 0;
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const i = (y * w + x) * 4;
+            if (pd[i + 3] < 40) continue;
+            const edge = pd[i - 4 + 3] < 30 || pd[i + 4 + 3] < 30 || pd[i - w * 4 + 3] < 30 || pd[i + w * 4 + 3] < 30;
+            const min = Math.min(pd[i], pd[i + 1], pd[i + 2]);
+            const max = Math.max(pd[i], pd[i + 1], pd[i + 2]);
+            const isHalo = edge && min > 186 && max - min < 36;
+            const isDash = pd[i + 3] > 180 && max - min < 22 && lum(pd, i) < 100;
+            if (name === 'cup3d-trio.png' ? isHalo : isDash) {
+              pd[i] = 255; pd[i + 1] = 0; pd[i + 2] = 200; pd[i + 3] = 255;
+              marked++;
+            }
+          }
+        }
+        const tmp = document.createElement('canvas');
+        tmp.width = w; tmp.height = h;
+        tmp.getContext('2d').putImageData(paint, 0, 0);
+        g.drawImage(tmp, 0, 0, out.width, out.height);
+        await post('tools/_qa/' + name.replace('.png', '-mark.png'), await toBlob(out));
+        log('  marked ' + marked);
+      }
+    }
+    log('DONE');
+  } catch (err) {
+    log('ERROR: ' + (err.stack || err.message));
+  }
+</script>
+</body>
+</html>

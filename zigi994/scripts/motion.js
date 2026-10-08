@@ -879,7 +879,7 @@ function initClock() {
       minute: "2-digit",
       hour12: false,
     }).format(now);
-    el.textContent = `Guangzhou ${parts}`;
+    el.textContent = `Shenzhen ${parts}`;
   };
 
   tick();

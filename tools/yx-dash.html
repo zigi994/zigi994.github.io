@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>yx dash</title></head>
+<body>
+<pre id="log">PENDING</pre>
+<script type="module">
+  const logEl = document.getElementById('log');
+  const lines = [];
+  const log = (s) => { lines.push(s); logEl.textContent = lines.join('\n'); };
+  async function post(name, blob) {
+    const res = await fetch('/_save?name=' + encodeURIComponent(name), { method: 'POST', body: blob });
+    if (!res.ok) throw new Error('save ' + name + ' ' + res.status);
+  }
+  const toBlob = (c) => new Promise((ok) => c.toBlob(ok, 'image/png'));
+  function load(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(src));
+      img.src = src;
+    });
+  }
+
+  function satAt(d, i) {
+    return Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
+  }
+  function lumAt(d, i) {
+    return (d[i] + d[i + 1] + d[i + 2]) / 3;
+  }
+
+  function isDark(d, i) {
+    if (d[i + 3] < 170) return false;
+    return satAt(d, i) < 28 && lumAt(d, i) < 96;
+  }
+  function touches(d, w, h, x, y, pred) {
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) { if (pred(null)) return true; continue; }
+        if (pred(d, (ny * w + nx) * 4)) return true;
+      }
+    }
+    return false;
+  }
+  function isSilhouette(d, w, h, x, y) {
+    const empty = touches(d, w, h, x, y, (data, i) => data === null || data[i + 3] < 40);
+    const fill = touches(d, w, h, x, y, (data, i) => data && data[i + 3] > 180 && !isDark(data, i));
+    return empty && fill;
+  }
+
+  function dropGuides(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const rows = [];
+    for (let y = 0; y < h; y++) {
+      let left = 0, right = 0, mid = 0;
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        if (!isDark(d, i)) continue;
+        if (x < 42) left++;
+        else if (x >= w - 42) right++;
+        else mid++;
+      }
+      if (left >= 8 && right >= 8 && mid >= 8) rows.push(y);
+    }
+    let removed = 0, filled = 0;
+    const kill = new Uint8Array(w * h);
+    for (const y of rows) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        if (!isDark(d, i)) continue;
+        if (isSilhouette(d, w, h, x, y)) continue;
+        kill[y * w + x] = 1;
+      }
+    }
+    const side = (x, y, dy) => {
+      for (let r = 1; r <= 6; r++) {
+        const ny = y + dy * r;
+        if (ny < 0 || ny >= h) return 'empty';
+        const j = (ny * w + x) * 4;
+        if (d[j + 3] < 40) return 'empty';
+        if (kill[ny * w + x] || isDark(d, j)) continue;
+        return j;
+      }
+      return 'empty';
+    };
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (!kill[p]) continue;
+        const up = side(x, y, -1);
+        const dn = side(x, y, 1);
+        const i = p * 4;
+        if (typeof up === 'number' && typeof dn === 'number') {
+          const j = up;
+          d[i] = d[j]; d[i + 1] = d[j + 1]; d[i + 2] = d[j + 2]; d[i + 3] = 255;
+          filled++;
+        } else {
+          d[i + 3] = 0;
+          removed++;
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return { removed, filled, rows: rows.join(',') };
+  }
+
+  function repairContour(canvas, backup) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const bctx = backup.getContext('2d', { willReadFrequently: true });
+    const bd = bctx.getImageData(0, 0, w, h).data;
+    let restored = 0;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = (y * w + x) * 4;
+        if (!isDark(bd, i)) continue;
+        const changed = Math.abs(d[i + 3] - bd[i + 3]) > 40 || Math.abs(d[i] - bd[i]) > 24;
+        if (!changed) continue;
+        if (!isSilhouette(bd, w, h, x, y)) continue;
+        d[i] = bd[i]; d[i + 1] = bd[i + 1]; d[i + 2] = bd[i + 2]; d[i + 3] = bd[i + 3];
+        restored++;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return restored;
+  }
+
+  function peelRim(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    let n = 0;
+    for (let pass = 0; pass < 3; pass++) {
+      const copy = new Uint8ClampedArray(d);
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const i = (y * w + x) * 4;
+          if (copy[i + 3] < 40) continue;
+          const edge = copy[i - 4 + 3] < 30 || copy[i + 4 + 3] < 30 || copy[i - w * 4 + 3] < 30 || copy[i + w * 4 + 3] < 30;
+          if (!edge) continue;
+          const min = Math.min(copy[i], copy[i + 1], copy[i + 2]);
+          const max = Math.max(copy[i], copy[i + 1], copy[i + 2]);
+          const lum = (copy[i] + copy[i + 1] + copy[i + 2]) / 3;
+          if (max - min > 26 || lum < 128 || lum > 236) continue;
+          let ink = false;
+          for (let dy = -2; dy <= 2 && !ink; dy++) {
+            for (let dx = -2; dx <= 2; dx++) {
+              const q = ((y + dy) * w + (x + dx)) * 4;
+              if (q < 0 || q >= copy.length || copy[q + 3] < 180) continue;
+              if ((copy[q] + copy[q + 1] + copy[q + 2]) / 3 < 70) ink = true;
+            }
+          }
+          if (!ink) continue;
+          d[i + 3] = 0;
+          n++;
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return n;
+  }
+
+  function dropGuidesOLD(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height, n = w * h;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const dark = new Uint8Array(n);
+    for (let p = 0, i = 0; p < n; p++, i += 4) {
+      if (d[i + 3] < 160) continue;
+      if (satAt(d, i) < 32 && lumAt(d, i) < 165) dark[p] = 1;
+    }
+    const kind = (x, y, dx, dy) => {
+      for (let r = 1; r <= 5; r++) {
+        const nx = x + dx * r, ny = y + dy * r;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) return 'empty';
+        const q = ny * w + nx;
+        if (dark[q]) continue;
+        if (d[q * 4 + 3] < 40) return 'empty';
+        return 'fill';
+      }
+      return 'empty';
+    };
+    const kill = new Uint8Array(n);
+    const consider = (cells, horizontal) => {
+      if (cells.length < 5) return;
+      let exterior = 0, crossing = 0;
+      const tags = new Uint8Array(cells.length);
+      cells.forEach((p, idx) => {
+        const y = (p / w) | 0, x = p - y * w;
+        const a = horizontal ? kind(x, y, 0, -1) : kind(x, y, -1, 0);
+        const b = horizontal ? kind(x, y, 0, 1) : kind(x, y, 1, 0);
+        if (a === 'empty' && b === 'empty') { tags[idx] = 1; exterior++; }
+        else if (a === 'fill' && b === 'fill') { tags[idx] = 2; crossing++; }
+      });
+      if (exterior < 5) return;
+      cells.forEach((p, idx) => { if (tags[idx]) kill[p] = tags[idx]; });
+    };
+    const chains = (horizontal) => {
+      const major = horizontal ? h : w;
+      const minor = horizontal ? w : h;
+      for (let a = 0; a < major; a++) {
+        let cells = [];
+        let gap = 0;
+        const flush = () => { if (cells.length) consider(cells, horizontal); cells = []; gap = 0; };
+        for (let b = 0; b < minor; b++) {
+          const p = horizontal ? a * w + b : b * w + a;
+          if (dark[p]) { cells.push(p); gap = 0; continue; }
+          if (!cells.length) continue;
+          gap++;
+          if (gap > 14) flush();
+        }
+        flush();
+      }
+    };
+    chains(true);
+    chains(false);
+    let removed = 0, filled = 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (!kill[p]) continue;
+        const i = p * 4;
+        if (kill[p] === 2) {
+          let src = -1;
+          for (let r = 1; r <= 8 && src < 0; r++) {
+            for (const [nx, ny] of [[x, y - r], [x, y + r], [x - r, y], [x + r, y]]) {
+              if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+              const q = ny * w + nx;
+              if (kill[q] || dark[q] || d[q * 4 + 3] < 200) continue;
+              src = q;
+              break;
+            }
+          }
+          if (src >= 0) {
+            const j = src * 4;
+            d[i] = d[j]; d[i + 1] = d[j + 1]; d[i + 2] = d[j + 2]; d[i + 3] = 255;
+            filled++;
+          } else {
+            d[i + 3] = 0;
+            removed++;
+          }
+        } else {
+          d[i + 3] = 0;
+          removed++;
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return { removed, filled, w, h };
+  }
+
+  function dropSpecks(canvas, maxArea) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height, n = w * h;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const ink = new Uint8Array(n);
+    for (let p = 0, i = 0; p < n; p++, i += 4) if (d[i + 3] > 20) ink[p] = 1;
+    const seen = new Uint8Array(n);
+    const stack = [];
+    let dropped = 0;
+    for (let start = 0; start < n; start++) {
+      if (!ink[start] || seen[start]) continue;
+      const cells = [];
+      stack.length = 0;
+      stack.push(start);
+      seen[start] = 1;
+      while (stack.length) {
+        const p = stack.pop();
+        cells.push(p);
+        const y = (p / w) | 0, x = p - y * w;
+        const next = [];
+        if (x > 0) next.push(p - 1);
+        if (x < w - 1) next.push(p + 1);
+        if (y > 0) next.push(p - w);
+        if (y < h - 1) next.push(p + w);
+        for (const q of next) {
+          if (ink[q] && !seen[q]) { seen[q] = 1; stack.push(q); }
+        }
+      }
+      if (cells.length >= maxArea) continue;
+      for (const p of cells) d[p * 4 + 3] = 0;
+      dropped += cells.length;
+    }
+    ctx.putImageData(img, 0, 0);
+    return dropped;
+  }
+
+  function isSkin(d, i) {
+    if (d[i + 3] < 200) return false;
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const lum = (r + g + b) / 3;
+    return lum > 214 && max - min > 28 && max - min < 96 && r > g && g > b;
+  }
+
+  function healDashes(canvas) {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    let sr = 0, sg = 0, sb = 0, sn = 0;
+    for (let y = (h * 0.62) | 0; y < (h * 0.78) | 0; y++) {
+      for (let x = (w * 0.4) | 0; x < (w * 0.6) | 0; x++) {
+        const i = (y * w + x) * 4;
+        if (!isSkin(d, i)) continue;
+        sr += d[i]; sg += d[i + 1]; sb += d[i + 2]; sn++;
+      }
+    }
+    if (!sn) return 0;
+    const skin = [Math.round(sr / sn), Math.round(sg / sn), Math.round(sb / sn)];
+    let healed = 0;
+    const yStart = (h * 0.55) | 0;
+    for (let y = yStart; y < h - 4; y++) {
+      for (let x = 2; x < w - 2; x++) {
+        const i = (y * w + x) * 4;
+        if (d[i + 3] < 180 || isSkin(d, i)) continue;
+        const lum = (d[i] + d[i + 1] + d[i + 2]) / 3;
+        const sat = Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
+        if (sat > 48 || lum > 220) continue;
+        const up = (Math.max(0, y - 4) * w + x) * 4;
+        const dn = (Math.min(h - 1, y + 4) * w + x) * 4;
+        if (lum < 78) {
+          if (!(isSkin(d, up) && isSkin(d, dn))) continue;
+        } else if (!isSkin(d, up) && !isSkin(d, dn)) continue;
+        let around = 0;
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            if (isSkin(d, ((y + dy) * w + (x + dx)) * 4)) around++;
+          }
+        }
+        if (around < 6) continue;
+        d[i] = skin[0]; d[i + 1] = skin[1]; d[i + 2] = skin[2]; d[i + 3] = 255;
+        healed++;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return { healed, skin: skin.join(',') };
+  }
+
+  async function canvasOf(src) {
+    const img = await load(src);
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    c.getContext('2d').drawImage(img, 0, 0);
+    return c;
+  }
+  async function preview(file, canvas) {
+    const scale = 2;
+    const out = document.createElement('canvas');
+    out.width = canvas.width * scale;
+    out.height = canvas.height * scale;
+    const g = out.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.fillStyle = '#12110d';
+    g.fillRect(0, 0, out.width, out.height);
+    g.drawImage(canvas, 0, 0, out.width, out.height);
+    await post('tools/_qa/clean-' + file, await toBlob(out));
+  }
+
+  try {
+    log('heal');
+    for (const file of ['dye-01.png', 'dye-02.png', 'dye-03.png']) {
+      const c = await canvasOf('/assets/ip/yx/' + file + '?fresh=' + Date.now());
+      const info = healDashes(c);
+      await post('zigi994/assets/ip/yx/' + file, await toBlob(c));
+      await preview(file, c);
+      log(file + ' healed ' + info.healed + ' skin ' + info.skin);
+    }
+    log('DONE');
+  } catch (err) {
+    log('ERROR: ' + (err.stack || err.message));
+  }
+</script>
+</body>
+</html>

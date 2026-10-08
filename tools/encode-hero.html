@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>encode hero lion</title>
+</head>
+<body>
+<pre id="log">starting</pre>
+<script type="module">
+const log = document.getElementById("log");
+try {
+  const image = new Image();
+  image.src = "/__tools/_qa/vi/lion-cut.png?src=1";
+  await image.decode();
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  canvas.getContext("2d").drawImage(image, 0, 0);
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((value) => (value ? resolve(value) : reject(new Error("webp failed"))), "image/webp", 0.9);
+  });
+  const response = await fetch("/_save?name=zigi994/assets/ip/hero-lion.webp", { method: "POST", body: blob });
+  if (!response.ok) throw new Error("save " + response.status);
+  log.textContent = `DONE ${canvas.width}x${canvas.height} ${blob.size}`;
+} catch (error) {
+  log.textContent = "ERROR " + error.message;
+}
+</script>
+</body>
+</html>

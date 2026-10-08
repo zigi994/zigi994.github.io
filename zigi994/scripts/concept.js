@@ -10,7 +10,8 @@ const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
    ------------------------------------------------------------ */
 function initNodeUI() {
   const root = document.querySelector("[data-nodeui]");
-  if (!root) return;
+  if (!root || root.dataset.bound) return;
+  root.dataset.bound = "1";
 
   const canvas = root.querySelector(".nodeui__canvas");
   const svg = root.querySelector(".nodeui__wires");
@@ -116,7 +117,8 @@ function initNodeUI() {
    ------------------------------------------------------------ */
 function initDevice() {
   const root = document.querySelector("[data-device]");
-  if (!root) return;
+  if (!root || root.dataset.bound) return;
+  root.dataset.bound = "1";
 
   const ring = root.querySelector(".device__ring");
   const fill = root.querySelector(".device__fill");
@@ -235,6 +237,8 @@ function boot() {
   initNodeUI();
   initDevice();
 }
+
+document.addEventListener("case:mount", boot);
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", boot);
