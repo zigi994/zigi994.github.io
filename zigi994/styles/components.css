@@ -306,15 +306,22 @@
     box-shadow: var(--shadow-deep);
     transform: translate3d(102%, 0, 0);
     visibility: hidden;
-    transition: transform var(--d-slow) var(--ease-out-expo),
-      visibility 0s linear var(--d-slow);
   }
 
   .js .nav__links.is-open {
     transform: none;
     visibility: visible;
-    transition-delay: 0s;
   }
+
+  /* Armed by motion.js a frame after boot. With the transition live from the
+     moment .js lands, the drawer slid from the no-JS strip to off-screen --
+     and stayed visible doing it -- on every phone page load. */
+  .js .nav.is-armed .nav__links {
+    transition: transform var(--d-slow) var(--ease-out-expo),
+      visibility 0s linear var(--d-slow);
+  }
+
+  .js .nav.is-armed .nav__links.is-open { transition-delay: 0s; }
 
   .js .nav__menu-head {
     display: flex;

@@ -781,6 +781,9 @@ function initNav() {
     };
     mobile.addEventListener?.("change", syncMenu);
     syncMenu();
+    /* Only once the closed drawer has been drawn off-screen without it; see
+       .nav.is-armed in components.css. */
+    requestAnimationFrame(() => requestAnimationFrame(() => nav.classList.add("is-armed")));
   }
 
   let last = window.scrollY;
