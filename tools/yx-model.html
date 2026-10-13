@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>yx model assets</title>
+</head>
+<body>
+<pre id="log">starting</pre>
+<script type="module">
+/* Web copies of the 狮小团 model next to the Blender export, which stays
+   the master in assets/ip/yx/model/:
+
+     texture_*.webp  the four maps yx-model.js samples, as lossy WebP.
+                     The colour map keeps 2048 px; the lighting maps drop
+                     to 1024, since normal/roughness/metal detail is not
+                     what a 500 px render shows.
+     base.txt        base.obj with coordinates cut to 5 decimals (the model
+                     is ~1.4 units tall, so the error is under 1/10000 of it).
+                     .txt rather than .obj because GitHub Pages serves .obj as
+                     application/x-tgif and does not gzip it; text/plain it does.
+
+     /__tools/yx-model.html?q=0.86 */
+const params = new URLSearchParams(location.search);
+const Q = Number(params.get("q") || 0.86);
+const DIR = "assets/ip/yx/model/";
+const OUT = "zigi994/" + DIR;
+const MAPS = [
+  ["texture_diffuse.png", 2048],
+  ["texture_normal.png", 1024],
+  ["texture_roughness.png", 1024],
+  ["texture_metallic.png", 1024],
+];
+
+const logEl = document.getElementById("log");
+const lines = [];
+const log = (m) => { lines.push(m); logEl.textContent = lines.join("\n"); };
+const save = async (name, body) => {
+  const res = await fetch(`/_save?name=${encodeURIComponent(name)}`, { method: "POST", body });
+  if (!res.ok) throw new Error(`save ${name}: ${res.status}`);
+};
+
+try {
+  for (const [file, size] of MAPS) {
+    const blob = await (await fetch(`/${DIR}${file}?t=${Date.now()}`)).blob();
+    const bitmap = await createImageBitmap(blob, {
+      resizeWidth: size, resizeHeight: size, resizeQuality: "high",
+      colorSpaceConversion: "none", premultiplyAlpha: "none",
+    });
+    const canvas = new OffscreenCanvas(size, size);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0);
+    const webp = await canvas.convertToBlob({ type: "image/webp", quality: Q });
+    await save(OUT + file.replace(/\.png$/, ".webp"), webp);
+    log(`${file.padEnd(22)} ${(blob.size / 1024).toFixed(0)} KB -> ${size}px ${(webp.size / 1024).toFixed(0)} KB`);
+  }
+
+  const obj = await (await fetch(`/${DIR}base.obj?t=${Date.now()}`)).text();
+  const trimmed = obj.replace(/-?\d+\.\d{6,}/g, (n) => {
+    const v = Number(Number(n).toFixed(5));
+    return Object.is(v, -0) ? "0" : String(v);
+  });
+  await save(OUT + "base.txt", new Blob([trimmed], { type: "text/plain" }));
+  log(`base.obj ${(obj.length / 1024).toFixed(0)} KB -> base.txt ${(trimmed.length / 1024).toFixed(0)} KB`);
+  log("DONE");
+} catch (error) {
+  log("ERROR " + error.message);
+}
+</script>
+</body>
+</html>

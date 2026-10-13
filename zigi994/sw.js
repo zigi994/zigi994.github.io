@@ -31,7 +31,7 @@ const SHELL_CACHE = 'zigi-shell-' + BUILD_ID;
 /* Deliberately independent from BUILD_ID: unchanged images should survive a
    CSS-only deploy. Bump this version whenever the asset pipeline rewrites a
    stable image filename or changes the responsive derivative set. */
-const MEDIA_CACHE = 'zigi-media-v3';
+const MEDIA_CACHE = 'zigi-media-v4';
 
 /* Resolved from the worker's own URL so the same file works at the
    domain root and from a subdirectory preview. */
@@ -57,15 +57,11 @@ const PRECACHE = [
   at('styles/type-cn.css'),
   at('styles/components.css'),
   at('styles/home.css'),
-  at('styles/case.css'),
-  at('styles/concept.css'),
   at('styles/transitions.css'),
 
   at('scripts/motion.js'),
   at('scripts/home.js'),
   at('scripts/hero-ip.js'),
-  at('scripts/case.js'),
-  at('scripts/concept.js'),
   at('scripts/navigation.js'),
   at('scripts/sw-register.js'),
 
@@ -76,8 +72,6 @@ const PRECACHE = [
 
   at('favicon.svg'),
   at('manifest.webmanifest'),
-  /* motion.js fetches this for the image pipeline. */
-  at('assets/manifest.json'),
 ];
 
 const isMedia = (url) =>
@@ -125,9 +119,14 @@ self.addEventListener('install', (event) => {
       /* addAll() is all-or-nothing: one 404 and the whole shell is
          lost, which would leave a permanently broken install every
          time a filename drifts. Adding entries individually keeps a
-         missing file from costing us the other twenty-five. */
+         missing file from costing us all the others.
+
+         'no-cache' rather than 'reload': the install runs right after
+         a first visit has downloaded every one of these files, and
+         'reload' fetched them all again. Revalidating still guarantees
+         this build's bytes, but an unchanged file comes back as a 304. */
       const results = await Promise.allSettled(
-        PRECACHE.map((url) => cache.add(new Request(url, { cache: 'reload' })))
+        PRECACHE.map((url) => cache.add(new Request(url, { cache: 'no-cache' })))
       );
 
       const missed = results

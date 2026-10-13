@@ -3,7 +3,42 @@
    ============================================================ */
 
 import { lerp, reduceMotion } from "./motion.js";
-import { initYxModel } from "./yx-model.js";
+
+/* ------------------------------------------------------------
+   Loading by section
+   ------------------------------------------------------------ */
+
+/* A lazy image clipped out of view -- further down the phone's glass, off the
+   end of the sliding row -- never counts as near the viewport, so each would
+   only start loading as it slid into sight. Such groups load together, once
+   their section is within a screen. */
+function warmNear(el) {
+  if (!el) return;
+  const io = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return;
+    io.disconnect();
+    el.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = "eager"; });
+  }, { rootMargin: "100% 0px" });
+  io.observe(el);
+}
+
+/* three.js and the model are only for this one stage, and with them in the
+   page's import graph nothing in home.js could start until they had arrived. */
+function initYxModelNear(root) {
+  const stage = root.querySelector("[data-yx-model]");
+  if (!stage) return;
+  const io = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return;
+    io.disconnect();
+    import("./yx-model.js")
+      .then(({ initYxModel }) => initYxModel(root))
+      .catch(() => {
+        const wait = stage.querySelector("[data-yx-wait]");
+        if (wait) wait.textContent = "模型没有立起来";
+      });
+  }, { rootMargin: "100% 0px" });
+  io.observe(stage);
+}
 
 /* ------------------------------------------------------------
    Lab: easing comparison
@@ -326,6 +361,7 @@ function initUiStory() {
   const glass = root?.querySelector(".handset__glass");
   const reel = root?.querySelector("[data-ui-reel]");
   if (!root || !glass || !reel) return;
+  warmNear(root);
   const steps = [...root.querySelectorAll("[data-ui-step]")];
   const screens = [...reel.querySelectorAll("img")];
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -407,7 +443,7 @@ function initYx() {
 }
 
 function initYxTurn(root) {
-  initYxModel(root);
+  initYxModelNear(root);
   initYxExt(root);
 }
 
@@ -448,6 +484,7 @@ function initYxExt(root) {
     track.appendChild(copy);
   });
   reel.appendChild(track);
+  warmNear(reel);
   const cards = [...track.querySelectorAll("[data-yx-ext-show]")];
   const counter = ext.querySelector("[data-yx-ext-counter]");
   const slip = ext.querySelector("[data-yx-ext-slip]");

@@ -6,6 +6,11 @@
    column the layout reserved. The plate itself is never drawn.
    Pointer movement still drags the figure, the way the previous
    hero did: a decaying velocity field, not a second video.
+
+   That path needs a fine pointer and WebGL. Everywhere else the
+   figure clip -- the same key and framing, baked -- plays straight
+   into the slot, and with reduced motion or Save-Data the poster
+   (its first frame) stays. Both clips load after the page does.
    ============================================================ */
 
 (() => {
@@ -20,7 +25,49 @@
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
 
-  const gl = canvas.getContext("webgl", {
+  /* The poster is the clip's first frame, so a still hero needs no video. */
+  if (reducedMotion.matches || navigator.connection?.saveData) {
+    canvas.remove();
+    return;
+  }
+
+  /* Neither clip is part of the first screen -- the poster already fills the
+     slot -- so they wait for the load event instead of sharing the connection
+     with the fonts and stylesheets. */
+  const whenLoaded = (start) => {
+    const idle = () =>
+      window.requestIdleCallback ? window.requestIdleCallback(start, { timeout: 1500 }) : setTimeout(start, 0);
+    if (document.readyState === "complete") idle();
+    else window.addEventListener("load", idle, { once: true });
+  };
+
+  /* Without a fine pointer there is no flow for the canvas to add, and keying
+     every frame on the CPU cost a phone 50-280 ms per frame. The figure clip is
+     that same key and framing, done once by tools/hero-encode.html. */
+  const playFigure = () => {
+    canvas.remove();
+    let armed = false;
+    let inView = true;
+    const sync = () => {
+      if (!armed) return;
+      if (inView && !document.hidden) video.play().catch(() => {});
+      else video.pause();
+    };
+    video.addEventListener("playing", () => video.classList.add("is-playing"), { once: true });
+    new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      sync();
+    }, { rootMargin: "10%" }).observe(hero);
+    document.addEventListener("visibilitychange", sync);
+    whenLoaded(() => {
+      video.preload = "auto";
+      video.src = video.dataset.src;
+      armed = true;
+      sync();
+    });
+  };
+
+  const gl = finePointer.matches && canvas.getContext("webgl", {
     alpha: false,
     antialias: false,
     depth: false,
@@ -29,8 +76,7 @@
     powerPreference: "low-power",
   });
   if (!gl) {
-    video.classList.add("is-fallback");
-    canvas.remove();
+    playFigure();
     return;
   }
 
@@ -142,8 +188,7 @@ void main() {
   const drawProgram = link(fragmentSource);
   const flowProgram = drawProgram && link(flowSource);
   if (!drawProgram || !flowProgram) {
-    video.classList.add("is-fallback");
-    canvas.remove();
+    playFigure();
     return;
   }
 
@@ -365,6 +410,11 @@ void main() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   };
 
+  /* draw() runs on every animation frame and every pointer move, but the clip
+     only changes 24 times a second, and the key is the expensive part. */
+  let keyedAt = -1;
+  let live = false;
+
   function draw(splat) {
     if (video.readyState < 2) return;
     measure();
@@ -374,10 +424,14 @@ void main() {
       gl.useProgram(drawProgram.program);
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.activeTexture(gl.TEXTURE0);
-      keyMatte();
       gl.bindTexture(gl.TEXTURE_2D, videoTexture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, matte);
+      const now = video.currentTime;
+      if (keyedAt < 0 || Math.abs(now - keyedAt) >= 1 / 30) {
+        keyMatte();
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, matte);
+        keyedAt = now;
+      }
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, flowRead.texture);
       const u = drawProgram.uniforms;
@@ -388,7 +442,11 @@ void main() {
       gl.uniform1f(u.uRel, crop.rel);
       gl.uniform3f(u.uInk, 0.071, 0.067, 0.051);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      canvas.classList.add("is-live");
+      if (!live) {
+        live = true;
+        canvas.classList.add("is-live");
+        figure.classList.add("is-live");
+      }
     } catch (err) {
       /* One undecoded frame should not stop the loop. */
     }
@@ -458,11 +516,6 @@ void main() {
   }
 
   video.addEventListener("loadeddata", () => {
-    if (reducedMotion.matches) {
-      video.pause();
-      draw(null);
-      return;
-    }
     video.play().then(wake).catch(() => draw(null));
   });
   video.addEventListener("play", wake);
@@ -477,7 +530,7 @@ void main() {
       video.pause();
       if (frameRequest) cancelAnimationFrame(frameRequest);
       frameRequest = 0;
-    } else if (!reducedMotion.matches && video.readyState >= 2) {
+    } else if (video.readyState >= 2) {
       video.play().then(wake).catch(() => draw(null));
     } else {
       draw(null);
@@ -488,8 +541,11 @@ void main() {
   new ResizeObserver(resize).observe(canvas);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) video.pause();
-    else if (visible && !reducedMotion.matches) video.play().then(wake).catch(() => {});
+    else if (visible && video.readyState >= 2) video.play().then(wake).catch(() => {});
   });
 
-  if (video.readyState >= 2) video.dispatchEvent(new Event("loadeddata"));
+  whenLoaded(() => {
+    video.preload = "auto";
+    video.src = video.dataset.plate;
+  });
 })();

@@ -27,11 +27,11 @@ powershell -ExecutionPolicy Bypass -File tools/serve.ps1 -Port 8787
 
 ```
 zigi994/              发布的站点（GitHub Actions 直接上传这个目录）
-  index.html          首页：hero / 宣言 / 作品索引 / 交互实验 / 关于
-  work/*.html         六个案例详情页
-  styles/             tokens · base · components · home · case · concept · transitions
-  scripts/            motion（通用动效）· home · case · concept · navigation · sw-register
-  assets/             压缩后的 WebP、可变字体、manifest.json（内含 LQIP 占位图）
+  index.html          首页：hero / 关于 / 四个项目（含交互实验）
+  styles/             tokens · base · type-cn · components · home · transitions
+  scripts/            motion（通用动效）· home · hero-ip · yx-model · navigation · sw-register
+                      vendor/ 里是 three.js 与 OBJLoader，只有 3D 形象快进入视口时才加载
+  assets/             压缩后的 WebP、hero 视频、3D 模型、可变字体与 Noto Serif SC 分片
   sw.js               Service Worker：离线与缓存策略
 tools/                资源流水线与自查工具，刻意放在发布目录之外，不会被上传
 ```
@@ -77,8 +77,8 @@ GitHub Pages 对所有响应统一下发很短的 `Cache-Control`，而且**无�
 
 原始素材（`.ai`、大尺寸 PNG/JPG）通过 `tools/` 里的浏览器端流水线转成 WebP：
 先用 pdf.js 栅格化 Illustrator 画板，再用 canvas 压缩、去背、生成 20px 的
-LQIP 占位图，最后写入 `assets/manifest.json`。本机没有 ImageMagick、Node 或
-可用的 Python，所以全部在无头 Chrome 里完成。
+LQIP 占位图，最后写入 `assets/manifest.json`。本机没有 ImageMagick 或
+可用的 Python，所以图像处理全部在无头 Chrome 里完成。
 
 重新生成资源：启动本地服务后依次打开
 `/__tools/pipeline.html`、`/__tools/cutout.html`、`/__tools/crop.html`。
@@ -94,6 +94,23 @@ powershell -ExecutionPolicy Bypass -File tools/run-tool.ps1 responsive-assets.ht
 `srcset` 负责选择；首屏只给一个视觉焦点 `fetchpriority="high"`，其余首屏图
 正常或低优先级，折叠线以下统一懒加载。所有 `<img>` 都写明 `width` / `height`
 以避免解码前布局跳动。
+
+首屏的狮小团由 `/__tools/hero-encode.html` 从 1280×720 的原片生成三个文件：
+`hero-plate.mp4`（640×360、无音轨，桌面端 WebGL 实时抠像用）、`hero-figure.mp4`
+（同一套抠像与取景离线做好、合成在页面底色上的 5:4 片段，触屏直接播放）和
+`hero-figure.webp`（它的第一帧，作为海报随页面一起出现）。两段视频都在
+`load` 之后才开始下载；减弱动态效果或开了省流量时只显示海报。需要先
+`npm pack mediabunny` 并解压到 `tools/_qa/vendor/`。
+
+粤醒茶香的 PNG 与 `portrait.png` 仍是母版（前者由 `yx-*` 页面写出）；跑一遍
+`/__tools/yx-webp.html` 会在旁边生成同名 WebP（有损带透明，逐张解码回来和原图比
+PSNR，低于下限就不写），首页引用的是这些 WebP。
+
+3D 形象的母版是 Blender 导出的 `assets/ip/yx/model/base.obj` 和四张 2048 px PNG 贴图。
+`/__tools/yx-model.html` 生成网页用的副本：贴图转成 WebP（颜色贴图保留 2048 px，
+法线、粗糙度、金属度降到 1024 px），模型坐标截到 5 位小数另存为 `base.txt` ——
+GitHub Pages 把 `.obj` 当成 `application/x-tgif` 且不压缩，换成 `.txt` 才会 gzip。
+重新导出模型后要再跑一遍。
 
 抽取之前先把源文件复制成 `tools/source.pdf`（`.ai` 存盘时勾了 PDF 兼容就能直接读），
 打开 `/__tools/pdf-sheet.html` 看一张总览图 —— 它回答「这个文件里到底有什么」。
@@ -121,6 +138,11 @@ powershell -ExecutionPolicy Bypass -File tools/run-tool.ps1 responsive-assets.ht
 写这类脚本要注意：令牌自带的 alpha 会和祖先的 opacity 相乘，
 `--fg-1/2/3` 是同一个墨色配 0.82/0.72/0.64，只读 RGB 会把三者都当成不透明的
 `--fg-0`，结果虚高一个多点。
+
+`node tools/load-audit.mjs --label <名字>`（Node 22+）按电脑、平板、手机三档
+限速首次加载首页，记录 FCP / LCP / CLS / 长任务、hero 何时出现、`load` 前后
+各下载了什么，并截加载过程的胶片帧；随后不限速逐段滚动截图，列出超出视口宽度的
+元素。结果写到 `tools/_qa/load/<名字>/`。
 
 `/__tools/measure.html` 输出关键元素的实际盒模型。
 `tools/shot.ps1` 是无头截图脚本（会自己回收进程和临时配置目录）。

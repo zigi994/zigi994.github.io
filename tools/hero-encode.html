@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>encode hero clips</title>
+</head>
+<body>
+<pre id="log">starting</pre>
+<script type="module">
+/* Derives the three hero files from the 1280x720 studio clip:
+
+     hero-plate.mp4   640x360, no audio. What hero-ip.js keys live on
+                      desktop -- it draws every frame into a 640x360
+                      canvas anyway, so the extra pixels never arrived.
+     hero-figure.mp4  The same key and the same auto-framing, done once
+                      here and composited onto the page ink at 5:4. Touch
+                      screens play this directly instead of keying every
+                      frame on the CPU.
+     hero-figure.webp First frame of the figure clip: the poster.
+
+   The keying and framing below are copied from scripts/hero-ip.js, so the
+   figure clip is what the live canvas would have drawn with no pointer.
+
+   Needs mediabunny unpacked at tools/_qa/vendor/package (npm pack
+   mediabunny) and tools/serve.ps1 for /_save.
+     /__tools/hero-encode.html?plate=900000&figure=900000&out=tools/_qa/hero/ */
+import {
+  Input, ALL_FORMATS, BlobSource, VideoSampleSink,
+  Output, Mp4OutputFormat, BufferTarget, CanvasSource,
+} from "/__tools/_qa/vendor/package/dist/bundles/mediabunny.mjs";
+
+const params = new URLSearchParams(location.search);
+const SRC = params.get("src") || "/assets/ip/hero-ip-dark.mp4";
+const OUT = params.get("out") || "zigi994/assets/ip/";
+const PLATE_BITRATE = Number(params.get("plate") || 900000);
+const FIGURE_BITRATE = Number(params.get("figure") || 900000);
+const FIG_W = Number(params.get("fw") || 640);
+const FIG_H = Math.round((FIG_W * 4) / 5);
+const POSTER_Q = Number(params.get("pq") || 0.86);
+const INK = [18, 17, 13];
+
+const logEl = document.getElementById("log");
+const lines = [];
+const log = (m) => { lines.push(m); logEl.textContent = lines.join("\n"); };
+const save = async (name, body) => {
+  const res = await fetch(`/_save?name=${encodeURIComponent(name)}`, { method: "POST", body });
+  if (!res.ok) throw new Error(`save ${name}: ${res.status}`);
+};
+
+/* ---- keying, verbatim from hero-ip.js ---- */
+const matteW = 640;
+const matteH = 360;
+const matte = document.createElement("canvas");
+matte.width = matteW;
+matte.height = matteH;
+const matteCtx = matte.getContext("2d", { willReadFrequently: true });
+const matteBg = new Uint8Array(matteW * matteH);
+const matteQueue = new Int32Array(matteW * matteH);
+
+const smooth = (a, b, x) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+const keyMatte = (sample) => {
+  sample.draw(matteCtx, 0, 0, matteW, matteH);
+  const image = matteCtx.getImageData(0, 0, matteW, matteH);
+  const data = image.data;
+  matteBg.fill(0);
+  let head = 0;
+  let tail = 0;
+  const consider = (index) => {
+    if (matteBg[index]) return;
+    const offset = index * 4;
+    const r = data[offset];
+    const g = data[offset + 1];
+    const b = data[offset + 2];
+    const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+    const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    if (max > 42 || max - min > 18) return;
+    matteBg[index] = 1;
+    matteQueue[tail++] = index;
+  };
+  for (let x = 0; x < matteW; x += 1) {
+    consider(x);
+    consider((matteH - 1) * matteW + x);
+  }
+  for (let y = 0; y < matteH; y += 1) {
+    consider(y * matteW);
+    consider(y * matteW + matteW - 1);
+  }
+  while (head < tail) {
+    const index = matteQueue[head++];
+    const x = index % matteW;
+    const y = (index / matteW) | 0;
+    if (x > 0) consider(index - 1);
+    if (x < matteW - 1) consider(index + 1);
+    if (y > 0) consider(index - matteW);
+    if (y < matteH - 1) consider(index + matteW);
+  }
+  for (let index = 0; index < matteW * matteH; index += 1) {
+    const offset = index * 4;
+    if (matteBg[index]) {
+      data[offset + 3] = 0;
+      continue;
+    }
+    const x = index % matteW;
+    const y = (index / matteW) | 0;
+    let close = false;
+    for (let dy = -3; dy <= 3 && !close; dy += 1) {
+      for (let dx = -3; dx <= 3; dx += 1) {
+        const xx = x + dx;
+        const yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= matteW || yy >= matteH) continue;
+        if (matteBg[yy * matteW + xx]) {
+          close = true;
+          break;
+        }
+      }
+    }
+    if (!close) {
+      data[offset + 3] = 255;
+      continue;
+    }
+    const r = data[offset];
+    const g = data[offset + 1];
+    const b = data[offset + 2];
+    const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+    const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+    if (max - min > 48 && luma > 110) {
+      data[offset + 3] = 255;
+      continue;
+    }
+    const alpha = Math.min(1, Math.max(0, (luma - 16) / 78));
+    if (alpha > 0.04 && alpha < 1) {
+      data[offset] = Math.min(255, r / alpha);
+      data[offset + 1] = Math.min(255, g / alpha);
+      data[offset + 2] = Math.min(255, b / alpha);
+    }
+    data[offset + 3] = Math.round(alpha * 255);
+  }
+  /* The shader's corner badge and frame-edge fade, evaluated where it
+     evaluates them: in source UV with y flipped (UNPACK_FLIP_Y). */
+  for (let y = 0; y < matteH; y += 1) {
+    const v = 1 - (y + 0.5) / matteH;
+    const fadeY = smooth(0, 0.04, v) * (1 - smooth(0.96, 1, v));
+    for (let x = 0; x < matteW; x += 1) {
+      const u = (x + 0.5) / matteW;
+      const badge = (1 - smooth(0, 0.16, u)) * smooth(0.8, 0.94, v);
+      const fade = smooth(0, 0.035, u) * (1 - smooth(0.965, 1, u)) * fadeY;
+      const offset = (y * matteW + x) * 4 + 3;
+      data[offset] = Math.round(data[offset] * (1 - badge) * fade);
+    }
+  }
+  matteCtx.putImageData(image, 0, 0);
+};
+
+/* ---- framing, verbatim from hero-ip.js (crop in flipped-y UV) ---- */
+const scanW = 160;
+const scanH = 90;
+const scan = document.createElement("canvas");
+scan.width = scanW;
+scan.height = scanH;
+const scanCtx = scan.getContext("2d", { willReadFrequently: true });
+const crop = { x: 0.2, y: 0.1, w: 0.5, h: 0.75, ready: false };
+/* The page blends 0.22 per animation frame at 60 Hz; this runs once per
+   video frame, so the same settling time needs a larger step. */
+let blendPerFrame = 0.22;
+
+const isCharacter = (r, g, b) => {
+  const neutral = Math.abs(r - g) + Math.abs(g - b) + Math.abs(b - r);
+  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+  return neutral > 46 && luma > 28 && luma < 252;
+};
+
+const measure = (sample) => {
+  sample.draw(scanCtx, 0, 0, scanW, scanH);
+  const data = scanCtx.getImageData(0, 0, scanW, scanH).data;
+  let minX = scanW;
+  let minY = scanH;
+  let maxX = 0;
+  let maxY = 0;
+  let count = 0;
+  for (let y = 0; y < scanH; y += 1) {
+    for (let x = 0; x < scanW; x += 1) {
+      if (x < 24 && y < 16) continue;
+      const i = (y * scanW + x) * 4;
+      if (!isCharacter(data[i], data[i + 1], data[i + 2])) continue;
+      count += 1;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (count < 12) return;
+  const padX = Math.max(4, (maxX - minX) * 0.08);
+  const padY = Math.max(4, (maxY - minY) * 0.08);
+  minX = Math.max(0, minX - padX);
+  minY = Math.max(0, minY - padY);
+  maxX = Math.min(scanW - 1, maxX + padX);
+  maxY = Math.min(scanH - 1, maxY + padY);
+  const next = {
+    x: minX / scanW,
+    y: 1 - (maxY + 1) / scanH,
+    w: (maxX - minX + 1) / scanW,
+    h: (maxY - minY + 1) / scanH,
+  };
+  const blend = crop.ready ? blendPerFrame : 1;
+  crop.x += (next.x - crop.x) * blend;
+  crop.y += (next.y - crop.y) * blend;
+  crop.w += (next.w - crop.w) * blend;
+  crop.h += (next.h - crop.h) * blend;
+  crop.ready = true;
+};
+
+/* ---- composite: the shader's contain-fit of the crop into the box ---- */
+const figure = document.createElement("canvas");
+figure.width = FIG_W;
+figure.height = FIG_H;
+const figureCtx = figure.getContext("2d");
+figureCtx.imageSmoothingEnabled = true;
+figureCtx.imageSmoothingQuality = "high";
+
+const composite = () => {
+  figureCtx.fillStyle = `rgb(${INK.join(",")})`;
+  figureCtx.fillRect(0, 0, FIG_W, FIG_H);
+  const sw = crop.w * matteW;
+  const sh = crop.h * matteH;
+  const sx = crop.x * matteW;
+  const sy = (1 - crop.y - crop.h) * matteH;
+  const scale = Math.min(FIG_W / sw, FIG_H / sh);
+  const dw = sw * scale;
+  const dh = sh * scale;
+  figureCtx.drawImage(matte, sx, sy, sw, sh, (FIG_W - dw) / 2, (FIG_H - dh) / 2, dw, dh);
+};
+
+const plate = document.createElement("canvas");
+plate.width = 640;
+plate.height = 360;
+const plateCtx = plate.getContext("2d");
+plateCtx.imageSmoothingEnabled = true;
+plateCtx.imageSmoothingQuality = "high";
+
+try {
+  /* A Blob rather than a URL source: serve.ps1 ignores Range headers. */
+  const blob = await (await fetch(SRC)).blob();
+  const input = new Input({ source: new BlobSource(blob), formats: ALL_FORMATS });
+  const track = await input.getPrimaryVideoTrack();
+  const stats = await track.computePacketStats();
+  const fps = stats.averagePacketRate;
+  blendPerFrame = 1 - Math.pow(1 - 0.22, 60 / fps);
+  log(`source ${track.displayWidth}x${track.displayHeight}  ${fps.toFixed(2)} fps  ${stats.packetCount} frames  codec ${track.codec}`);
+
+  const makeOutput = (canvas, bitrate) => {
+    const target = new BufferTarget();
+    const output = new Output({ format: new Mp4OutputFormat({ fastStart: "in-memory" }), target });
+    const source = new CanvasSource(canvas, {
+      codec: "avc",
+      bitrate,
+      keyFrameInterval: 2,
+      latencyMode: "quality",
+    });
+    output.addVideoTrack(source, { frameRate: Math.round(fps) });
+    return { output, source, target };
+  };
+  const plateOut = makeOutput(plate, PLATE_BITRATE);
+  const figureOut = makeOutput(figure, FIGURE_BITRATE);
+  await plateOut.output.start();
+  await figureOut.output.start();
+
+  const sink = new VideoSampleSink(track);
+  let n = 0;
+  for await (const sample of sink.samples()) {
+    const t = sample.timestamp;
+    const d = sample.duration;
+    sample.draw(plateCtx, 0, 0, 640, 360);
+    await plateOut.source.add(t, d);
+
+    measure(sample);
+    keyMatte(sample);
+    composite();
+    await figureOut.source.add(t, d);
+
+    if (n === 0) {
+      const poster = await new Promise((resolve, reject) =>
+        figure.toBlob((b) => (b ? resolve(b) : reject(new Error("webp"))), "image/webp", POSTER_Q)
+      );
+      await save(`${OUT}hero-figure.webp`, poster);
+      log(`poster ${FIG_W}x${FIG_H} ${(poster.size / 1024).toFixed(1)} KB`);
+    }
+    sample.close();
+    n += 1;
+    if (n % 30 === 0) log(`frame ${n}`);
+  }
+
+  await plateOut.output.finalize();
+  await figureOut.output.finalize();
+  await save(`${OUT}hero-plate.mp4`, plateOut.target.buffer);
+  await save(`${OUT}hero-figure.mp4`, figureOut.target.buffer);
+  log(`plate  640x360 ${(plateOut.target.buffer.byteLength / 1024).toFixed(1)} KB @ ${PLATE_BITRATE}`);
+  log(`figure ${FIG_W}x${FIG_H} ${(figureOut.target.buffer.byteLength / 1024).toFixed(1)} KB @ ${FIGURE_BITRATE}`);
+  log(`DONE ${n} frames`);
+} catch (error) {
+  log("ERROR " + (error && error.stack ? error.stack : error));
+}
+</script>
+</body>
+</html>

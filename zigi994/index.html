@@ -117,8 +117,10 @@
         </div>
 
         <div class="hero__figure" data-hero-figure>
-          <video class="hero__video" data-hero-video src="assets/ip/hero-ip-dark.mp4"
-                 muted loop playsinline preload="auto"></video>
+          <img class="hero__poster" src="assets/ip/hero-figure.webp" width="640" height="512" alt=""
+               fetchpriority="high" elementtiming="hero-poster">
+          <video class="hero__video" data-hero-video muted loop playsinline preload="none"
+                 data-src="assets/ip/hero-figure.mp4" data-plate="assets/ip/hero-plate.mp4"></video>
         </div>
 
         <a class="hero__primary" href="#work">查看作品 <i aria-hidden="true">→</i></a>
@@ -129,7 +131,7 @@
   <section class="section about" id="about">
     <div class="shell about__inner">
       <figure class="about__photo">
-        <img src="assets/portrait.png" width="488" height="1024" alt="周子杭">
+        <img src="assets/portrait.webp" width="488" height="1024" alt="周子杭" loading="lazy" decoding="async">
       </figure>
       <div class="about__lead">
         <h2 class="display-s cn reveal-lines">你好，我是周子杭</h2>
@@ -169,25 +171,25 @@
                     <div class="handset__reel" data-ui-reel>
                       <img src="assets/app/screen-01-960.webp"
                            srcset="assets/app/screen-01-480.webp 480w, assets/app/screen-01-960.webp 960w, assets/app/screen-01.webp 1664w"
-                           sizes="320px" width="1664" height="3600" alt="趣宠启动页：在等你回家，登录或注册" decoding="async">
+                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="趣宠启动页：在等你回家，登录或注册" decoding="async">
                       <img src="assets/app/screen-02-960.webp"
                            srcset="assets/app/screen-02-480.webp 480w, assets/app/screen-02-960.webp 960w, assets/app/screen-02.webp 1664w"
-                           sizes="320px" width="1664" height="3600" alt="选择无宠物或有宠物" decoding="async">
+                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="选择无宠物或有宠物" decoding="async">
                       <img src="assets/app/screen-03-960.webp"
                            srcset="assets/app/screen-03-480.webp 480w, assets/app/screen-03-960.webp 960w, assets/app/screen-03.webp 1664w"
-                           sizes="320px" width="1664" height="3600" alt="注册：手机号、验证码、密码，并选择喜欢的宠物" decoding="async">
+                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="注册：手机号、验证码、密码，并选择喜欢的宠物" decoding="async">
                       <img src="assets/app/screen-04-960.webp"
                            srcset="assets/app/screen-04-480.webp 480w, assets/app/screen-04-960.webp 960w, assets/app/screen-04.webp 1664w"
-                           sizes="320px" width="1664" height="3600" alt="登录：账号、密码与进入" decoding="async">
+                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="登录：账号、密码与进入" decoding="async">
                       <img src="assets/app/screen-05-960.webp"
                            srcset="assets/app/screen-05-480.webp 480w, assets/app/screen-05-960.webp 960w, assets/app/screen-05.webp 1664w"
-                           sizes="320px" width="1664" height="3600" alt="首页：宠物档案、日常记录与服务" decoding="async">
+                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="首页：宠物档案、日常记录与服务" decoding="async">
                       <img src="assets/app/screen-06-960.webp"
                            srcset="assets/app/screen-06-480.webp 480w, assets/app/screen-06-960.webp 960w, assets/app/screen-06.webp 1664w"
-                           sizes="320px" width="1664" height="3600" alt="社交：好友状态与推荐、关注、同城" decoding="async">
+                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="社交：好友状态与推荐、关注、同城" decoding="async">
                       <img src="assets/app/screen-07-960.webp"
                            srcset="assets/app/screen-07-480.webp 480w, assets/app/screen-07-960.webp 960w, assets/app/screen-07.webp 1664w"
-                           sizes="320px" width="1664" height="3600" alt="商店：品类、直播、秒杀与补贴" decoding="async">
+                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="商店：品类、直播、秒杀与补贴" decoding="async">
                     </div>
                   </div>
                   <p class="handset__tag cn"><span>往下划</span><b data-ui-tag>启动</b></p>
@@ -377,7 +379,7 @@
             <div class="yx-rest">
               <section class="yx-lock" aria-label="标志">
                 <div class="yx-lock__head">
-                  <img src="assets/ip/yx/mark-01.png?v=4" width="289" height="288" alt="粤醒茶香标志，醒狮帽的头" decoding="async">
+                  <img src="assets/ip/yx/mark-01.webp" width="289" height="288" alt="粤醒茶香标志，醒狮帽的头" loading="lazy" decoding="async">
                 </div>
                 <div class="yx-lock__type">
                   <p class="yx-lock__name cn">粤醒茶香</p>
@@ -390,7 +392,7 @@
                   </ul>
                   <div class="yx-lock__line">
                     <div class="yx-lock__ink">
-                      <img src="assets/ip/yx/ink-01.png" width="298" height="311" alt="标志线稿" decoding="async">
+                      <img src="assets/ip/yx/ink-01.webp" width="298" height="311" alt="标志线稿" loading="lazy" decoding="async">
                     </div>
                     <p class="cn">彩色和线稿是同一张脸。深底上用彩色，浅底上用线稿，都认得出来。</p>
                   </div>
@@ -398,43 +400,43 @@
               </section>
 
               <div class="yx-cloth" aria-hidden="true">
-                <img src="assets/ip/yx/pat-01.png" width="444" height="258" alt="" decoding="async">
-                <img src="assets/ip/yx/pat-02.png" width="444" height="258" alt="" decoding="async">
-                <img src="assets/ip/yx/pat-03.png" width="444" height="263" alt="" decoding="async">
-                <img src="assets/ip/yx/pat-04.png" width="444" height="259" alt="" decoding="async">
+                <img src="assets/ip/yx/pat-01.webp" width="444" height="258" alt="" loading="lazy" decoding="async">
+                <img src="assets/ip/yx/pat-02.webp" width="444" height="258" alt="" loading="lazy" decoding="async">
+                <img src="assets/ip/yx/pat-03.webp" width="444" height="263" alt="" loading="lazy" decoding="async">
+                <img src="assets/ip/yx/pat-04.webp" width="444" height="259" alt="" loading="lazy" decoding="async">
               </div>
 
               <section class="yx-faces" aria-label="表情">
                 <p class="yx__lead cn">十二张表情。点任意一张，他会换成那一个；不点的话，他自己轮着做。</p>
                 <div class="yx-stage">
                   <div class="yx-spot" data-yx-spot>
-                    <img data-yx-show data-move="bounce" class="is-on" src="assets/ip/yx/face-03.png?v=4" width="306" height="343" alt="">
-                    <img data-yx-show data-move="bounce" src="assets/ip/yx/face-07.png?v=4" width="277" height="373" alt="">
-                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-02.png?v=4" width="271" height="377" alt="">
-                    <img data-yx-show data-move="bounce" src="assets/ip/yx/face-05.png?v=4" width="277" height="280" alt="">
-                    <img data-yx-show data-move="tilt" src="assets/ip/yx/face-06.png?v=4" width="271" height="273" alt="">
-                    <img data-yx-show data-move="pulse" src="assets/ip/yx/face-04.png?v=4" width="265" height="302" alt="">
-                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-09.png?v=4" width="271" height="377" alt="">
-                    <img data-yx-show data-move="pop" src="assets/ip/yx/face-12.png?v=4" width="272" height="273" alt="">
-                    <img data-yx-show data-move="walk" src="assets/ip/yx/face-01.png?v=4" width="276" height="389" alt="">
-                    <img data-yx-show data-move="shake" src="assets/ip/yx/face-10.png?v=4" width="277" height="278" alt="">
-                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-11.png?v=4" width="276" height="279" alt="">
-                    <img data-yx-show data-move="shake" src="assets/ip/yx/face-08.png?v=4" width="275" height="385" alt="">
+                    <img data-yx-show data-move="bounce" class="is-on" src="assets/ip/yx/face-03.webp" width="306" height="343" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="bounce" src="assets/ip/yx/face-07.webp" width="277" height="373" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-02.webp" width="271" height="377" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="bounce" src="assets/ip/yx/face-05.webp" width="277" height="280" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="tilt" src="assets/ip/yx/face-06.webp" width="271" height="273" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="pulse" src="assets/ip/yx/face-04.webp" width="265" height="302" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-09.webp" width="271" height="377" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="pop" src="assets/ip/yx/face-12.webp" width="272" height="273" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="walk" src="assets/ip/yx/face-01.webp" width="276" height="389" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="shake" src="assets/ip/yx/face-10.webp" width="277" height="278" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-11.webp" width="276" height="279" alt="" loading="lazy" decoding="async">
+                    <img data-yx-show data-move="shake" src="assets/ip/yx/face-08.webp" width="275" height="385" alt="" loading="lazy" decoding="async">
                   </div>
                   <p class="yx-stage__name cn" data-yx-name>送心</p>
                   <div class="yx-tray" role="group" aria-label="狮小团的表情">
-                    <button type="button" data-yx-pick data-label="送心" aria-pressed="true" aria-label="送心"><img src="assets/ip/yx/face-03.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="得意" aria-pressed="false" aria-label="得意"><img src="assets/ip/yx/face-07.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="眨眼" aria-pressed="false" aria-label="眨眼"><img src="assets/ip/yx/face-02.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="大笑" aria-pressed="false" aria-label="大笑"><img src="assets/ip/yx/face-05.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="吐舌" aria-pressed="false" aria-label="吐舌"><img src="assets/ip/yx/face-06.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="比心" aria-pressed="false" aria-label="比心"><img src="assets/ip/yx/face-04.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="害羞" aria-pressed="false" aria-label="害羞"><img src="assets/ip/yx/face-09.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="惊讶" aria-pressed="false" aria-label="惊讶"><img src="assets/ip/yx/face-12.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="跺脚" aria-pressed="false" aria-label="跺脚"><img src="assets/ip/yx/face-01.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="皱眉" aria-pressed="false" aria-label="皱眉"><img src="assets/ip/yx/face-10.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="委屈" aria-pressed="false" aria-label="委屈"><img src="assets/ip/yx/face-11.png?v=4" alt=""></button>
-                    <button type="button" data-yx-pick data-label="哭哭" aria-pressed="false" aria-label="哭哭"><img src="assets/ip/yx/face-08.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="送心" aria-pressed="true" aria-label="送心"><img src="assets/ip/yx/face-03.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="得意" aria-pressed="false" aria-label="得意"><img src="assets/ip/yx/face-07.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="眨眼" aria-pressed="false" aria-label="眨眼"><img src="assets/ip/yx/face-02.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="大笑" aria-pressed="false" aria-label="大笑"><img src="assets/ip/yx/face-05.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="吐舌" aria-pressed="false" aria-label="吐舌"><img src="assets/ip/yx/face-06.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="比心" aria-pressed="false" aria-label="比心"><img src="assets/ip/yx/face-04.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="害羞" aria-pressed="false" aria-label="害羞"><img src="assets/ip/yx/face-09.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="惊讶" aria-pressed="false" aria-label="惊讶"><img src="assets/ip/yx/face-12.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="跺脚" aria-pressed="false" aria-label="跺脚"><img src="assets/ip/yx/face-01.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="皱眉" aria-pressed="false" aria-label="皱眉"><img src="assets/ip/yx/face-10.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="委屈" aria-pressed="false" aria-label="委屈"><img src="assets/ip/yx/face-11.webp" alt="" loading="lazy" decoding="async"></button>
+                    <button type="button" data-yx-pick data-label="哭哭" aria-pressed="false" aria-label="哭哭"><img src="assets/ip/yx/face-08.webp" alt="" loading="lazy" decoding="async"></button>
                   </div>
                 </div>
               </section>
@@ -447,28 +449,28 @@
                 </div>
                 <div class="yx-ext__reel" data-yx-ext-reel tabindex="0" aria-label="一排形象，点到哪张哪张放大">
                   <button type="button" class="yx-ext__card is-on" data-yx-ext-show data-theme="drink" aria-pressed="true" aria-label="茶饮">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/drink.png" width="512" height="400" alt="狮小团端着茶杯" decoding="async" draggable="false"></span>
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/drink.webp" width="512" height="400" alt="狮小团端着茶杯" loading="lazy" decoding="async" draggable="false"></span>
                   </button>
                   <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="scent" aria-pressed="false" aria-label="茶香">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/scent.png" width="512" height="400" alt="狮小团闭眼，叶子绕着转" decoding="async" draggable="false"></span>
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/scent.webp" width="512" height="400" alt="狮小团闭眼，叶子绕着转" loading="lazy" decoding="async" draggable="false"></span>
                   </button>
                   <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="snack" aria-pressed="false" aria-label="茶点">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/snack.png" width="512" height="400" alt="狮小团捧着包子，蒸笼打开" decoding="async" draggable="false"></span>
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/snack.webp" width="512" height="400" alt="狮小团捧着包子，蒸笼打开" loading="lazy" decoding="async" draggable="false"></span>
                   </button>
                   <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="lion" aria-pressed="false" aria-label="醒狮">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/lion.png" width="512" height="400" alt="狮小团戴着舞狮头" decoding="async" draggable="false"></span>
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/lion.webp" width="512" height="400" alt="狮小团戴着舞狮头" loading="lazy" decoding="async" draggable="false"></span>
                   </button>
                   <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="pick" aria-pressed="false" aria-label="采茶">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/pick.png" width="512" height="400" alt="狮小团捧着一束茶叶" decoding="async" draggable="false"></span>
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/pick.webp" width="512" height="400" alt="狮小团捧着一束茶叶" loading="lazy" decoding="async" draggable="false"></span>
                   </button>
                   <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="gift" aria-pressed="false" aria-label="茶礼">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/gift.png" width="512" height="400" alt="狮小团穿着红衣，旁边是茶壶和礼盒" decoding="async" draggable="false"></span>
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/gift.webp" width="512" height="400" alt="狮小团穿着红衣，旁边是茶壶和礼盒" loading="lazy" decoding="async" draggable="false"></span>
                   </button>
                 </div>
                 <div class="yx-ext__board">
                   <p class="yx-ext__board-name cn" data-yx-ext-board>茶饮</p>
                   <div class="yx-ext__counter" data-yx-ext-counter tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-valuetext="茶饮" aria-label="顺着柜台拖单子">
-                    <img src="assets/ip/yx/ext/lineup.jpg" width="1888" height="833" alt="六个狮小团站在木柜台后" decoding="async" draggable="false">
+                    <img src="assets/ip/yx/ext/lineup.jpg" width="1888" height="833" alt="六个狮小团站在木柜台后" loading="lazy" decoding="async" draggable="false">
                     <div class="yx-ext__glow" data-yx-ext-glow></div>
                     <div class="yx-ext__slip" data-yx-ext-slip><span data-yx-ext-slip-name>茶饮</span></div>
                   </div>
@@ -583,7 +585,7 @@
                 <p class="brand__use cn" data-brand-use>茶绿。叶子、罐身和门头用这个绿。</p>
               </div>
               <figure class="brand__frame">
-                <img data-brand-view src="assets/ip/yx/brand/id.jpg" width="506" height="336" alt="识别板：狮小团正侧背、茶叶、窗花，和茶绿、米白、朱红、暖金" decoding="async">
+                <img data-brand-view src="assets/ip/yx/brand/id.jpg" width="506" height="336" alt="识别板：狮小团正侧背、茶叶、窗花，和茶绿、米白、朱红、暖金" loading="lazy" decoding="async">
               </figure>
             </div>
           </article>

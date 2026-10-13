@@ -622,16 +622,20 @@ function initParallax() {
    Progressive images — swap in the LQIP, fade on decode
    ------------------------------------------------------------ */
 async function initImages() {
+  const images = document.querySelectorAll(".frame img");
   let manifest = null;
   const base = document.body.dataset.base || "";
-  try {
-    const res = await fetch(`${base}assets/manifest.json`, { cache: "force-cache" });
-    if (res.ok) manifest = await res.json();
-  } catch {
-    /* placeholders are a nicety, never a requirement */
+  /* 17 KB of placeholders, so only for a page that has a frame asking for one. */
+  if ([...images].some((img) => img.dataset.lqip)) {
+    try {
+      const res = await fetch(`${base}assets/manifest.json`, { cache: "force-cache" });
+      if (res.ok) manifest = await res.json();
+    } catch {
+      /* placeholders are a nicety, never a requirement */
+    }
   }
 
-  document.querySelectorAll(".frame img").forEach((img) => {
+  images.forEach((img) => {
     const key = img.dataset.lqip;
     if (manifest?.lqip && key && manifest.lqip[key]) {
       const frame = img.closest(".frame");

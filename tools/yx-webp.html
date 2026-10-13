@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>yx webp</title>
+</head>
+<body>
+<pre id="log">starting</pre>
+<script type="module">
+/* WebP twins of the 粤醒 images and the portrait the homepage shows. The PNGs
+   stay the masters the yx-* pages write; this runs after them and saves a .webp
+   beside each one, which is what index.html points at.
+
+   Lossy with an alpha channel. Each result is decoded back and compared
+   with its source -- colour error is weighted by alpha, so a transparent
+   pixel's discarded RGB does not count -- and the run reports anything
+   under the floor instead of writing it.
+     /__tools/yx-webp.html?q=0.86&floor=38 */
+const params = new URLSearchParams(location.search);
+const QUALITY = Number(params.get("q") || 0.86);
+const FLOOR = Number(params.get("floor") || 38);
+const OUT = params.get("out") || "zigi994/assets/";
+
+/* Relative to assets/. */
+const FILES = [
+  ...Array.from({ length: 12 }, (_, i) => `ip/yx/face-${String(i + 1).padStart(2, "0")}.png`),
+  "ip/yx/pat-01.png", "ip/yx/pat-02.png", "ip/yx/pat-03.png", "ip/yx/pat-04.png",
+  "ip/yx/mark-01.png", "ip/yx/ink-01.png",
+  "ip/yx/ext/drink.png", "ip/yx/ext/scent.png", "ip/yx/ext/snack.png",
+  "ip/yx/ext/lion.png", "ip/yx/ext/pick.png", "ip/yx/ext/gift.png",
+  "portrait.png",
+];
+
+const logEl = document.getElementById("log");
+const lines = [];
+const log = (m) => { lines.push(m); logEl.textContent = lines.join("\n"); };
+
+const pixels = (source, w, h) => {
+  const c = new OffscreenCanvas(w, h);
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0);
+  return ctx.getImageData(0, 0, w, h).data;
+};
+
+const psnr = (a, b) => {
+  let se = 0;
+  let n = 0;
+  for (let i = 0; i < a.length; i += 4) {
+    const wa = a[i + 3] / 255;
+    for (let k = 0; k < 3; k++) {
+      const d = a[i + k] * wa - b[i + k] * (b[i + 3] / 255);
+      se += d * d;
+    }
+    const da = a[i + 3] - b[i + 3];
+    se += da * da;
+    n += 4;
+  }
+  return se === 0 ? 99 : 10 * Math.log10((255 * 255) / (se / n));
+};
+
+let before = 0;
+let after = 0;
+try {
+  for (const name of FILES) {
+    const res = await fetch(`/assets/${name}?src=${Date.now()}`);
+    if (!res.ok) throw new Error(`${name}: ${res.status}`);
+    const blob = await res.blob();
+    const bitmap = await createImageBitmap(blob, { premultiplyAlpha: "none", colorSpaceConversion: "none" });
+    const { width: w, height: h } = bitmap;
+    const canvas = new OffscreenCanvas(w, h);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0);
+    const webp = await canvas.convertToBlob({ type: "image/webp", quality: QUALITY });
+    const back = await createImageBitmap(webp, { premultiplyAlpha: "none", colorSpaceConversion: "none" });
+    const score = psnr(pixels(bitmap, w, h), pixels(back, w, h));
+    const target = name.replace(/\.(png|jpe?g)$/i, ".webp");
+    const kept = score >= FLOOR && webp.size < blob.size;
+    if (kept) {
+      const save = await fetch(`/_save?name=${encodeURIComponent(OUT + target)}`, { method: "POST", body: webp });
+      if (!save.ok) throw new Error(`save ${target}: ${save.status}`);
+      before += blob.size;
+      after += webp.size;
+    }
+    log(`${kept ? "ok  " : "SKIP"} ${name.padEnd(22)} ${w}x${h}  ${(blob.size / 1024).toFixed(1)} -> ${(webp.size / 1024).toFixed(1)} KB  ${score.toFixed(1)} dB`);
+  }
+  log(`total ${(before / 1024).toFixed(0)} KB -> ${(after / 1024).toFixed(0)} KB at q=${QUALITY}`);
+  log("DONE");
+} catch (error) {
+  log("ERROR " + error.message);
+}
+</script>
+</body>
+</html>

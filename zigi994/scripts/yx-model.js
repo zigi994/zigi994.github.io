@@ -90,16 +90,19 @@ export function initYxModel(root) {
     return tex;
   };
 
+  /* WebP copies of the Blender maps, made by tools/yx-model.html. */
   const material = new THREE.MeshStandardMaterial({
-    map: mapOf("texture_diffuse.png", true),
-    normalMap: mapOf("texture_normal.png", false),
-    roughnessMap: mapOf("texture_roughness.png", false),
-    metalnessMap: mapOf("texture_metallic.png", false),
+    map: mapOf("texture_diffuse.webp", true),
+    normalMap: mapOf("texture_normal.webp", false),
+    roughnessMap: mapOf("texture_roughness.webp", false),
+    metalnessMap: mapOf("texture_metallic.webp", false),
     roughness: 0.82,
     metalness: 0.08
   });
 
-  new OBJLoader().load(MODEL + "base.obj", (obj) => {
+  /* base.obj under a .txt name: GitHub Pages serves .obj as application/x-tgif
+     and will not gzip it, which is 2.5 MB on the wire instead of 0.7 MB. */
+  new OBJLoader().load(MODEL + "base.txt", (obj) => {
     obj.traverse((child) => {
       if (child.isMesh) child.material = material;
     });
@@ -157,7 +160,13 @@ export function initYxModel(root) {
   resize();
   applySpin();
 
+  /* Draws only while the stage is on screen and the tab is showing; otherwise
+     a phone kept rendering the model on every frame for the rest of the visit. */
+  let inView = false;
+  let frameId = 0;
   const tick = () => {
+    frameId = 0;
+    if (!inView || document.hidden) return;
     if (!dragging && !touched && !reduced.matches) spin.y += 0.004;
     else if (!dragging) {
       spin.y += vx * 0.0022;
@@ -168,7 +177,14 @@ export function initYxModel(root) {
     applySpin();
     placeCamera();
     renderer.render(scene, camera);
-    requestAnimationFrame(tick);
+    frameId = requestAnimationFrame(tick);
   };
-  tick();
+  const wake = () => {
+    if (!frameId && inView && !document.hidden) frameId = requestAnimationFrame(tick);
+  };
+  new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting;
+    wake();
+  }).observe(stage);
+  document.addEventListener("visibilitychange", wake);
 }

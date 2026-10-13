@@ -135,6 +135,7 @@
 /* The slot stays a standing figure. The clip is cropped into it,
    so a 16:9 plate never becomes the layout. */
 .hero__figure {
+  position: relative;
   grid-area: figure;
   height: min(56vh, 520px);
   width: auto;
@@ -144,27 +145,31 @@
   pointer-events: none;
 }
 
+/* The poster is the figure clip's first frame, keyed onto the page ink, so it
+   paints with the page and hands over in place: to the clip where it plays
+   directly, or to the fluid canvas underneath once that draws. */
+.hero__poster,
 .hero__video {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.hero__video.is-fallback {
-  position: static;
-  width: 100%;
-  height: 100%;
-  opacity: 1;
-  object-fit: contain;
-}
-
-.hero__figure img {
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.hero__video {
+  opacity: 0;
+  transition: opacity 320ms linear;
+}
+
+.hero__video.is-playing { opacity: 1; }
+
+/* The canvas fades in over 700ms beneath the poster; the poster only goes once
+   that is done, so the figure never dims halfway through the swap. */
+.hero__figure.is-live .hero__poster {
+  opacity: 0;
+  transition: opacity 240ms linear 700ms;
 }
 
 .hero__word {
@@ -337,6 +342,9 @@
     flex: none;
     gap: 0.2em;
     transform: none;
+    /* Room for the extruded shadow and the letters' downward nudges, which
+       otherwise land on the tag row; desktop reserves 0.55em for the same. */
+    padding-bottom: 0.45em;
   }
   .hero__row { max-width: 100%; }
   .hero__title { height: auto; }
@@ -432,6 +440,14 @@
     justify-self: center;
   }
   .hero__line--indent { padding-left: 0; }
+}
+
+/* Tablet portrait stacks like a phone but has twice the height; at phone
+   scale the content sat at the bottom of a 100svh hero with its top third
+   empty. */
+@media (min-width: 601px) and (max-width: 900px) {
+  .hero__word { font-size: clamp(5.2rem, 15vw, 8rem); }
+  .hero__figure { width: min(66vw, 540px); }
 }
 
 /* ============================================================
@@ -695,8 +711,10 @@
   gap: clamp(20px, 3vw, 48px);
 }
 
+/* 78% of its own column as well as the viewport height: on a portrait tablet
+   the height alone allowed 440px in a 340px column, over the copy beside it. */
 .handset {
-  width: min(440px, calc((100vh - 120px) / 2.05));
+  width: min(440px, calc((100vh - 120px) / 2.05), 78%);
   margin-inline: auto;
   transform: rotate(-6deg);
 }
