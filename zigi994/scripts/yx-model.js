@@ -17,7 +17,8 @@ export function initYxModel(root) {
     if (wait) wait.textContent = "这个浏览器画不出立体模型";
     return;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const pixelCap = window.innerWidth < 900 ? 1 : 1.5;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelCap));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor(0x000000, 0);
 
@@ -38,13 +39,12 @@ export function initYxModel(root) {
   scene.add(rig);
 
   const spin = { x: 0.12, y: 0.4 };
+  const restX = 0.12;
   let radius = 3;
   let dragging = false;
-  let touched = reduced.matches;
+  let returning = false;
   let lastX = 0;
   let lastY = 0;
-  let vx = 0;
-  let vy = 0;
 
   const resize = () => {
     const w = stage.clientWidth;
@@ -90,19 +90,16 @@ export function initYxModel(root) {
     return tex;
   };
 
-  /* WebP copies of the Blender maps, made by tools/yx-model.html. */
   const material = new THREE.MeshStandardMaterial({
-    map: mapOf("texture_diffuse.webp", true),
-    normalMap: mapOf("texture_normal.webp", false),
-    roughnessMap: mapOf("texture_roughness.webp", false),
-    metalnessMap: mapOf("texture_metallic.webp", false),
+    map: mapOf("texture_diffuse.png", true),
+    normalMap: mapOf("texture_normal.png", false),
+    roughnessMap: mapOf("texture_roughness.png", false),
+    metalnessMap: mapOf("texture_metallic.png", false),
     roughness: 0.82,
     metalness: 0.08
   });
 
-  /* base.obj under a .txt name: GitHub Pages serves .obj as application/x-tgif
-     and will not gzip it, which is 2.5 MB on the wire instead of 0.7 MB. */
-  new OBJLoader().load(MODEL + "base.txt", (obj) => {
+  new OBJLoader().load(MODEL + "base.obj", (obj) => {
     obj.traverse((child) => {
       if (child.isMesh) child.material = material;
     });
@@ -116,11 +113,9 @@ export function initYxModel(root) {
   stage.addEventListener("pointerdown", (e) => {
     if (e.button !== undefined && e.button !== 0) return;
     dragging = true;
-    touched = true;
+    returning = false;
     lastX = e.clientX;
     lastY = e.clientY;
-    vx = 0;
-    vy = 0;
     stage.classList.add("is-drag");
     try { stage.setPointerCapture(e.pointerId); } catch (err) { /* optional */ }
   });
@@ -130,8 +125,6 @@ export function initYxModel(root) {
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
-    vx = dx;
-    vy = dy;
     spin.y += dx * 0.012;
     spin.x += dy * 0.008;
     applySpin();
@@ -139,6 +132,7 @@ export function initYxModel(root) {
   const endDrag = () => {
     if (!dragging) return;
     dragging = false;
+    returning = true;
     stage.classList.remove("is-drag");
   };
   stage.addEventListener("pointerup", endDrag);
@@ -151,7 +145,7 @@ export function initYxModel(root) {
     else if (e.key === "ArrowDown") spin.x += step;
     else return;
     e.preventDefault();
-    touched = true;
+    returning = true;
     applySpin();
   });
 
@@ -160,31 +154,38 @@ export function initYxModel(root) {
   resize();
   applySpin();
 
-  /* Draws only while the stage is on screen and the tab is showing; otherwise
-     a phone kept rendering the model on every frame for the rest of the visit. */
-  let inView = false;
-  let frameId = 0;
+  let onscreen = false;
+  let raf = 0;
   const tick = () => {
-    frameId = 0;
-    if (!inView || document.hidden) return;
-    if (!dragging && !touched && !reduced.matches) spin.y += 0.004;
-    else if (!dragging) {
-      spin.y += vx * 0.0022;
-      spin.x += vy * 0.0014;
-      vx *= 0.9;
-      vy *= 0.9;
+    raf = 0;
+    if (!onscreen || document.hidden) return;
+    if (dragging) {
+      /* The hand owns the turn. */
+    } else if (returning) {
+      spin.x += (restX - spin.x) * 0.08;
+      if (Math.abs(spin.x - restX) < 0.012) {
+        spin.x = restX;
+        returning = false;
+      }
+    } else if (!reduced.matches) {
+      spin.y += 0.0032;
     }
     applySpin();
     placeCamera();
     renderer.render(scene, camera);
-    frameId = requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
   };
   const wake = () => {
-    if (!frameId && inView && !document.hidden) frameId = requestAnimationFrame(tick);
+    if (!raf && onscreen && !document.hidden) raf = requestAnimationFrame(tick);
   };
-  new IntersectionObserver(([entry]) => {
-    inView = entry.isIntersecting;
-    wake();
-  }).observe(stage);
+  const seen = new IntersectionObserver(([entry]) => {
+    onscreen = entry.isIntersecting;
+    if (onscreen) wake();
+    else if (raf) {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+  }, { rootMargin: "80px" });
+  seen.observe(stage);
   document.addEventListener("visibilitychange", wake);
 }

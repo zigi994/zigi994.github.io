@@ -332,19 +332,28 @@ function initSplitText() {
    Custom cursor
    ------------------------------------------------------------ */
 function initCursor() {
-  if (!finePointer.matches || reduceMotion.matches) return;
+  if (!finePointer.matches) return;
 
   const root = document.createElement("div");
   root.className = "cursor";
   root.innerHTML = `
-    <div class="cursor__dot"></div>
-    <div class="cursor__ring"><span class="cursor__text"></span></div>
+    <div class="cursor__paw">
+      <svg viewBox="0 0 36 44" aria-hidden="true">
+        <g fill="#f6c4ce">
+          <circle cx="7.2" cy="16" r="3.35"/>
+          <circle cx="13.6" cy="10.2" r="3.55"/>
+          <circle cx="22.4" cy="10.2" r="3.55"/>
+          <circle cx="28.8" cy="16" r="3.35"/>
+          <ellipse cx="18" cy="29.5" rx="9" ry="8"/>
+        </g>
+      </svg>
+      <span class="cursor__text"></span>
+    </div>
   `;
   document.body.appendChild(root);
   document.body.classList.add("has-cursor");
 
-  const dot = root.querySelector(".cursor__dot");
-  const ring = root.querySelector(".cursor__ring");
+  const paw = root.querySelector(".cursor__paw");
   const text = root.querySelector(".cursor__text");
 
   /* The centre of the viewport is a placeholder, not a position, and nothing may
@@ -357,9 +366,6 @@ function initCursor() {
      screen, which is the jump this was reported as. */
   let mx = window.innerWidth / 2;
   let my = window.innerHeight / 2;
-  let dx = mx, dy = my;
-  let rx = mx, ry = my;
-  let placed = false;
   let shown = false;
 
   /* Press feedback lives here rather than in a CSS `scale`, and the centring
@@ -372,10 +378,11 @@ function initCursor() {
   let press = 1;
   let pressTarget = 1;
 
+  /* The paw's centre is the toe-tips, so centring the box puts the point of
+     the paw on the click. Scale stays in this same string: a CSS scale on the
+     element would multiply these coordinates. */
   const paint = () => {
-    const centre = "translate(-50%, -50%)";
-    dot.style.transform = `translate3d(${dx}px, ${dy}px, 0) ${centre} scale(${press})`;
-    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) ${centre} scale(${press})`;
+    paw.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%) scale(${press})`;
   };
 
   const show = () => {
@@ -390,15 +397,7 @@ function initCursor() {
   const track = (e) => {
     mx = e.clientX;
     my = e.clientY;
-    if (!placed) {
-      placed = true;
-      dx = rx = mx;
-      dy = ry = my;
-      /* Land the transform in this same task. The ticker would otherwise not run
-         until the next frame, and revealing first left one frame of an opaque
-         ring still drawn on the placeholder -- the jump made small, not gone. */
-      paint();
-    }
+    paint();
     show();
   };
 
@@ -420,14 +419,15 @@ function initCursor() {
   root.style.opacity = "0";
   root.style.transition = "opacity 220ms linear";
 
-  ticker.add(() => {
-    dx = lerp(dx, mx, 0.62);
-    dy = lerp(dy, my, 0.62);
-    rx = lerp(rx, mx, 0.16);
-    ry = lerp(ry, my, 0.16);
-    press = lerp(press, pressTarget, 0.34);
-    paint();
-  });
+  if (reduceMotion.matches) {
+    window.addEventListener("mousedown", () => { press = pressTarget; paint(); });
+    window.addEventListener("mouseup", () => { press = pressTarget; paint(); });
+  } else {
+    ticker.add(() => {
+      press = lerp(press, pressTarget, 0.34);
+      paint();
+    });
+  }
 
   const HOVER = 'a, button, [data-cursor], input, textarea, select, summary, [role="button"]';
 
@@ -622,20 +622,16 @@ function initParallax() {
    Progressive images — swap in the LQIP, fade on decode
    ------------------------------------------------------------ */
 async function initImages() {
-  const images = document.querySelectorAll(".frame img");
   let manifest = null;
   const base = document.body.dataset.base || "";
-  /* 17 KB of placeholders, so only for a page that has a frame asking for one. */
-  if ([...images].some((img) => img.dataset.lqip)) {
-    try {
-      const res = await fetch(`${base}assets/manifest.json`, { cache: "force-cache" });
-      if (res.ok) manifest = await res.json();
-    } catch {
-      /* placeholders are a nicety, never a requirement */
-    }
+  try {
+    const res = await fetch(`${base}assets/manifest.json`, { cache: "force-cache" });
+    if (res.ok) manifest = await res.json();
+  } catch {
+    /* placeholders are a nicety, never a requirement */
   }
 
-  images.forEach((img) => {
+  document.querySelectorAll(".frame img").forEach((img) => {
     const key = img.dataset.lqip;
     if (manifest?.lqip && key && manifest.lqip[key]) {
       const frame = img.closest(".frame");
@@ -781,9 +777,6 @@ function initNav() {
     };
     mobile.addEventListener?.("change", syncMenu);
     syncMenu();
-    /* Only once the closed drawer has been drawn off-screen without it; see
-       .nav.is-armed in components.css. */
-    requestAnimationFrame(() => requestAnimationFrame(() => nav.classList.add("is-armed")));
   }
 
   let last = window.scrollY;

@@ -5,42 +5,6 @@
 import { lerp, reduceMotion } from "./motion.js";
 
 /* ------------------------------------------------------------
-   Loading by section
-   ------------------------------------------------------------ */
-
-/* A lazy image clipped out of view -- further down the phone's glass, off the
-   end of the sliding row -- never counts as near the viewport, so each would
-   only start loading as it slid into sight. Such groups load together, once
-   their section is within a screen. */
-function warmNear(el) {
-  if (!el) return;
-  const io = new IntersectionObserver(([entry]) => {
-    if (!entry.isIntersecting) return;
-    io.disconnect();
-    el.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = "eager"; });
-  }, { rootMargin: "100% 0px" });
-  io.observe(el);
-}
-
-/* three.js and the model are only for this one stage, and with them in the
-   page's import graph nothing in home.js could start until they had arrived. */
-function initYxModelNear(root) {
-  const stage = root.querySelector("[data-yx-model]");
-  if (!stage) return;
-  const io = new IntersectionObserver(([entry]) => {
-    if (!entry.isIntersecting) return;
-    io.disconnect();
-    import("./yx-model.js")
-      .then(({ initYxModel }) => initYxModel(root))
-      .catch(() => {
-        const wait = stage.querySelector("[data-yx-wait]");
-        if (wait) wait.textContent = "模型没有立起来";
-      });
-  }, { rootMargin: "100% 0px" });
-  io.observe(stage);
-}
-
-/* ------------------------------------------------------------
    Lab: easing comparison
    ------------------------------------------------------------ */
 function initEasingDemo() {
@@ -361,7 +325,6 @@ function initUiStory() {
   const glass = root?.querySelector(".handset__glass");
   const reel = root?.querySelector("[data-ui-reel]");
   if (!root || !glass || !reel) return;
-  warmNear(root);
   const steps = [...root.querySelectorAll("[data-ui-step]")];
   const screens = [...reel.querySelectorAll("img")];
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -407,7 +370,6 @@ function initYx() {
   let index = 0;
   let timer = 0;
   let held = false;
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const show = (i) => {
     index = i;
@@ -423,7 +385,7 @@ function initYx() {
   const stop = () => { clearInterval(timer); timer = 0; };
   const play = () => {
     stop();
-    if (reduced.matches || held) return;
+    if (held) return;
     timer = setInterval(() => show((index + 1) % shows.length), 1600);
   };
 
@@ -436,14 +398,26 @@ function initYx() {
   const stage = root.querySelector(".yx-stage");
   stage?.addEventListener("mouseenter", () => { held = true; stop(); });
   stage?.addEventListener("mouseleave", () => { held = false; play(); });
-  reduced.addEventListener("change", play);
   show(0);
   play();
   initYxTurn(root);
 }
 
 function initYxTurn(root) {
-  initYxModelNear(root);
+  const stage = root.querySelector("[data-yx-model]");
+  const bootModel = () => {
+    import("./yx-model.js").then((mod) => mod.initYxModel(root));
+  };
+  if (stage && "IntersectionObserver" in window) {
+    const models = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      models.disconnect();
+      bootModel();
+    }, { rootMargin: "280px" });
+    models.observe(stage);
+  } else if (stage) {
+    bootModel();
+  }
   initYxExt(root);
 }
 
@@ -484,7 +458,6 @@ function initYxExt(root) {
     track.appendChild(copy);
   });
   reel.appendChild(track);
-  warmNear(reel);
   const cards = [...track.querySelectorAll("[data-yx-ext-show]")];
   const counter = ext.querySelector("[data-yx-ext-counter]");
   const slip = ext.querySelector("[data-yx-ext-slip]");
@@ -497,7 +470,6 @@ function initYxExt(root) {
   let held = false;
   let dragging = false;
   let frame = 0;
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const show = (slipPct) => {
     ext.dataset.theme = id;
@@ -529,9 +501,9 @@ function initYxExt(root) {
   };
   const watch = () => {
     cancelAnimationFrame(frame);
-    if (reduced.matches || held) return;
+    if (held) return;
     const step = () => {
-      if (held || reduced.matches) return;
+      if (held) return;
       const box = reel.getBoundingClientRect();
       const mid = box.left + box.width / 2;
       let best = null;
@@ -638,8 +610,8 @@ function initYxExt(root) {
     show();
   });
 
-  reduced.addEventListener("change", () => { if (reduced.matches) hold(true); else hold(false); });
   show();
+  ext.classList.add("is-awake");
   watch();
 }
 
@@ -763,103 +735,168 @@ function initTea() {
 function initBrand() {
   const root = document.querySelector("[data-brand]");
   if (!root) return;
-  const view = root.querySelector("[data-brand-view]");
-  const line = root.querySelector("[data-brand-line]");
-  const use = root.querySelector("[data-brand-use]");
-  const picks = [...root.querySelectorAll("[data-brand-pick]")];
-  const inks = [...root.querySelectorAll("[data-brand-ink]")];
-  const systems = {
-    id: {
-      src: "assets/ip/yx/brand/id.jpg",
-      w: 506,
-      h: 336,
-      line: "角色、叶子、窗花和四个颜色，先定在这一张上。",
-      alt: "识别板：狮小团正侧背、茶叶、窗花，和茶绿、米白、朱红、暖金"
-    },
-    pack: {
-      src: "assets/ip/yx/brand/pack.jpg",
-      w: 508,
-      h: 336,
-      line: "茶罐、茶袋是绿的。朱红只留给礼盒。",
-      alt: "包装：茶罐、茶袋、纸杯和红绿礼盒"
-    },
-    merch: {
-      src: "assets/ip/yx/brand/merch.jpg",
-      w: 506,
-      h: 336,
-      line: "徽章、挂件、杯子和本子，小东西上也是这张脸。",
-      alt: "周边：徽章、贴纸、钥匙扣、帆布袋、马克杯、手机壳和毛绒公仔"
-    },
-    space: {
-      src: "assets/ip/yx/brand/space.jpg",
-      w: 508,
-      h: 336,
-      line: "门头、杯套、立牌，再走到院子里的装置。",
-      alt: "空间：门头、纸杯、菜单、立牌和院子里的装置"
-    }
-  };
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-  let shown = "id";
 
-  const show = (id) => {
-    const info = systems[id];
-    if (!info || id === shown && view.getAttribute("src") === info.src) {
-      picks.forEach((btn) => {
-        const on = btn.dataset.brandPick === id;
-        btn.classList.toggle("is-on", on);
-        btn.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      return;
-    }
-    shown = id;
-    picks.forEach((btn) => {
-      const on = btn.dataset.brandPick === id;
+  const goods = {
+    tote: { src: "assets/ip/yx/brand/g-tote.png", w: 212, h: 290, name: "手提袋", alt: "粤醒茶香手提袋" },
+    bag: { src: "assets/ip/yx/brand/g-bag.png", w: 144, h: 296, name: "纸袋", alt: "粤醒茶香纸袋" },
+    key: { src: "assets/ip/yx/brand/g-key.png", w: 147, h: 221, name: "钥匙扣", alt: "狮小团叶子钥匙扣" },
+    tag: { src: "assets/ip/yx/brand/g-tag.png", w: 95, h: 236, name: "吊牌", alt: "粤醒茶香椭圆吊牌" },
+    sip: { src: "assets/ip/yx/brand/g-sip.png", w: 186, h: 225, name: "贴纸", alt: "狮小团端着奶茶的贴纸" },
+    head: { src: "assets/ip/yx/brand/g-head.png", w: 133, h: 199, name: "头贴", alt: "狮小团头像贴纸" },
+    post: { src: "assets/ip/yx/brand/g-post.png", w: 201, h: 274, name: "海报", alt: "狮小团喝茶的海报" },
+    field: { src: "assets/ip/yx/brand/g-field.png", w: 249, h: 275, name: "茶园", alt: "茶园里的狮小团海报" },
+    sheet: { src: "assets/ip/yx/brand/g-sheet.png", w: 222, h: 266, name: "贴纸页", alt: "一整页狮小团贴纸" },
+    ticket: { src: "assets/ip/yx/brand/g-ticket.png", w: 274, h: 144, name: "门票", alt: "粤醒茶香门票" },
+    stub: { src: "assets/ip/yx/brand/g-stub.png", w: 275, h: 105, name: "票根", alt: "写着 GOOD TEA 的票根" },
+    cup: { src: "assets/ip/yx/brand/g-cup.png", w: 115, h: 189, name: "纸杯", alt: "带盖的粤醒茶香纸杯" },
+    sleeve: { src: "assets/ip/yx/brand/g-sleeve.png", w: 140, h: 106, name: "杯套", alt: "印着狮小团的杯套" },
+    boba: { src: "assets/ip/yx/brand/g-boba.png", w: 116, h: 196, name: "奶茶", alt: "珍珠奶茶杯" },
+    badge: { src: "assets/ip/yx/brand/g-badge.png", w: 151, h: 152, name: "徽章", alt: "圆形粤醒茶香徽章" },
+    house: { src: "assets/ip/yx/brand/g-house.png", w: 113, h: 171, name: "挂件", alt: "房子形状的狮小团挂件" },
+    life: { src: "assets/ip/yx/brand/g-life.png", w: 168, h: 171, name: "好茶", alt: "好茶好生活贴纸" },
+    banner: { src: "assets/ip/yx/brand/g-banner.png", w: 479, h: 121, name: "横幅", alt: "粤醒茶香横幅" },
+    "tag-green": { src: "assets/ip/yx/brand/g-tag-green.png", w: 59, h: 124, name: "绿茶签", alt: "绿色茶签" },
+    "tag-orange": { src: "assets/ip/yx/brand/g-tag-orange.png", w: 60, h: 124, name: "橙茶签", alt: "橙色茶签" },
+    "tag-cream": { src: "assets/ip/yx/brand/g-tag-cream.png", w: 58, h: 124, name: "米茶签", alt: "米色茶签" },
+    "tag-blue": { src: "assets/ip/yx/brand/g-tag-blue.png", w: 58, h: 124, name: "蓝茶签", alt: "蓝色茶签" },
+    dot: { src: "assets/ip/yx/brand/g-dot.png", w: 76, h: 77, name: "圆贴", alt: "狮小团圆形贴纸" },
+    leaf: { src: "assets/ip/yx/brand/g-leaf.png", w: 58, h: 59, name: "叶贴", alt: "茶叶圆形贴纸" },
+    flower: { src: "assets/ip/yx/brand/g-flower.png", w: 45, h: 46, name: "花贴", alt: "小花圆形贴纸" },
+    tower: { src: "assets/ip/yx/brand/g-tower.png", w: 67, h: 69, name: "塔贴", alt: "广州塔圆形贴纸" }
+  };
+  const showImg = root.querySelector("[data-brand-show]");
+  const goodName = root.querySelector("[data-brand-good-name]");
+  const goodBtns = [...root.querySelectorAll("[data-brand-good]")];
+  const pickGood = (id) => {
+    const info = goods[id];
+    if (!info || !showImg) return;
+    goodBtns.forEach((btn) => {
+      const on = btn.dataset.brandGood === id;
       btn.classList.toggle("is-on", on);
-      btn.setAttribute("aria-selected", on ? "true" : "false");
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
-    const paint = () => {
-      view.src = info.src;
-      view.width = info.w;
-      view.height = info.h;
-      view.alt = info.alt;
-      line.textContent = info.line;
-      view.classList.remove("is-swap");
-    };
-    if (reduced.matches) {
-      paint();
-      return;
-    }
-    view.classList.add("is-swap");
-    window.setTimeout(paint, 160);
+    showImg.src = info.src;
+    showImg.width = info.w;
+    showImg.height = info.h;
+    showImg.alt = info.alt;
+    if (goodName) goodName.textContent = info.name;
+  };
+  goodBtns.forEach((btn, i) => {
+    btn.addEventListener("click", () => pickGood(btn.dataset.brandGood));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const next = goodBtns[(i + (e.key === "ArrowRight" ? 1 : -1) + goodBtns.length) % goodBtns.length];
+      next.focus();
+      pickGood(next.dataset.brandGood);
+    });
+  });
+
+  const places = {
+    stop: { src: "assets/ip/yx/street/stop.png", w: 1926, h: 1530, line: "候车的人先看见他。后面是广州塔。", alt: "公交站广告牌上的狮小团，背景是广州塔" },
+    xiguan: { src: "assets/ip/yx/street/xiguan.png", w: 1986, h: 1530, line: "旗挂在骑楼边上。陶陶居的灯还亮着。", alt: "西关老街上的竖幅，旁边是陶陶居和红灯笼" },
+    door: { src: "assets/ip/yx/street/door.png", w: 1293, h: 1104, line: "进门之前，他端着一杯茶站在木框里。", alt: "茶铺木门上的海报，狮小团端着一杯茶" },
+    box: { src: "assets/ip/yx/street/box.png", w: 1203, h: 1104, line: "电箱也贴上同一张脸，路过不用抬头。", alt: "街头电箱上的狮小团，背景画着广州塔和桥" },
+    bus: { src: "assets/ip/yx/street/bus.png", w: 1398, h: 1104, line: "车身侧面走过去，字和人一起在路上。", alt: "广州巴士车身上的粤醒茶香和狮小团" },
+    river: { src: "assets/ip/yx/street/river.png", w: 1566, h: 918, line: "袋子拿到珠江边，塔还在后面。", alt: "江边举起的茶袋，远处是广州塔和日落" },
+    lamp: { src: "assets/ip/yx/street/lamp.png", w: 2349, h: 918, line: "两面旗挂在灯下。黑板写着今天的茶。", alt: "店铺灯下的两面旗，旁边黑板写着今日推荐" }
   };
 
-  picks.forEach((btn, i) => {
-    btn.addEventListener("click", () => show(btn.dataset.brandPick));
+  const zones = {
+    all: { line: "点一个地方，画面走到那里。", fx: 50, fy: 48, zoom: 1 },
+    goods: { line: "左边整面货架。玩偶、袋子和杯子。", fx: 16, fy: 58, zoom: 2.05 },
+    bar: { line: "茶在圆环里做。人站在外面点。", fx: 50, fy: 44, zoom: 2.05 },
+    diy: { line: "右边自己做茶。墙上写着亲手制茶。", fx: 80, fy: 32, zoom: 2.05 },
+    sit: { line: "转角坐下。墙上写着茶香相遇。", fx: 84, fy: 70, zoom: 2.05 }
+  };
+  const shop = root.querySelector("[data-brand-shop]");
+  const zoneLine = root.querySelector("[data-brand-zone-line]");
+  const zoneBtns = [...root.querySelectorAll("[data-brand-zone]")];
+  const zonePins = [...root.querySelectorAll("[data-brand-pin]")];
+  const pickZone = (id) => {
+    const info = zones[id];
+    if (!info || !shop) return;
+    zoneBtns.forEach((btn) => btn.setAttribute("aria-pressed", btn.dataset.brandZone === id ? "true" : "false"));
+    zonePins.forEach((pin) => pin.classList.toggle("is-on", pin.dataset.brandPin === id));
+    shop.style.setProperty("--fx", info.fx);
+    shop.style.setProperty("--fy", info.fy);
+    shop.style.setProperty("--s", info.zoom);
+    shop.classList.toggle("is-in", info.zoom > 1);
+    if (zoneLine) zoneLine.textContent = info.line;
+  };
+  zonePins.forEach((pin) => pin.addEventListener("click", () => pickZone(pin.dataset.brandPin)));
+  zoneBtns.forEach((btn, i) => {
+    btn.addEventListener("click", () => pickZone(btn.dataset.brandZone));
     btn.addEventListener("keydown", (e) => {
-      if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       e.preventDefault();
-      const dir = (e.key === "ArrowDown" || e.key === "ArrowRight") ? 1 : -1;
-      const next = picks[(i + dir + picks.length) % picks.length];
+      const next = zoneBtns[(i + (e.key === "ArrowRight" ? 1 : -1) + zoneBtns.length) % zoneBtns.length];
       next.focus();
-      show(next.dataset.brandPick);
+      pickZone(next.dataset.brandZone);
     });
   });
 
-  inks.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      inks.forEach((other) => {
-        const on = other === btn;
-        other.classList.toggle("is-on", on);
-        other.setAttribute("aria-pressed", on ? "true" : "false");
-      });
-      root.style.setProperty("--brand-ink", btn.dataset.brandInk);
-      use.textContent = btn.dataset.use;
+  const cityView = root.querySelector("[data-brand-city-view]");
+  const cityLine = root.querySelector("[data-brand-city-line]");
+  const cityBtns = [...root.querySelectorAll("[data-brand-city]")];
+  const pickCity = (id) => {
+    const info = places[id];
+    if (!info || !cityView) return;
+    cityBtns.forEach((btn) => {
+      const on = btn.dataset.brandCity === id;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    cityView.src = info.src;
+    cityView.width = info.w;
+    cityView.height = info.h;
+    cityView.alt = info.alt;
+    if (cityLine) cityLine.textContent = info.line;
+  };
+  cityBtns.forEach((btn, i) => {
+    btn.addEventListener("click", () => pickCity(btn.dataset.brandCity));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const next = cityBtns[(i + (e.key === "ArrowRight" ? 1 : -1) + cityBtns.length) % cityBtns.length];
+      next.focus();
+      pickCity(next.dataset.brandCity);
     });
   });
 
-  picks[0].classList.add("is-on");
-  inks[0].classList.add("is-on");
-  root.style.setProperty("--brand-ink", "#7E905C");
+  const viBoards = {
+    1: { src: "assets/ip/yx/vi/01.jpg", line: "标准标志。竖式和横式各一版。", alt: "01 标准标志" },
+    2: { src: "assets/ip/yx/vi/02.jpg", line: "反白。深底上字是白的。", alt: "02 标准字反白标志" },
+    3: { src: "assets/ip/yx/vi/03.jpg", line: "单色线稿。浅底上用这一版。", alt: "03 单色线稿标志" },
+    4: { src: "assets/ip/yx/vi/04.jpg", line: "墨稿和反白。深底上用白线。", alt: "04 标志墨稿与反白效果" },
+    5: { src: "assets/ip/yx/vi/05.jpg", line: "标准化制图。格子按头的高度来量。", alt: "05 标志标准化制图" },
+    6: { src: "assets/ip/yx/vi/06.jpg", line: "中文和拼音。绿字、黑字、反白、制图各一版。", alt: "06 品牌名称中英文" }
+  };
+  const viView = root.querySelector("[data-brand-vi-view]");
+  const viLine = root.querySelector("[data-brand-vi-line]");
+  const viBtns = [...root.querySelectorAll("[data-brand-vi]")];
+  const pickVi = (id) => {
+    const info = viBoards[id];
+    if (!info || !viView) return;
+    viBtns.forEach((btn) => {
+      const on = btn.dataset.brandVi === id;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    viView.src = info.src;
+    viView.alt = info.alt;
+    if (viLine) viLine.textContent = info.line;
+  };
+  viBtns.forEach((btn, i) => {
+    btn.addEventListener("click", () => pickVi(btn.dataset.brandVi));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const next = viBtns[(i + (e.key === "ArrowRight" ? 1 : -1) + viBtns.length) % viBtns.length];
+      next.focus();
+      pickVi(next.dataset.brandVi);
+    });
+  });
 }
 
 function boot() {

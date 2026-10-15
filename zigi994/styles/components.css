@@ -3,110 +3,51 @@
    ============================================================ */
 
 .cursor {
-  /* The whole cursor is composited with mix-blend-mode: difference, so what
-     reaches the screen is |--cursor-fg − backdrop|, never --cursor-fg itself.
-     That is what lets one element stay visible over a near-black page, a pale
-     artboard and a photograph, and it is also why neither value below is a
-     per-theme "white or black": what has to be tuned is the *difference*.
-
-     White over the dark room inverts to near-white on the page and to the
-     page's own ink over a light mockup — the original behaviour, untouched.
-     On bone it is still perfectly visible, but |255 − 247,242,232| is
-     (8, 13, 23): a cold blue-black sitting on a warm sheet. #d9d8d4 is bone
-     minus the ink ramp, so its difference against the page ground lands on
-     (30, 26, 20) — within three steps of --fg-0 — while a dark device mockup
-     still inverts it to a warm light grey around (197, 193, 185).
-
-     --cursor-label stays #000 on both themes on purpose: black differences to
-     the backdrop's own colour, so the label always reads as the page itself
-     showing through the disc. */
-  --cursor-fg: #fff;
-  --cursor-label: #000;
-
   position: fixed;
   top: 0;
   left: 0;
   z-index: var(--z-cursor);
   pointer-events: none;
-  mix-blend-mode: difference;
   display: none;
-}
-
-:root[data-theme="light"] .cursor {
-  --cursor-fg: #d9d8d4;
 }
 
 /* Pointer-only: a custom cursor is meaningless on touch. */
 @media (hover: hover) and (pointer: fine) {
   .cursor { display: block; }
   body.has-cursor,
-  body.has-cursor a,
-  body.has-cursor button { cursor: none; }
+  body.has-cursor * { cursor: none !important; }
 }
 
-/* No transform property here. motion.js composes the whole matrix for these two
-   layers -- position, the centring -50%, and the press scale -- because the
-   individual properties (translate/rotate/scale) always apply *before*
-   `transform`, so anything declared here silently multiplies the coordinates it
-   writes. A `scale: 0.82` on the pressed state moved the ring 202px away from
-   the pointer. Size and shape are still this file's business; the matrix is
-   not. */
-.cursor__dot,
-.cursor__ring {
+/* motion.js owns the transform. A CSS scale here would multiply the
+   coordinates it writes and throw the paw off the pointer. */
+.cursor__paw {
   position: absolute;
-  border-radius: var(--r-full);
-  will-change: transform, width, height;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 42px;
+  filter: drop-shadow(0 1px 1px rgba(160, 90, 110, 0.22));
 }
 
-.cursor__dot {
-  width: 6px;
-  height: 6px;
-  background: var(--cursor-fg);
-  transition: opacity var(--d-fast) linear, scale var(--d-base) var(--ease-out-expo);
-}
+.cursor__paw svg { display: block; width: 100%; height: 100%; }
 
-.cursor__ring {
-  width: 36px;
-  height: 36px;
-  border: 1px solid color-mix(in oklab, var(--cursor-fg) 70%, transparent);
-  display: grid;
-  place-items: center;
-  transition: width var(--d-base) var(--ease-out-expo),
-    height var(--d-base) var(--ease-out-expo),
-    background-color var(--d-base) var(--ease-out-expo),
-    border-color var(--d-base) linear;
-}
-
-/* The labels this carries are Chinese — 写邮件, 下一个, 回到第一个 — so the
-   uppercase did nothing while the 0.12em tracking pulled the characters
-   apart. 11px because sans CJK needs the extra pixel that tracked caps
-   were faking. */
 .cursor__text {
+  position: absolute;
+  left: 36px;
+  top: 34px;
+  padding: 0.15em 0.45em;
+  border-radius: 999px;
+  background: #2b221c;
+  color: #fff4ea;
   font-family: var(--font-cn);
   font-size: 11px;
   letter-spacing: 0.04em;
-  color: var(--cursor-label);
+  line-height: 1.4;
+  white-space: nowrap;
   opacity: 0;
-  scale: 0.8;
-  transition: opacity var(--d-fast) linear, scale var(--d-base) var(--ease-out-back);
 }
 
-.cursor.is-hovering .cursor__ring {
-  width: 56px;
-  height: 56px;
-  background: color-mix(in oklab, var(--cursor-fg) 90%, transparent);
-  border-color: transparent;
-}
-
-.cursor.is-hovering .cursor__dot { opacity: 0; }
-
-.cursor.is-labelled .cursor__ring {
-  width: 92px;
-  height: 92px;
-  background: var(--cursor-fg);
-}
-
-.cursor.is-labelled .cursor__text { opacity: 1; scale: 1; }
+.cursor.is-labelled .cursor__text { opacity: 1; }
 
 /* The pressed state is motion.js's `press` factor; see the note above the
    .cursor__dot rule for why it cannot be a `scale` here. */
@@ -181,6 +122,16 @@
   padding-block: 4px;
 }
 
+.nav__link i {
+  margin-left: 0.45em;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.78em;
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
+
 .nav__link::after {
   content: "";
   position: absolute;
@@ -189,16 +140,17 @@
   width: 100%;
   height: 1px;
   background: currentColor;
-  scale: 0 1;
+  scale: 1 1;
+  opacity: 0.4;
   transform-origin: left;
-  transition: scale var(--d-slow) var(--ease-out-expo);
+  transition: opacity var(--d-base) linear;
 }
 
 .nav__link:hover,
 .nav__link[aria-current="page"] { color: var(--fg-0); }
 
 .nav__link:hover::after,
-.nav__link[aria-current="page"]::after { scale: 1 1; }
+.nav__link[aria-current="page"]::after { opacity: 1; }
 
 .nav__email b { display: none; }
 
@@ -294,8 +246,8 @@
     margin: 0;
     padding: max(var(--s-5), env(safe-area-inset-top)) var(--s-5)
       max(var(--s-5), env(safe-area-inset-bottom));
-    display: grid;
-    grid-template-rows: auto repeat(4, auto) 1fr auto;
+    display: flex;
+    flex-direction: column;
     align-content: start;
     align-items: stretch;
     gap: 0;
@@ -306,22 +258,15 @@
     box-shadow: var(--shadow-deep);
     transform: translate3d(102%, 0, 0);
     visibility: hidden;
+    transition: transform var(--d-slow) var(--ease-out-expo),
+      visibility 0s linear var(--d-slow);
   }
 
   .js .nav__links.is-open {
     transform: none;
     visibility: visible;
+    transition-delay: 0s;
   }
-
-  /* Armed by motion.js a frame after boot. With the transition live from the
-     moment .js lands, the drawer slid from the no-JS strip to off-screen --
-     and stayed visible doing it -- on every phone page load. */
-  .js .nav.is-armed .nav__links {
-    transition: transform var(--d-slow) var(--ease-out-expo),
-      visibility 0s linear var(--d-slow);
-  }
-
-  .js .nav.is-armed .nav__links.is-open { transition-delay: 0s; }
 
   .js .nav__menu-head {
     display: flex;
@@ -355,12 +300,16 @@
   .js .nav__links > .nav__link::after { display: none; }
 
   .js .nav__email {
-    grid-row: -2;
-    align-self: end;
+    align-self: stretch;
     display: grid;
     justify-items: start;
     gap: var(--s-1);
     border: 0;
+    padding-top: var(--s-4);
+  }
+
+  .js .nav__links > .nav__link:nth-child(5) {
+    margin-top: auto;
     padding-top: var(--s-7);
   }
 
@@ -384,7 +333,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    background: rgba(18, 17, 13, 0.72);
+    background: rgba(15, 30, 24, 0.76);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -515,17 +464,29 @@
 /* Text link with a sliding underline */
 .tlink {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28em;
   color: var(--fg-0);
   padding-bottom: 2px;
   background-image: linear-gradient(currentColor, currentColor);
   background-repeat: no-repeat;
-  background-size: 0% 1px;
+  background-size: 100% 1px;
   background-position: 0 100%;
-  transition: background-size var(--d-slow) var(--ease-out-expo);
 }
 
-.tlink:hover { background-size: 100% 1px; }
+.tlink::after {
+  content: "";
+  width: 0.42em;
+  height: 0.42em;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg) translate(-0.05em, 0.05em);
+  opacity: 0.75;
+  flex: none;
+}
+
+.tlink:hover { color: var(--accent-text); }
 
 /* ============================================================
    Section headers
@@ -536,9 +497,9 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: var(--s-5);
-  padding-bottom: var(--s-6);
+  padding-bottom: var(--s-5);
   border-bottom: 1px solid var(--line);
-  margin-bottom: var(--s-8);
+  margin-bottom: var(--s-6);
 }
 
 .sec-head__meta {
@@ -660,6 +621,13 @@
   transition: color var(--d-slow) var(--ease-out-expo);
 }
 
+.footer__col h4 i,
+.footer__base i {
+  margin-left: 0.45em;
+  font-style: normal;
+  letter-spacing: 0.06em;
+}
+
 .footer__cta:hover i { color: var(--accent); }
 
 .footer__grid {
@@ -682,7 +650,28 @@
   margin-bottom: var(--s-4);
 }
 
-.footer__col li + li { margin-top: var(--s-2); }
+.footer__col li + li { margin-top: var(--s-3); }
+
+.contact-list .tlink,
+.contact-plain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.contact-ico {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.contact-emoji {
+  width: 18px;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+  flex: none;
+}
 
 .footer__col a,
 .footer__col p {

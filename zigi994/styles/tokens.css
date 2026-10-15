@@ -10,16 +10,21 @@
    ============================================================ */
 
 :root {
-  /* --- surfaces: sumi ink, warm-shifted toward brown/olive rather
-         than the usual cool near-black --- */
-  --ink-0: #12110d;
-  --ink-1: #191713;
-  --ink-2: #211e18;
-  --ink-3: #2a261f;
-  --ink-4: #363029;
+  /* --- surfaces: black. The warm greys read as muddy next to the
+         lacquer and the paper. Steps above the ground are only there
+         so a card still separates from the page. --- */
+  --ink-0: #0a0a0a;
+  --ink-1: #121212;
+  --ink-2: #1a1a1a;
+  --ink-3: #242424;
+  --ink-4: #2e2e2e;
 
-  --line: rgba(244, 238, 226, 0.1);
-  --line-strong: rgba(244, 238, 226, 0.2);
+  --line: rgba(246, 238, 224, 0.11);
+  --line-strong: rgba(246, 238, 224, 0.22);
+
+  /* Paper the artwork sits on — same stock as the brand plates. */
+  --paper: #e6dece;
+  --paper-ink: #1b1712;
 
   /* --- type colour: unbleached paper, never pure white ---
          All four tiers carry real text, so all four have to stay legible.
@@ -37,7 +42,11 @@
          Every accent below clears 4.5:1 against --ink-0 so it stays
          usable for the small uppercase labels, not just for graphics. --- */
   --accent: #ee5c36;
-  --accent-ink: #12110d;
+  --accent-ink: #0a0a0a;
+
+  /* Three marks only — a tea leaf, a paw, the lion ears — on a
+     wide tile, so the black ground stays mostly empty. */
+  --ground-marks: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22960%22%20height%3D%221080%22%20fill%3D%22none%22%20stroke%3D%22%23f4eee2%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cg%20opacity%3D%220.3%22%3E%3Cpath%20d%3D%22M70%2090c16-20%2042-16%2046%208-20%202-36%206-46-8z%22%2F%3E%3Cpath%20d%3D%22M82%2090c8%2012%2010%2024%206%2034%22%2F%3E%3Ccircle%20cx%3D%22860%22%20cy%3D%22260%22%20r%3D%223.2%22%2F%3E%3Ccircle%20cx%3D%22869%22%20cy%3D%22257.5%22%20r%3D%223.2%22%2F%3E%3Ccircle%20cx%3D%22878%22%20cy%3D%22260%22%20r%3D%223.2%22%2F%3E%3Cpath%20d%3D%22M861%20269c0-4%204-7%208-7s8%203%208%207c0%205-3.5%209-8%209s-8-4-8-9z%22%2F%3E%3Cpath%20d%3D%22M160%20900c12-28%2032-28%2044%200%22%2F%3E%3Cpath%20d%3D%22M204%20900c12-28%2032-28%2044%200%22%2F%3E%3Cpath%20d%3D%22M182%20900c8%2012%2024%2012%2032%200%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
 
   /* --- per-project accents --- */
   --a-quchong: #9db37f; /* 茶绿, desaturated so it reads herbal not candy */
@@ -90,7 +99,7 @@
 
   --gutter: clamp(20px, 4.5vw, 72px);
   --grid-step: clamp(64px, 7vw, 116px);
-  --section-y: clamp(88px, 12vh, 200px);
+  --section-y: clamp(64px, 8vh, 128px);
   --measure: 62ch;
   --max-w: 1680px;
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>zigi — 交互设计师 / Interaction Designer</title>
 <meta name="description" content="zigi 的设计作品集：交互、IP 与动效，附可操作原型和完整案例过程。">
-<meta name="theme-color" content="#12110d">
+<meta name="theme-color" content="#0a0a0a">
 <meta property="og:title" content="zigi — 交互设计师 / Interaction Designer">
 <meta property="og:description" content="交互、IP 与动效，附可操作原型和完整案例过程。">
 <meta property="og:type" content="website">
@@ -41,9 +41,9 @@
         <span class="label">导航</span>
         <button class="nav__close" type="button">关闭</button>
       </div>
-      <a class="nav__link" href="#work">作品</a>
-      <a class="nav__link" href="#lab">交互实验</a>
-      <a class="nav__link" href="#about">关于</a>
+      <a class="nav__link" href="#work">作品<i>Work</i></a>
+      <a class="nav__link" href="#lab">交互实验<i>Lab</i></a>
+      <a class="nav__link" href="#about">关于<i>About</i></a>
       <a class="nav__link nav__email" href="mailto:1965200384@qq.com">
         <span>联系邮箱</span><b>1965200384@qq.com</b>
       </a>
@@ -113,14 +113,13 @@
             <li>UI设计</li>
             <li>平面设计</li>
           </ul>
-          <p class="hero__byline">周子杭 个人作品</p>
+          <p class="hero__byline">周子杭 <i>Zhou Zihang</i></p>
         </div>
 
         <div class="hero__figure" data-hero-figure>
-          <img class="hero__poster" src="assets/ip/hero-figure.webp" width="640" height="512" alt=""
-               fetchpriority="high" elementtiming="hero-poster">
-          <video class="hero__video" data-hero-video muted loop playsinline preload="none"
-                 data-src="assets/ip/hero-figure.mp4" data-plate="assets/ip/hero-plate.mp4"></video>
+          <video class="hero__video" data-hero-video src="assets/ip/hero-ip-dark.mp4"
+                 muted autoplay loop playsinline preload="auto"
+                 aria-label="狮小团从站立走到镜头前，伸出一只手"></video>
         </div>
 
         <a class="hero__primary" href="#work">查看作品 <i aria-hidden="true">→</i></a>
@@ -129,19 +128,90 @@
   </section>
 
   <section class="section about" id="about">
+    <div class="wash wash--about" aria-hidden="true">
+      <img src="assets/ip/yx/pat-04.png" alt="" width="422" height="237" decoding="async">
+    </div>
     <div class="shell about__inner">
       <figure class="about__photo">
-        <img src="assets/portrait.webp" width="488" height="1024" alt="周子杭" loading="lazy" decoding="async">
+        <img src="assets/portrait.png" width="488" height="1024" alt="周子杭" decoding="async" loading="lazy">
       </figure>
       <div class="about__lead">
         <h2 class="display-s cn reveal-lines">你好，我是周子杭</h2>
+        <p class="about__en">Interaction designer in Shenzhen. Interfaces, characters, and motion, made in code.</p>
         <div class="about__text stack-lg">
           <p class="lede cn" data-reveal>深圳的交互设计师。界面、角色和动效，直接在代码里做。</p>
         </div>
         <dl class="dl about__facts" data-reveal>
           <div><dt>Focus</dt><dd class="cn">交互设计 / 界面 / 动效</dd></div>
           <div><dt>Also</dt><dd class="cn">IP 形象 / 品牌</dd></div>
-          <div><dt>Tools</dt><dd>Figma · Illustrator · Blender · HTML/CSS/JS</dd></div>
+          <div>
+            <dt>Study</dt>
+            <dd class="cn"><a class="tlink" href="https://www.baiyunu.edu.cn/" target="_blank" rel="noopener noreferrer">广东白云学院</a> · 本科 · 数字媒体艺术设计</dd>
+          </div>
+          <div>
+            <dt>Courses</dt>
+            <dd class="cn">数字出版设计 / 移动 App 设计 / AI 与数字绘画 / 数字媒体交互</dd>
+          </div>
+          <div class="dl__wide">
+            <dt>Tools</dt>
+            <dd>
+              <ul class="tools">
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4.5 19.5h15L12 4.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M12 19.5V11" stroke="currentColor" stroke-width="1.5"/>
+                  </svg>
+                  <span>CAD</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <text x="12" y="16" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" font-weight="600" fill="currentColor">Ps</text>
+                  </svg>
+                  <span>PS</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <text x="12" y="16" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" font-weight="600" fill="currentColor">Ai</text>
+                  </svg>
+                  <span>AI</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="13" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <circle cx="16.2" cy="7.6" r="2.3" fill="currentColor"/>
+                  </svg>
+                  <span>Blender</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M8 16.2 15.2 8.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="15.6" cy="8.2" r="1.35" fill="currentColor"/>
+                  </svg>
+                  <span class="cn">即时设计</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M9 24a4 4 0 0 0 4-4v-4H9a4 4 0 0 0 0 8z"/>
+                    <path fill="currentColor" d="M5 12a4 4 0 0 1 4-4h4v8H9a4 4 0 0 1-4-4z"/>
+                    <path fill="currentColor" d="M5 4a4 4 0 0 1 4-4h4v8H9a4 4 0 0 1-4-4z"/>
+                    <path fill="currentColor" d="M13 0h4a4 4 0 0 1 0 8h-4V0z"/>
+                    <circle cx="17" cy="12" r="4" fill="currentColor"/>
+                  </svg>
+                  <span>Figma</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3.5 19.5 8v8L12 20.5 4.5 16V8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M12 12.2 19.5 8M12 12.2 4.5 8M12 12.2v8.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                  <span>3ds Max</span>
+                </li>
+              </ul>
+            </dd>
+          </div>
           <div><dt>Based</dt><dd class="cn">中国 · 深圳</dd></div>
           <div><dt>Now</dt><dd class="cn">寻找 2026 的合作与机会</dd></div>
         </dl>
@@ -155,13 +225,16 @@
   <section class="section work" id="work">
     <div class="shell">
       <div class="sec-head">
-        <h2 class="display-m cn reveal-lines">四个项目</h2>
+        <h2 class="work-names">
+          <a href="#quchong">趣宠<em>Quchong</em></a>
+          <a href="#brand">粤醒茶香<em>Yuexing</em></a>
+          <a href="#tea">茶时<em>Tea Time</em></a>
+          <a href="#shixiaotuan">狮小团<em>Shixiaotuan</em></a>
+        </h2>
       </div>
-
-    <div class="shell">
       <ul class="projects">
 
-        <li class="project project--ui" data-accent="#9db37f">
+        <li class="project project--ui" id="quchong" data-accent="#9db37f">
           <div class="ui-story" data-ui-story>
             <div class="ui-story__pin">
               <div class="handset">
@@ -171,25 +244,25 @@
                     <div class="handset__reel" data-ui-reel>
                       <img src="assets/app/screen-01-960.webp"
                            srcset="assets/app/screen-01-480.webp 480w, assets/app/screen-01-960.webp 960w, assets/app/screen-01.webp 1664w"
-                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="趣宠启动页：在等你回家，登录或注册" decoding="async">
+                           sizes="320px" width="1664" height="3600" alt="趣宠启动页：在等你回家，登录或注册" decoding="async" loading="lazy">
                       <img src="assets/app/screen-02-960.webp"
                            srcset="assets/app/screen-02-480.webp 480w, assets/app/screen-02-960.webp 960w, assets/app/screen-02.webp 1664w"
-                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="选择无宠物或有宠物" decoding="async">
+                           sizes="320px" width="1664" height="3600" alt="选择无宠物或有宠物" decoding="async" loading="lazy">
                       <img src="assets/app/screen-03-960.webp"
                            srcset="assets/app/screen-03-480.webp 480w, assets/app/screen-03-960.webp 960w, assets/app/screen-03.webp 1664w"
-                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="注册：手机号、验证码、密码，并选择喜欢的宠物" decoding="async">
+                           sizes="320px" width="1664" height="3600" alt="注册：手机号、验证码、密码，并选择喜欢的宠物" decoding="async" loading="lazy">
                       <img src="assets/app/screen-04-960.webp"
                            srcset="assets/app/screen-04-480.webp 480w, assets/app/screen-04-960.webp 960w, assets/app/screen-04.webp 1664w"
-                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="登录：账号、密码与进入" decoding="async">
+                           sizes="320px" width="1664" height="3600" alt="登录：账号、密码与进入" decoding="async" loading="lazy">
                       <img src="assets/app/screen-05-960.webp"
                            srcset="assets/app/screen-05-480.webp 480w, assets/app/screen-05-960.webp 960w, assets/app/screen-05.webp 1664w"
-                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="首页：宠物档案、日常记录与服务" decoding="async">
+                           sizes="320px" width="1664" height="3600" alt="首页：宠物档案、日常记录与服务" decoding="async" loading="lazy">
                       <img src="assets/app/screen-06-960.webp"
                            srcset="assets/app/screen-06-480.webp 480w, assets/app/screen-06-960.webp 960w, assets/app/screen-06.webp 1664w"
-                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="社交：好友状态与推荐、关注、同城" decoding="async">
+                           sizes="320px" width="1664" height="3600" alt="社交：好友状态与推荐、关注、同城" decoding="async" loading="lazy">
                       <img src="assets/app/screen-07-960.webp"
                            srcset="assets/app/screen-07-480.webp 480w, assets/app/screen-07-960.webp 960w, assets/app/screen-07.webp 1664w"
-                           sizes="(max-width: 800px) min(236px, 64vw), 360px" width="1664" height="3600" loading="lazy" alt="商店：品类、直播、秒杀与补贴" decoding="async">
+                           sizes="320px" width="1664" height="3600" alt="商店：品类、直播、秒杀与补贴" decoding="async" loading="lazy">
                     </div>
                   </div>
                   <p class="handset__tag cn"><span>往下划</span><b data-ui-tag>启动</b></p>
@@ -202,7 +275,7 @@
                   <span class="label">交互设计、UI/UX</span>
                 </div>
                 <h3 class="ui-name" aria-label="趣宠 — 宠物生活方式 App">
-                  <span class="ui-name__zh"><i>趣</i><i>宠</i></span>
+                  <span class="ui-name__zh qchars"><i>趣</i><i>宠</i></span>
                   <b class="ui-name__app">App</b>
                   <em class="ui-name__sub">宠物生活方式</em>
                 </h3>
@@ -259,7 +332,7 @@
         <li class="project project--lab" id="lab" data-accent="#9db37f" data-accent-zone="#9db37f">
           <div class="lab lab--app">
             <header class="lab__head">
-              <h2 class="lab__title cn">可以上手的动效小样</h2>
+              <h2 class="lab__title cn">可以上手的动效小样<i>Motion</i></h2>
               <p class="lab__lead cn">下面几个动作，用的是趣宠的界面。</p>
             </header>
             <div class="lab__grid">
@@ -352,144 +425,268 @@
           </div>
         </li>
 
-        <li class="project project--yx" data-accent="#ec9138">
-          <article class="yx" data-yx>
-            <div class="yx-hero">
-              <div class="yx-hero__copy">
-                <div class="project__meta">
-                  <span class="num">02</span>
-                  <span class="label">IP 设计、品牌</span>
-                </div>
-                <h3 class="yx__title cn">粤醒<span>茶香</span></h3>
-                <p class="yx__who cn">狮小团</p>
-                <dl class="yx-facts cn">
-                  <div><dt>性别</dt><dd>男</dd></div>
-                  <div><dt>星座</dt><dd>狮子座</dd></div>
-                  <div><dt>爱好</dt><dd>喝奶茶、吃零食</dd></div>
-                  <div><dt>特征</dt><dd>醒狮帽子</dd></div>
-                </dl>
-              </div>
-
-              <div class="yx-turn__stage" data-yx-model tabindex="0" aria-label="按住拖动，上下左右转动形象">
-                <canvas data-yx-canvas></canvas>
-                <p class="yx-turn__wait cn" data-yx-wait>模型还在立起来</p>
-              </div>
+        <li class="project project--brand" id="brand" data-accent="#c45c4a">
+          <article class="brand" data-brand>
+            <div class="wash wash--brand" aria-hidden="true">
+              <img src="assets/ip/yx/pat-02.png" alt="" width="421" height="237" decoding="async">
             </div>
+            <div class="project__meta">
+              <span class="num">02</span>
+              <span class="label">品牌设计<i class="label--en">Identity</i></span>
+            </div>
+            <header class="brand__intro">
+              <h3 class="brand__title cn" aria-label="粤醒茶香">
+                <span class="qchars"><i>粤</i><i>醒</i><i>茶</i><i>香</i></span>
+              </h3>
+              <p class="brand__latin">yuexingchaxiang</p>
+              <p class="brand__lead cn">一杯好茶，唤醒岭南。从标志和手册，做到周边、快闪店和街上的广告。</p>
+            </header>
 
-            <div class="yx-rest">
-              <section class="yx-lock" aria-label="标志">
-                <div class="yx-lock__head">
-                  <img src="assets/ip/yx/mark-01.webp" width="289" height="288" alt="粤醒茶香标志，醒狮帽的头" loading="lazy" decoding="async">
-                </div>
-                <div class="yx-lock__type">
-                  <p class="yx-lock__name cn">粤醒茶香</p>
-                  <p class="yx-lock__en">yuexingchaxiang</p>
-                  <ul class="yx-colors" aria-label="标准色，从深橙到浅黄">
-                    <li style="--c:#d47801;color:#fafcac">#d47801</li>
-                    <li style="--c:#f29700;color:#1b1712">#f29700</li>
-                    <li style="--c:#ffb92b;color:#1b1712">#ffb92b</li>
-                    <li style="--c:#fafcac;color:#1b1712">#fafcac</li>
+            <section class="brand-mark" aria-labelledby="brand-mark-title">
+              <h3 id="brand-mark-title" class="brand__word cn">标志<i>Mark</i></h3>
+              <div class="brand-mark__paper">
+                <div class="brand-mark__main">
+                  <img class="brand-mark__lock" src="assets/ip/yx/brand/lockup.png" width="1451" height="612" alt="粤醒茶香标志：醒狮帽的头，旁边是标准字" decoding="async">
+                  <p class="brand-mark__line cn">一杯好茶 · 唤醒岭南</p>
+                  <ul class="brand-mark__chips" aria-label="标志标准色，从深橙到浅黄">
+                    <li style="--c:#d47801;--ink:#fafcac">#d47801</li>
+                    <li style="--c:#f29700;--ink:#1b1712">#f29700</li>
+                    <li style="--c:#ffb92b;--ink:#1b1712">#ffb92b</li>
+                    <li style="--c:#fafcac;--ink:#1b1712">#fafcac</li>
                   </ul>
-                  <div class="yx-lock__line">
-                    <div class="yx-lock__ink">
-                      <img src="assets/ip/yx/ink-01.webp" width="298" height="311" alt="标志线稿" loading="lazy" decoding="async">
-                    </div>
-                    <p class="cn">彩色和线稿是同一张脸。深底上用彩色，浅底上用线稿，都认得出来。</p>
-                  </div>
+                  <ul class="brand-mark__swatch" aria-label="品牌色">
+                    <li style="--c:#16382c"></li>
+                    <li style="--c:#c5d39a"></li>
+                    <li style="--c:#f0b429"></li>
+                    <li style="--c:#c45c4a"></li>
+                    <li style="--c:#4e96d4"></li>
+                    <li style="--c:#f3ead8"></li>
+                  </ul>
                 </div>
-              </section>
+                <aside class="brand-mark__side">
+                  <p class="brand-mark__note cn">彩色和线稿是同一张脸。深底上用彩色，浅底上用线稿，都认得出来。</p>
+                  <div class="brand-mark__sheet">
+                    <figure class="brand-mark__face brand-mark__face--color">
+                      <img src="assets/ip/yx/mark-01.png?v=4" width="289" height="288" alt="粤醒茶香标志色稿，醒狮帽的头" decoding="async" loading="lazy">
+                      <figcaption class="cn">色稿</figcaption>
+                    </figure>
+                    <figure class="brand-mark__face brand-mark__face--ink">
+                      <img src="assets/ip/yx/ink-01.png" width="298" height="311" alt="同一张脸的线稿" decoding="async" loading="lazy">
+                      <figcaption class="cn">线稿</figcaption>
+                    </figure>
+                  </div>
+                </aside>
+              </div>
+            </section>
 
-              <div class="yx-cloth" aria-hidden="true">
-                <img src="assets/ip/yx/pat-01.webp" width="444" height="258" alt="" loading="lazy" decoding="async">
-                <img src="assets/ip/yx/pat-02.webp" width="444" height="258" alt="" loading="lazy" decoding="async">
-                <img src="assets/ip/yx/pat-03.webp" width="444" height="263" alt="" loading="lazy" decoding="async">
-                <img src="assets/ip/yx/pat-04.webp" width="444" height="259" alt="" loading="lazy" decoding="async">
+            <section class="brand-vi" aria-labelledby="brand-vi-title">
+              <div class="brand-vi__head">
+                <h3 id="brand-vi-title" class="brand__word cn">手册<i>Manual</i></h3>
+                <p class="brand-vi__line cn" data-brand-vi-line>标准标志。竖式和横式各一版。</p>
+              </div>
+              <figure class="brand-vi__view">
+                <img data-brand-vi-view src="assets/ip/yx/vi/01.jpg" width="1600" height="901" alt="01 标准标志" decoding="async">
+              </figure>
+              <div class="brand-vi__film" role="list">
+                <button type="button" role="listitem" class="is-on" data-brand-vi="1" aria-pressed="true">标准标志</button>
+                <button type="button" role="listitem" data-brand-vi="2" aria-pressed="false">反白</button>
+                <button type="button" role="listitem" data-brand-vi="3" aria-pressed="false">线稿</button>
+                <button type="button" role="listitem" data-brand-vi="4" aria-pressed="false">墨稿</button>
+                <button type="button" role="listitem" data-brand-vi="5" aria-pressed="false">制图</button>
+                <button type="button" role="listitem" data-brand-vi="6" aria-pressed="false">中英文</button>
+              </div>
+            </section>
+
+            <section class="brand-pat" aria-labelledby="brand-pat-title">
+              <div class="brand-pat__head">
+                <h3 id="brand-pat-title" class="brand__word cn">辅助图形<i>Pattern</i></h3>
+                <p class="brand-pat__lead cn">窗花纹样，四套颜色。中间是狮小团的剪影。</p>
+              </div>
+              <div class="brand-pat__grid">
+                <img src="assets/ip/yx/pat-01.png" width="444" height="258" alt="绿色窗花纹样，中间是狮小团剪影" decoding="async" loading="lazy">
+                <img src="assets/ip/yx/pat-02.png" width="444" height="258" alt="橙色窗花纹样，中间是狮小团剪影" decoding="async" loading="lazy">
+                <img src="assets/ip/yx/pat-03.png" width="444" height="263" alt="紫色窗花纹样，中间是狮小团剪影" decoding="async" loading="lazy">
+                <img src="assets/ip/yx/pat-04.png" width="444" height="259" alt="粉色窗花纹样，中间是狮小团剪影" decoding="async" loading="lazy">
+              </div>
+            </section>
+
+            <section class="brand-goods" aria-labelledby="brand-goods-title">
+              <div class="brand-goods__head">
+                <h3 id="brand-goods-title" class="brand__word cn">周边<i>Goods</i></h3>
+                <p class="brand-goods__hint cn">点一件，提到前面来看。</p>
+              </div>
+              <div class="brand-goods__stage" data-brand-stage>
+                <img data-brand-show src="assets/ip/yx/brand/g-tote.png" width="212" height="290" alt="粤醒茶香手提袋" decoding="async">
+                <p class="brand-goods__name cn" data-brand-good-name>手提袋</p>
+              </div>
+              <div class="brand-goods__shelf" data-brand-shelf role="list">
+                <button type="button" role="listitem" class="is-on" data-brand-good="tote" aria-pressed="true">
+                  <img src="assets/ip/yx/brand/g-tote.png" width="212" height="290" alt="" decoding="async" loading="lazy">
+                  <span class="cn">手提袋</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="bag" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-bag.png" width="144" height="296" alt="" decoding="async" loading="lazy">
+                  <span class="cn">纸袋</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="key" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-key.png" width="147" height="221" alt="" decoding="async" loading="lazy">
+                  <span class="cn">钥匙扣</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="tag" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-tag.png" width="95" height="236" alt="" decoding="async" loading="lazy">
+                  <span class="cn">吊牌</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="sip" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-sip.png" width="186" height="225" alt="" decoding="async" loading="lazy">
+                  <span class="cn">贴纸</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="head" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-head.png" width="133" height="199" alt="" decoding="async" loading="lazy">
+                  <span class="cn">头贴</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="post" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-post.png" width="201" height="274" alt="" decoding="async" loading="lazy">
+                  <span class="cn">海报</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="field" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-field.png" width="249" height="275" alt="" decoding="async" loading="lazy">
+                  <span class="cn">茶园</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="sheet" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-sheet.png" width="222" height="266" alt="" decoding="async" loading="lazy">
+                  <span class="cn">贴纸页</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="ticket" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-ticket.png" width="274" height="144" alt="" decoding="async" loading="lazy">
+                  <span class="cn">门票</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="stub" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-stub.png" width="275" height="105" alt="" decoding="async" loading="lazy">
+                  <span class="cn">票根</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="cup" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-cup.png" width="115" height="189" alt="" decoding="async" loading="lazy">
+                  <span class="cn">纸杯</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="sleeve" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-sleeve.png" width="140" height="106" alt="" decoding="async" loading="lazy">
+                  <span class="cn">杯套</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="boba" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-boba.png" width="116" height="196" alt="" decoding="async" loading="lazy">
+                  <span class="cn">奶茶</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="badge" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-badge.png" width="151" height="152" alt="" decoding="async" loading="lazy">
+                  <span class="cn">徽章</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="house" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-house.png" width="113" height="171" alt="" decoding="async" loading="lazy">
+                  <span class="cn">挂件</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="life" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-life.png" width="168" height="171" alt="" decoding="async" loading="lazy">
+                  <span class="cn">好茶</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="banner" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-banner.png" width="479" height="121" alt="" decoding="async" loading="lazy">
+                  <span class="cn">横幅</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="tag-green" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-tag-green.png" width="59" height="124" alt="" decoding="async" loading="lazy">
+                  <span class="cn">绿茶签</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="tag-orange" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-tag-orange.png" width="60" height="124" alt="" decoding="async" loading="lazy">
+                  <span class="cn">橙茶签</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="tag-cream" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-tag-cream.png" width="58" height="124" alt="" decoding="async" loading="lazy">
+                  <span class="cn">米茶签</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="tag-blue" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-tag-blue.png" width="58" height="124" alt="" decoding="async" loading="lazy">
+                  <span class="cn">蓝茶签</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="dot" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-dot.png" width="76" height="77" alt="" decoding="async" loading="lazy">
+                  <span class="cn">圆贴</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="leaf" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-leaf.png" width="58" height="59" alt="" decoding="async" loading="lazy">
+                  <span class="cn">叶贴</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="flower" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-flower.png" width="45" height="46" alt="" decoding="async" loading="lazy">
+                  <span class="cn">花贴</span>
+                </button>
+                <button type="button" role="listitem" data-brand-good="tower" aria-pressed="false">
+                  <img src="assets/ip/yx/brand/g-tower.png" width="67" height="69" alt="" decoding="async" loading="lazy">
+                  <span class="cn">塔贴</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="brand-shop" aria-labelledby="brand-shop-title">
+              <div class="brand-shop__head">
+                <h3 id="brand-shop-title" class="brand__word cn">快闪店<i>Pop-up</i></h3>
+                <p class="brand-shop__lead cn">中间一圈柜台，左边是货，右边自己做茶。</p>
               </div>
 
-              <section class="yx-faces" aria-label="表情">
-                <p class="yx__lead cn">十二张表情。点任意一张，他会换成那一个；不点的话，他自己轮着做。</p>
-                <div class="yx-stage">
-                  <div class="yx-spot" data-yx-spot>
-                    <img data-yx-show data-move="bounce" class="is-on" src="assets/ip/yx/face-03.webp" width="306" height="343" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="bounce" src="assets/ip/yx/face-07.webp" width="277" height="373" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-02.webp" width="271" height="377" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="bounce" src="assets/ip/yx/face-05.webp" width="277" height="280" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="tilt" src="assets/ip/yx/face-06.webp" width="271" height="273" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="pulse" src="assets/ip/yx/face-04.webp" width="265" height="302" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-09.webp" width="271" height="377" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="pop" src="assets/ip/yx/face-12.webp" width="272" height="273" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="walk" src="assets/ip/yx/face-01.webp" width="276" height="389" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="shake" src="assets/ip/yx/face-10.webp" width="277" height="278" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="bob" src="assets/ip/yx/face-11.webp" width="276" height="279" alt="" loading="lazy" decoding="async">
-                    <img data-yx-show data-move="shake" src="assets/ip/yx/face-08.webp" width="275" height="385" alt="" loading="lazy" decoding="async">
+              <div class="brand-shop__paper">
+                <figure class="brand-shop__view" data-brand-shop>
+                  <div class="brand-shop__shot">
+                    <img src="assets/ip/yx/brand/kiosk-hall.jpg" width="1024" height="682" alt="粤醒茶香快闪店：圆环柜台在中间，左边货架，右边茶坊和座位" decoding="async" loading="lazy">
+                    <button type="button" class="brand-shop__pin" style="--x:16%;--y:58%" data-brand-pin="goods" tabindex="-1" aria-hidden="true">周边</button>
+                    <button type="button" class="brand-shop__pin" style="--x:50%;--y:44%" data-brand-pin="bar" tabindex="-1" aria-hidden="true">环台</button>
+                    <button type="button" class="brand-shop__pin" style="--x:80%;--y:32%" data-brand-pin="diy" tabindex="-1" aria-hidden="true">茶坊</button>
+                    <button type="button" class="brand-shop__pin" style="--x:84%;--y:70%" data-brand-pin="sit" tabindex="-1" aria-hidden="true">坐席</button>
                   </div>
-                  <p class="yx-stage__name cn" data-yx-name>送心</p>
-                  <div class="yx-tray" role="group" aria-label="狮小团的表情">
-                    <button type="button" data-yx-pick data-label="送心" aria-pressed="true" aria-label="送心"><img src="assets/ip/yx/face-03.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="得意" aria-pressed="false" aria-label="得意"><img src="assets/ip/yx/face-07.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="眨眼" aria-pressed="false" aria-label="眨眼"><img src="assets/ip/yx/face-02.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="大笑" aria-pressed="false" aria-label="大笑"><img src="assets/ip/yx/face-05.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="吐舌" aria-pressed="false" aria-label="吐舌"><img src="assets/ip/yx/face-06.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="比心" aria-pressed="false" aria-label="比心"><img src="assets/ip/yx/face-04.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="害羞" aria-pressed="false" aria-label="害羞"><img src="assets/ip/yx/face-09.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="惊讶" aria-pressed="false" aria-label="惊讶"><img src="assets/ip/yx/face-12.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="跺脚" aria-pressed="false" aria-label="跺脚"><img src="assets/ip/yx/face-01.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="皱眉" aria-pressed="false" aria-label="皱眉"><img src="assets/ip/yx/face-10.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="委屈" aria-pressed="false" aria-label="委屈"><img src="assets/ip/yx/face-11.webp" alt="" loading="lazy" decoding="async"></button>
-                    <button type="button" data-yx-pick data-label="哭哭" aria-pressed="false" aria-label="哭哭"><img src="assets/ip/yx/face-08.webp" alt="" loading="lazy" decoding="async"></button>
-                  </div>
+                </figure>
+                <div class="brand-shop__tabs" role="group" aria-label="快闪店的几个地方">
+                  <button type="button" data-brand-zone="all" aria-pressed="true">全貌</button>
+                  <button type="button" data-brand-zone="goods" aria-pressed="false">周边</button>
+                  <button type="button" data-brand-zone="bar" aria-pressed="false">环台</button>
+                  <button type="button" data-brand-zone="diy" aria-pressed="false">茶坊</button>
+                  <button type="button" data-brand-zone="sit" aria-pressed="false">坐席</button>
                 </div>
-              </section>
+                <p class="brand-shop__note cn" data-brand-zone-line>点一个地方，画面走到那里。</p>
+              </div>
+            </section>
 
-              <section class="yx-ext" data-yx-ext data-theme="drink" aria-label="形象延展">
-                <div class="yx-ext__copy">
-                  <p class="yx-ext__name cn" data-yx-ext-name aria-live="polite"><span>茶</span><span>饮</span></p>
-                  <p class="yx-ext__line cn" data-yx-ext-line>端着一杯茶。茶壶在旁边。</p>
-                  <p class="yx-ext__hint cn">这一排匀速滚过去。点到哪一张，哪一张停下来放大。框里的单子可以拖。</p>
-                </div>
-                <div class="yx-ext__reel" data-yx-ext-reel tabindex="0" aria-label="一排形象，点到哪张哪张放大">
-                  <button type="button" class="yx-ext__card is-on" data-yx-ext-show data-theme="drink" aria-pressed="true" aria-label="茶饮">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/drink.webp" width="512" height="400" alt="狮小团端着茶杯" loading="lazy" decoding="async" draggable="false"></span>
-                  </button>
-                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="scent" aria-pressed="false" aria-label="茶香">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/scent.webp" width="512" height="400" alt="狮小团闭眼，叶子绕着转" loading="lazy" decoding="async" draggable="false"></span>
-                  </button>
-                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="snack" aria-pressed="false" aria-label="茶点">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/snack.webp" width="512" height="400" alt="狮小团捧着包子，蒸笼打开" loading="lazy" decoding="async" draggable="false"></span>
-                  </button>
-                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="lion" aria-pressed="false" aria-label="醒狮">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/lion.webp" width="512" height="400" alt="狮小团戴着舞狮头" loading="lazy" decoding="async" draggable="false"></span>
-                  </button>
-                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="pick" aria-pressed="false" aria-label="采茶">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/pick.webp" width="512" height="400" alt="狮小团捧着一束茶叶" loading="lazy" decoding="async" draggable="false"></span>
-                  </button>
-                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="gift" aria-pressed="false" aria-label="茶礼">
-                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/gift.webp" width="512" height="400" alt="狮小团穿着红衣，旁边是茶壶和礼盒" loading="lazy" decoding="async" draggable="false"></span>
-                  </button>
-                </div>
-                <div class="yx-ext__board">
-                  <p class="yx-ext__board-name cn" data-yx-ext-board>茶饮</p>
-                  <div class="yx-ext__counter" data-yx-ext-counter tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-valuetext="茶饮" aria-label="顺着柜台拖单子">
-                    <img src="assets/ip/yx/ext/lineup.jpg" width="1888" height="833" alt="六个狮小团站在木柜台后" loading="lazy" decoding="async" draggable="false">
-                    <div class="yx-ext__glow" data-yx-ext-glow></div>
-                    <div class="yx-ext__slip" data-yx-ext-slip><span data-yx-ext-slip-name>茶饮</span></div>
-                  </div>
-                </div>
-              </section>
-
-            </div>
+            <section class="brand-city" aria-labelledby="brand-city-title">
+              <div class="brand-city__head">
+                <h3 id="brand-city-title" class="brand__word cn">落地<i>Street</i></h3>
+                <p class="brand-city__line cn" data-brand-city-line>候车的人先看见他。后面是广州塔。</p>
+              </div>
+              <figure class="brand-city__view">
+                <img data-brand-city-view src="assets/ip/yx/street/stop.png" width="1926" height="1530" alt="公交站广告牌上的狮小团，背景是广州塔" decoding="async">
+              </figure>
+              <div class="brand-city__film" role="list">
+                <button type="button" role="listitem" class="is-on" data-brand-city="stop" aria-pressed="true">车站</button>
+                <button type="button" role="listitem" data-brand-city="xiguan" aria-pressed="false">西关</button>
+                <button type="button" role="listitem" data-brand-city="door" aria-pressed="false">铺门</button>
+                <button type="button" role="listitem" data-brand-city="box" aria-pressed="false">街箱</button>
+                <button type="button" role="listitem" data-brand-city="bus" aria-pressed="false">巴士</button>
+                <button type="button" role="listitem" data-brand-city="river" aria-pressed="false">江边</button>
+                <button type="button" role="listitem" data-brand-city="lamp" aria-pressed="false">灯下</button>
+              </div>
+            </section>
           </article>
         </li>
 
-        <li class="project project--tea" data-accent="#c9842a">
+        <li class="project project--tea" id="tea" data-accent="#c9842a">
           <article class="tea" data-tea>
+            <div class="wash wash--tea" aria-hidden="true">
+              <img src="assets/ip/yx/pat-01.png" alt="" width="421" height="236" decoding="async">
+            </div>
             <div class="tea__copy">
               <div class="project__meta">
                 <span class="num">03</span>
-                <span class="label">交互设计、软硬结合</span>
+                <span class="label">交互设计、软硬结合<i class="label--en">Tea Time</i></span>
               </div>
               <h3 class="tea__title" aria-label="茶时交互小设计">
-                <span class="tea__name"><i>茶</i><i>时</i></span>
+                <span class="tea__name qchars"><i>茶</i><i>时</i></span>
                 <span class="tea__kind"><i>交</i><i>互</i><i>小</i><i>设</i><i>计</i></span>
               </h3>
             </div>
@@ -557,36 +754,119 @@
           </article>
         </li>
 
-        <li class="project project--brand" data-accent="#7E905C">
-          <article class="brand" data-brand>
-            <header class="brand__head">
-              <div class="project__meta">
-                <span class="num">04</span>
-                <span class="label">品牌设计</span>
-              </div>
-              <h3 class="brand__title cn">品牌</h3>
-              <p class="brand__lead cn">粤醒茶香。同一张脸，从色板走到杯子、礼盒和店门口。点名字换一块，点颜色看它用在哪。</p>
-            </header>
-            <div class="brand__sheet">
-              <div class="brand__side">
-                <div class="brand__systems" role="tablist" aria-label="四块品牌">
-                  <button type="button" role="tab" data-brand-pick="id" aria-selected="true">识别</button>
-                  <button type="button" role="tab" data-brand-pick="pack" aria-selected="false">包装</button>
-                  <button type="button" role="tab" data-brand-pick="merch" aria-selected="false">周边</button>
-                  <button type="button" role="tab" data-brand-pick="space" aria-selected="false">空间</button>
+        <li class="project project--yx" id="shixiaotuan" data-accent="#ec9138">
+          <article class="yx" data-yx>
+            <div class="wash wash--lion" aria-hidden="true">
+              <img src="assets/ip/yx/pat-03.png" alt="" width="420" height="239" decoding="async">
+            </div>
+            <div class="yx-hero">
+              <div class="yx-hero__copy">
+                <div class="project__meta">
+                  <span class="num">04</span>
+                  <span class="label">IP 设计<i class="label--en">Character</i></span>
                 </div>
-                <p class="brand__line cn" data-brand-line>角色、叶子、窗花和四个颜色，先定在这一张上。</p>
-                <div class="brand__inks" role="group" aria-label="四个颜色">
-                  <button type="button" data-brand-ink="#7E905C" data-use="茶绿。叶子、罐身和门头用这个绿。" aria-pressed="true"><i style="background:#7E905C"></i>茶绿</button>
-                  <button type="button" data-brand-ink="#F4ECD7" data-use="米白。纸、袋子和杯子的底是这个白。" aria-pressed="false"><i style="background:#F4ECD7"></i>米白</button>
-                  <button type="button" data-brand-ink="#CF4A45" data-use="朱红。礼盒和印章才用这点红。" aria-pressed="false"><i style="background:#CF4A45"></i>朱红</button>
-                  <button type="button" data-brand-ink="#CFA269" data-use="暖金。窗花的线，和字旁边的细边。" aria-pressed="false"><i style="background:#CFA269"></i>暖金</button>
-                </div>
-                <p class="brand__use cn" data-brand-use>茶绿。叶子、罐身和门头用这个绿。</p>
+                <h3 class="yx__title cn" aria-label="狮小团">
+                  <span class="qchars"><i>狮</i><i>小</i><i>团</i></span>
+                  <em>Shixiaotuan</em>
+                </h3>
+                <p class="yx__who cn">粤醒茶香</p>
+                <dl class="yx-facts cn">
+                  <div><dt>性别</dt><dd>男</dd></div>
+                  <div><dt>星座</dt><dd>狮子座</dd></div>
+                  <div><dt>爱好</dt><dd>喝奶茶、吃零食</dd></div>
+                  <div><dt>特征</dt><dd>醒狮帽子</dd></div>
+                </dl>
               </div>
-              <figure class="brand__frame">
-                <img data-brand-view src="assets/ip/yx/brand/id.jpg" width="506" height="336" alt="识别板：狮小团正侧背、茶叶、窗花，和茶绿、米白、朱红、暖金" loading="lazy" decoding="async">
+
+              <div class="yx-turn__stage" data-yx-model tabindex="0" aria-label="按住拖动，上下左右转动形象">
+                <canvas data-yx-canvas></canvas>
+                <p class="yx-turn__wait cn" data-yx-wait>模型还在立起来</p>
+              </div>
+            </div>
+
+            <section class="yx-poster" aria-label="立绘">
+              <div class="yx-poster__copy">
+                <h4 class="brand__word">立绘<i>Portrait</i></h4>
+                <p class="yx-poster__line cn">一盏广式茶，<br>满城狮趣香。</p>
+                <p class="yx-poster__note cn">灯从右边打过来。帽子亮着，人站在暗处。</p>
+              </div>
+              <figure class="yx-poster__frame">
+                <img src="assets/ip/yx/poster.jpg" width="576" height="1024" alt="狮小团立绘，旁边竖排写着一盏广式茶，满城狮趣香" loading="lazy" decoding="async">
               </figure>
+            </section>
+
+            <div class="yx-rest">
+              <section class="yx-faces" aria-label="表情">
+                <p class="yx__lead cn">十二张表情。点任意一张，他会换成那一个；不点的话，他自己轮着做。</p>
+                <div class="yx-stage">
+                  <div class="yx-spot" data-yx-spot>
+                    <img data-yx-show data-move="bounce" class="is-on" loading="lazy" decoding="async" src="assets/ip/yx/face-03.png?v=4" width="306" height="343" alt="">
+                    <img data-yx-show data-move="bounce" loading="lazy" decoding="async" src="assets/ip/yx/face-07.png?v=4" width="277" height="373" alt="">
+                    <img data-yx-show data-move="bob" loading="lazy" decoding="async" src="assets/ip/yx/face-02.png?v=4" width="271" height="377" alt="">
+                    <img data-yx-show data-move="bounce" loading="lazy" decoding="async" src="assets/ip/yx/face-05.png?v=4" width="277" height="280" alt="">
+                    <img data-yx-show data-move="tilt" loading="lazy" decoding="async" src="assets/ip/yx/face-06.png?v=4" width="271" height="273" alt="">
+                    <img data-yx-show data-move="pulse" loading="lazy" decoding="async" src="assets/ip/yx/face-04.png?v=4" width="265" height="302" alt="">
+                    <img data-yx-show data-move="bob" loading="lazy" decoding="async" src="assets/ip/yx/face-09.png?v=4" width="271" height="377" alt="">
+                    <img data-yx-show data-move="pop" loading="lazy" decoding="async" src="assets/ip/yx/face-12.png?v=4" width="272" height="273" alt="">
+                    <img data-yx-show data-move="walk" loading="lazy" decoding="async" src="assets/ip/yx/face-01.png?v=4" width="276" height="389" alt="">
+                    <img data-yx-show data-move="shake" loading="lazy" decoding="async" src="assets/ip/yx/face-10.png?v=4" width="277" height="278" alt="">
+                    <img data-yx-show data-move="bob" loading="lazy" decoding="async" src="assets/ip/yx/face-11.png?v=4" width="276" height="279" alt="">
+                    <img data-yx-show data-move="shake" loading="lazy" decoding="async" src="assets/ip/yx/face-08.png?v=4" width="275" height="385" alt="">
+                  </div>
+                  <p class="yx-stage__name cn" data-yx-name>送心</p>
+                  <div class="yx-tray" role="group" aria-label="狮小团的表情">
+                    <button type="button" data-yx-pick data-label="送心" aria-pressed="true" aria-label="送心"><img loading="lazy" decoding="async" src="assets/ip/yx/face-03.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="得意" aria-pressed="false" aria-label="得意"><img loading="lazy" decoding="async" src="assets/ip/yx/face-07.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="眨眼" aria-pressed="false" aria-label="眨眼"><img loading="lazy" decoding="async" src="assets/ip/yx/face-02.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="大笑" aria-pressed="false" aria-label="大笑"><img loading="lazy" decoding="async" src="assets/ip/yx/face-05.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="吐舌" aria-pressed="false" aria-label="吐舌"><img loading="lazy" decoding="async" src="assets/ip/yx/face-06.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="比心" aria-pressed="false" aria-label="比心"><img loading="lazy" decoding="async" src="assets/ip/yx/face-04.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="害羞" aria-pressed="false" aria-label="害羞"><img loading="lazy" decoding="async" src="assets/ip/yx/face-09.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="惊讶" aria-pressed="false" aria-label="惊讶"><img loading="lazy" decoding="async" src="assets/ip/yx/face-12.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="跺脚" aria-pressed="false" aria-label="跺脚"><img loading="lazy" decoding="async" src="assets/ip/yx/face-01.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="皱眉" aria-pressed="false" aria-label="皱眉"><img loading="lazy" decoding="async" src="assets/ip/yx/face-10.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="委屈" aria-pressed="false" aria-label="委屈"><img loading="lazy" decoding="async" src="assets/ip/yx/face-11.png?v=4" alt=""></button>
+                    <button type="button" data-yx-pick data-label="哭哭" aria-pressed="false" aria-label="哭哭"><img loading="lazy" decoding="async" src="assets/ip/yx/face-08.png?v=4" alt=""></button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="yx-ext" data-yx-ext data-theme="drink" aria-label="形象延展">
+                <div class="yx-ext__copy">
+                  <p class="yx-ext__name cn" data-yx-ext-name aria-live="polite"><span>茶</span><span>饮</span></p>
+                  <p class="yx-ext__line cn" data-yx-ext-line>端着一杯茶。茶壶在旁边。</p>
+                  <p class="yx-ext__hint cn">这一排匀速滚过去。点到哪一张，哪一张停下来放大。框里的单子可以拖。</p>
+                </div>
+                <div class="yx-ext__reel" data-yx-ext-reel tabindex="0" aria-label="一排形象，点到哪张哪张放大">
+                  <button type="button" class="yx-ext__card is-on" data-yx-ext-show data-theme="drink" aria-pressed="true" aria-label="茶饮">
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/drink.png" width="512" height="400" alt="狮小团端着茶杯" decoding="async" loading="lazy" draggable="false"></span>
+                  </button>
+                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="scent" aria-pressed="false" aria-label="茶香">
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/scent.png" width="512" height="400" alt="狮小团闭眼，叶子绕着转" decoding="async" loading="lazy" draggable="false"></span>
+                  </button>
+                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="snack" aria-pressed="false" aria-label="茶点">
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/snack.png" width="512" height="400" alt="狮小团捧着包子，蒸笼打开" decoding="async" loading="lazy" draggable="false"></span>
+                  </button>
+                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="lion" aria-pressed="false" aria-label="醒狮">
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/lion.png" width="512" height="400" alt="狮小团戴着舞狮头" decoding="async" loading="lazy" draggable="false"></span>
+                  </button>
+                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="pick" aria-pressed="false" aria-label="采茶">
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/pick.png" width="512" height="400" alt="狮小团捧着一束茶叶" decoding="async" loading="lazy" draggable="false"></span>
+                  </button>
+                  <button type="button" class="yx-ext__card" data-yx-ext-show data-theme="gift" aria-pressed="false" aria-label="茶礼">
+                    <span class="yx-ext__fit"><img src="assets/ip/yx/ext/gift.png" width="512" height="400" alt="狮小团穿着红衣，旁边是茶壶和礼盒" decoding="async" loading="lazy" draggable="false"></span>
+                  </button>
+                </div>
+                <div class="yx-ext__board">
+                  <p class="yx-ext__board-name cn" data-yx-ext-board>茶饮</p>
+                  <div class="yx-ext__counter" data-yx-ext-counter tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-valuetext="茶饮" aria-label="顺着柜台拖单子">
+                    <img src="assets/ip/yx/ext/lineup.jpg" width="1888" height="833" alt="六个狮小团站在木柜台后" decoding="async" loading="lazy" draggable="false">
+                    <div class="yx-ext__glow" data-yx-ext-glow></div>
+                    <div class="yx-ext__slip" data-yx-ext-slip><span data-yx-ext-slip-name>茶饮</span></div>
+                  </div>
+                </div>
+              </section>
+
             </div>
           </article>
         </li>
@@ -611,11 +891,38 @@
 
     <div class="footer__grid">
       <div class="footer__col">
-        <h4>联系</h4>
-        <ul>
-          <li><a class="tlink" href="mailto:1965200384@qq.com">1965200384@qq.com</a></li>
-          <li><a class="tlink" href="tel:18128443612">181 2844 3612</a></li>
-          <li>微信 Zhouzihang94</li>
+        <h4>联系<i>Contact</i></h4>
+        <ul class="contact-list">
+          <li>
+            <a class="tlink" href="mailto:1965200384@qq.com">
+              <svg class="contact-ico" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="3" fill="#12B7F5"/>
+                <path d="M3.2 6.2 12 12.4 20.8 6.2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+                <circle cx="17.2" cy="15.2" r="3.1" fill="#fff"/>
+                <text x="17.2" y="16.7" text-anchor="middle" font-size="4.2" font-family="Arial, sans-serif" font-weight="700" fill="#12B7F5">Q</text>
+              </svg>
+              <span>1965200384@qq.com</span>
+            </a>
+          </li>
+          <li>
+            <a class="tlink" href="tel:18128443612">
+              <span class="contact-emoji" aria-hidden="true">📞</span>
+              <span>181 2844 3612</span>
+            </a>
+          </li>
+          <li>
+            <span class="contact-plain">
+              <svg class="contact-ico" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#07C160" d="M9.4 3.2C5.6 3.2 2.6 5.7 2.6 8.8c0 1.8.9 3.4 2.3 4.5l-.6 2.2 2.4-1.2c.8.3 1.6.4 2.5.4.2 0 .5 0 .7 0-.2-.5-.3-1.1-.3-1.7 0-3 2.8-5.4 6.3-5.4.2 0 .4 0 .6 0C15.6 5 12.8 3.2 9.4 3.2z"/>
+                <path fill="#07C160" d="M16.2 8.6c-3 0-5.5 2-5.5 4.6s2.5 4.6 5.5 4.6c.6 0 1.2-.1 1.7-.3l1.9 1-.4-1.7c1.1-.8 1.8-2 1.8-3.6 0-2.6-2.5-4.6-5-4.6z"/>
+                <circle cx="7.2" cy="8.6" r=".7" fill="#fff"/>
+                <circle cx="10.6" cy="8.6" r=".7" fill="#fff"/>
+                <circle cx="14.4" cy="12.8" r=".65" fill="#fff"/>
+                <circle cx="17.4" cy="12.8" r=".65" fill="#fff"/>
+              </svg>
+              <span>微信 Zhouzihang94</span>
+            </span>
+          </li>
         </ul>
       </div>
       <div class="footer__col">
@@ -634,7 +941,7 @@
 
     <div class="footer__base">
       <span class="caption">© 2026 zigi. 保留所有权利。</span>
-      <a class="caption tlink" href="#top">回到顶部<i aria-hidden="true"> ↑</i></a>
+      <a class="caption tlink" href="#top">回到顶部<i>Top</i></a>
     </div>
   </div>
 

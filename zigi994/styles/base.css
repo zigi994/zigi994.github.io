@@ -66,6 +66,104 @@ body.is-locked {
   overflow: hidden;
 }
 
+/* The marks sit on the ground, under the page. Fixed so a long
+   scroll keeps the same quiet scatter instead of a wallpaper seam
+   racing past the type. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: var(--ground-marks);
+  background-size: 960px 1080px;
+}
+
+main,
+.footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* Large pieces of her own work, faded into the ground the way a
+   portrait sits behind a biography: one plate per stretch of page,
+   soft enough that the type stays in front. */
+.about,
+.brand,
+.tea,
+.yx {
+  position: relative;
+}
+
+.about > .shell,
+.brand > :not(.wash),
+.tea > :not(.wash),
+.yx > :not(.wash) {
+  position: relative;
+  z-index: 1;
+}
+
+.wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wash img {
+  position: absolute;
+  width: min(62vw, 760px);
+  height: auto;
+  opacity: 0.14;
+  -webkit-mask-image: radial-gradient(closest-side, #000 18%, transparent 72%);
+  mask-image: radial-gradient(closest-side, #000 18%, transparent 72%);
+  user-select: none;
+}
+
+.wash--about img {
+  right: -8%;
+  top: 8%;
+  width: min(54vw, 640px);
+  opacity: 0.13;
+  transform: rotate(-7deg);
+}
+
+.wash--brand img {
+  right: -2%;
+  top: 16%;
+  width: min(48vw, 620px);
+  opacity: 0.12;
+  transform: rotate(5deg);
+}
+
+.wash--tea img {
+  left: -4%;
+  bottom: 4%;
+  width: min(46vw, 560px);
+  opacity: 0.14;
+  transform: rotate(-4deg);
+}
+
+.wash--lion img {
+  right: -6%;
+  bottom: 8%;
+  width: min(52vw, 680px);
+  opacity: 0.12;
+  transform: rotate(6deg);
+}
+
+@media (max-width: 800px) {
+  .wash--about img,
+  .wash--brand img,
+  .wash--lion img,
+  .wash--tea img { width: min(78vw, 420px); opacity: 0.1; }
+}
+
+@media (max-width: 720px) {
+  body::before { background-size: 640px 720px; }
+}
+
 h1, h2, h3, h4, h5, p, figure, blockquote, dl, dd {
   margin: 0;
 }
@@ -293,10 +391,13 @@ h1, h2, h3,
   inset: -50%;
   z-index: var(--z-grain);
   pointer-events: none;
-  opacity: 0.028;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-  will-change: transform;
   animation: grain-shift 6s steps(6) infinite;
+}
+
+@media (max-width: 900px), (hover: none) {
+  .grain { animation: none; }
 }
 
 @keyframes grain-shift {
@@ -365,9 +466,12 @@ h1, h2, h3,
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 
-  *,
-  *::before,
-  *::after {
+  /* The cover, the expressions and the lineup are exempt: the character
+     moving is the work on show, and Windows reports "reduce" whenever its
+     animation effects are off. */
+  :not(.hero, .hero *, .yx-faces, .yx-faces *, .yx-ext, .yx-ext *),
+  :not(.hero, .hero *, .yx-faces, .yx-faces *, .yx-ext, .yx-ext *)::before,
+  :not(.hero, .hero *, .yx-faces, .yx-faces *, .yx-ext, .yx-ext *)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

@@ -6,11 +6,6 @@
    column the layout reserved. The plate itself is never drawn.
    Pointer movement still drags the figure, the way the previous
    hero did: a decaying velocity field, not a second video.
-
-   That path needs a fine pointer and WebGL. Everywhere else the
-   figure clip -- the same key and framing, baked -- plays straight
-   into the slot, and with reduced motion or Save-Data the poster
-   (its first frame) stays. Both clips load after the page does.
    ============================================================ */
 
 (() => {
@@ -22,52 +17,20 @@
   const video = hero?.querySelector("[data-hero-video]");
   if (!canvas || !hero || !figure || !video) return;
 
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  /* prefers-reduced-motion is deliberately not read here. The character's
+     motion is the work on show, and Windows reports "reduce" whenever its
+     animation effects are switched off, which left the cover frozen. */
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
 
-  /* The poster is the clip's first frame, so a still hero needs no video. */
-  if (reducedMotion.matches || navigator.connection?.saveData) {
-    canvas.remove();
-    return;
-  }
+  /* The canvas paints the page ground itself, so it has to be the same
+     colour as --ink-0 or the figure sits in a visible box. */
+  const ink = (() => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue("--ink-0").trim();
+    const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+    return m ? [1, 2, 3].map((i) => parseInt(m[i], 16) / 255) : [0.039, 0.039, 0.039];
+  })();
 
-  /* Neither clip is part of the first screen -- the poster already fills the
-     slot -- so they wait for the load event instead of sharing the connection
-     with the fonts and stylesheets. */
-  const whenLoaded = (start) => {
-    const idle = () =>
-      window.requestIdleCallback ? window.requestIdleCallback(start, { timeout: 1500 }) : setTimeout(start, 0);
-    if (document.readyState === "complete") idle();
-    else window.addEventListener("load", idle, { once: true });
-  };
-
-  /* Without a fine pointer there is no flow for the canvas to add, and keying
-     every frame on the CPU cost a phone 50-280 ms per frame. The figure clip is
-     that same key and framing, done once by tools/hero-encode.html. */
-  const playFigure = () => {
-    canvas.remove();
-    let armed = false;
-    let inView = true;
-    const sync = () => {
-      if (!armed) return;
-      if (inView && !document.hidden) video.play().catch(() => {});
-      else video.pause();
-    };
-    video.addEventListener("playing", () => video.classList.add("is-playing"), { once: true });
-    new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting;
-      sync();
-    }, { rootMargin: "10%" }).observe(hero);
-    document.addEventListener("visibilitychange", sync);
-    whenLoaded(() => {
-      video.preload = "auto";
-      video.src = video.dataset.src;
-      armed = true;
-      sync();
-    });
-  };
-
-  const gl = finePointer.matches && canvas.getContext("webgl", {
+  const gl = canvas.getContext("webgl", {
     alpha: false,
     antialias: false,
     depth: false,
@@ -76,7 +39,8 @@
     powerPreference: "low-power",
   });
   if (!gl) {
-    playFigure();
+    video.classList.add("is-fallback");
+    canvas.remove();
     return;
   }
 
@@ -99,6 +63,25 @@ uniform vec4 uCrop;
 uniform float uRel;
 uniform vec3 uInk;
 
+float plate(vec3 c) {
+  float hi = max(c.r, max(c.g, c.b));
+  float lo = min(c.r, min(c.g, c.b));
+  return smoothstep(0.20, 0.05, hi) * smoothstep(0.16, 0.0, hi - lo);
+}
+
+float kept(vec2 src) {
+  vec3 c = texture2D(uVideo, src).rgb;
+  float body = 1.0 - plate(c);
+  vec2 px = vec2(1.0 / 1280.0, 1.0 / 720.0) * 3.0;
+  float near = 0.0;
+  near = max(near, 1.0 - plate(texture2D(uVideo, src + vec2(px.x, 0.0)).rgb));
+  near = max(near, 1.0 - plate(texture2D(uVideo, src - vec2(px.x, 0.0)).rgb));
+  near = max(near, 1.0 - plate(texture2D(uVideo, src + vec2(0.0, px.y)).rgb));
+  near = max(near, 1.0 - plate(texture2D(uVideo, src - vec2(0.0, px.y)).rgb));
+  float luma = dot(c, vec3(0.299, 0.587, 0.114));
+  return max(body, near * (1.0 - smoothstep(0.0, 0.22, luma)));
+}
+
 void main() {
   vec2 flow = texture2D(uFlow, vUv).xy;
   vec2 off = flow * 0.085;
@@ -119,11 +102,13 @@ void main() {
       float badge = (1.0 - smoothstep(0.0, 0.16, src.x)) * smoothstep(0.80, 0.94, src.y);
       float frameFade = smoothstep(0.0, 0.035, src.x) * smoothstep(1.0, 0.965, src.x)
         * smoothstep(0.0, 0.04, src.y) * smoothstep(1.0, 0.96, src.y);
-      float alpha = tex.a * (1.0 - badge) * frameFade;
+      float alpha = kept(src) * (1.0 - badge) * frameFade;
       float speed = clamp(length(flow) * 1.4, 0.0, 1.0);
       vec3 lacquer = vec3(0.62, 0.22, 0.11);
       vec3 rgb = mix(tex.rgb, lacquer, speed * 0.18 * (1.0 - alpha));
-      color = mix(color, rgb, alpha);
+      vec3 over = mix(color, rgb, alpha);
+      // Plate residue is near-black; it may not pull the ground darker.
+      color = mix(max(over, uInk), over, smoothstep(0.55, 0.95, alpha));
       color = mix(color, lacquer, speed * 0.16 * (1.0 - alpha));
     }
   }
@@ -188,7 +173,8 @@ void main() {
   const drawProgram = link(fragmentSource);
   const flowProgram = drawProgram && link(flowSource);
   if (!drawProgram || !flowProgram) {
-    playFigure();
+    video.classList.add("is-fallback");
+    canvas.remove();
     return;
   }
 
@@ -227,97 +213,6 @@ void main() {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([18, 17, 13, 255]));
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-  const matteW = 640;
-  const matteH = 360;
-  const matte = document.createElement("canvas");
-  matte.width = matteW;
-  matte.height = matteH;
-  const matteCtx = matte.getContext("2d", { willReadFrequently: true });
-  const matteBg = new Uint8Array(matteW * matteH);
-  const matteQueue = new Int32Array(matteW * matteH);
-
-  /* Black plate, lifted from the edges so the eyes stay. A grey key left
-     a halo because the old plate was light; this one is actually black. */
-  const keyMatte = () => {
-    matteCtx.drawImage(video, 0, 0, matteW, matteH);
-    const image = matteCtx.getImageData(0, 0, matteW, matteH);
-    const data = image.data;
-    matteBg.fill(0);
-    let head = 0;
-    let tail = 0;
-    const consider = (index) => {
-      if (matteBg[index]) return;
-      const offset = index * 4;
-      const r = data[offset];
-      const g = data[offset + 1];
-      const b = data[offset + 2];
-      const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
-      const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
-      if (max > 42 || max - min > 18) return;
-      matteBg[index] = 1;
-      matteQueue[tail++] = index;
-    };
-    for (let x = 0; x < matteW; x += 1) {
-      consider(x);
-      consider((matteH - 1) * matteW + x);
-    }
-    for (let y = 0; y < matteH; y += 1) {
-      consider(y * matteW);
-      consider(y * matteW + matteW - 1);
-    }
-    while (head < tail) {
-      const index = matteQueue[head++];
-      const x = index % matteW;
-      const y = (index / matteW) | 0;
-      if (x > 0) consider(index - 1);
-      if (x < matteW - 1) consider(index + 1);
-      if (y > 0) consider(index - matteW);
-      if (y < matteH - 1) consider(index + matteW);
-    }
-    for (let index = 0; index < matteW * matteH; index += 1) {
-      const offset = index * 4;
-      if (matteBg[index]) {
-        data[offset + 3] = 0;
-        continue;
-      }
-      const x = index % matteW;
-      const y = (index / matteW) | 0;
-      let close = false;
-      for (let dy = -3; dy <= 3 && !close; dy += 1) {
-        for (let dx = -3; dx <= 3; dx += 1) {
-          const xx = x + dx;
-          const yy = y + dy;
-          if (xx < 0 || yy < 0 || xx >= matteW || yy >= matteH) continue;
-          if (matteBg[yy * matteW + xx]) {
-            close = true;
-            break;
-          }
-        }
-      }
-      if (!close) {
-        data[offset + 3] = 255;
-        continue;
-      }
-      const r = data[offset];
-      const g = data[offset + 1];
-      const b = data[offset + 2];
-      const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
-      const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
-      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-      if (max - min > 48 && luma > 110) {
-        data[offset + 3] = 255;
-        continue;
-      }
-      const alpha = Math.min(1, Math.max(0, (luma - 16) / 78));
-      if (alpha > 0.04 && alpha < 1) {
-        data[offset] = Math.min(255, r / alpha);
-        data[offset + 1] = Math.min(255, g / alpha);
-        data[offset + 2] = Math.min(255, b / alpha);
-      }
-      data[offset + 3] = Math.round(alpha * 255);
-    }
-    matteCtx.putImageData(image, 0, 0);
-  };
   const scanW = 160;
   const scanH = 90;
   const scan = document.createElement("canvas");
@@ -410,28 +305,18 @@ void main() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   };
 
-  /* draw() runs on every animation frame and every pointer move, but the clip
-     only changes 24 times a second, and the key is the expensive part. */
-  let keyedAt = -1;
-  let live = false;
-
   function draw(splat) {
     if (video.readyState < 2) return;
     measure();
     readFigure();
-    if (!reducedMotion.matches) drawFlow(splat);
+    drawFlow(splat);
     try {
       gl.useProgram(drawProgram.program);
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, videoTexture);
-      const now = video.currentTime;
-      if (keyedAt < 0 || Math.abs(now - keyedAt) >= 1 / 30) {
-        keyMatte();
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, matte);
-        keyedAt = now;
-      }
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, flowRead.texture);
       const u = drawProgram.uniforms;
@@ -440,13 +325,9 @@ void main() {
       gl.uniform4f(u.uFigure, box[0], box[1], box[2], box[3]);
       gl.uniform4f(u.uCrop, crop.x, crop.y, crop.w, crop.h);
       gl.uniform1f(u.uRel, crop.rel);
-      gl.uniform3f(u.uInk, 0.071, 0.067, 0.051);
+      gl.uniform3f(u.uInk, ink[0], ink[1], ink[2]);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if (!live) {
-        live = true;
-        canvas.classList.add("is-live");
-        figure.classList.add("is-live");
-      }
+      canvas.classList.add("is-live");
     } catch (err) {
       /* One undecoded frame should not stop the loop. */
     }
@@ -455,8 +336,9 @@ void main() {
   const tick = () => {
     frameRequest = 0;
     if (!visible || document.hidden) return;
+    if (video.paused) video.play().catch(() => {});
     draw(null);
-    if (!video.paused && !video.ended) frameRequest = requestAnimationFrame(tick);
+    frameRequest = requestAnimationFrame(tick);
   };
 
   const wake = () => {
@@ -479,9 +361,8 @@ void main() {
   };
 
   const letters = [...hero.querySelectorAll("[data-hero-letter]")];
-  if (finePointer.matches && !reducedMotion.matches) {
+  if (finePointer.matches) {
     hero.addEventListener("pointermove", (event) => {
-      const rect = canvas.getBoundingClientRect();
       const stop = figure.getBoundingClientRect().left - 12;
       letters.forEach((letter) => {
         const bounds = letter.getBoundingClientRect();
@@ -500,12 +381,6 @@ void main() {
         letter.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`;
       });
       if (!event.movementX && !event.movementY) return;
-      draw({
-        px: (event.clientX - rect.left) / rect.width,
-        py: 1 - (event.clientY - rect.top) / rect.height,
-        x: event.movementX * 0.035,
-        y: -event.movementY * 0.035,
-      });
       wake();
     }, { passive: true });
     hero.addEventListener("pointerleave", () => {
@@ -515,6 +390,9 @@ void main() {
     });
   }
 
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
   video.addEventListener("loadeddata", () => {
     video.play().then(wake).catch(() => draw(null));
   });
@@ -541,11 +419,8 @@ void main() {
   new ResizeObserver(resize).observe(canvas);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) video.pause();
-    else if (visible && video.readyState >= 2) video.play().then(wake).catch(() => {});
+    else if (visible) video.play().then(wake).catch(() => {});
   });
 
-  whenLoaded(() => {
-    video.preload = "auto";
-    video.src = video.dataset.plate;
-  });
+  if (video.readyState >= 2) video.dispatchEvent(new Event("loadeddata"));
 })();
