@@ -8,10 +8,16 @@
    type rather than applied uniformly:
 
      html   network-first   — a deploy must be visible on the
-                              next load, never one load later
+                              next load. If the phone has not
+                              answered in under two seconds and
+                              a copy is already stored, that
+                              copy paints and the fresh one
+                              lands in the cache afterwards
      css/js network-first   — they have to come from the same
                               deploy as the document that asks
-                              for them; see mustMatchDocument
+                              for them; see mustMatchDocument.
+                              A slow answer falls back to cache
+                              after a short wait
      font/icon/json  stale-while-revalidate, keyed to BUILD_ID —
                               instant paint, refreshed in the
                               background, wiped on every deploy
@@ -179,53 +185,88 @@ self.addEventListener('message', (event) => {
 async function networkFirst(event) {
   const request = event.request;
   const cache = await caches.open(SHELL_CACHE);
+  const cached = await caches.match(request, { ignoreSearch: true });
 
-  try {
+  /* Lie-fi: a phone that is "online" but crawling used to sit on a blank
+     document until the network gave up. The offline cookbook's answer is
+     a short race — wait for the fresh page, and if it has not arrived,
+     paint the copy we already stored. The fetch keeps going and updates
+     the cache, so the next open is current. */
+  const fromNetwork = (async () => {
     let response = null;
-    if (event.preloadResponse) response = await event.preloadResponse;
+    try {
+      if (event.preloadResponse) response = await event.preloadResponse;
+    } catch (err) { /* A rejected preload is just a miss. */ }
     if (!response) response = await fetch(request);
-
     if (isCacheable(response)) cache.put(request, response.clone());
     return response;
-  } catch (err) {
-    const cached = await caches.match(request, { ignoreSearch: true });
-    if (cached) return cached;
+  })().catch(() => null);
 
-    /* The homepage is cached under the directory URL, so an old bookmark or
-       an external link pointing at index.html is a different key. */
-    if (new URL(request.url).pathname.endsWith('/index.html')) {
-      const root = await caches.match(new URL('./', request.url).href);
-      if (root) return root;
-    }
+  try {
+    const response = await withTimeout(fromNetwork, cached ? 1800 : 8000);
+    if (response) return response;
+  } catch (err) { /* Timed out. Fall through to the cached document. */ }
 
-    const offline = await caches.match(OFFLINE_URL);
-    if (offline) return offline;
+  if (cached) return cached;
 
-    return new Response('离线 / offline', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
+  const response = await fromNetwork;
+  if (response) return response;
+
+  /* The homepage is cached under the directory URL, so an old bookmark or
+     an external link pointing at index.html is a different key. */
+  if (new URL(request.url).pathname.endsWith('/index.html')) {
+    const root = await caches.match(new URL('./', request.url).href);
+    if (root) return root;
   }
+
+  const offline = await caches.match(OFFLINE_URL);
+  if (offline) return offline;
+
+  return new Response('离线 / offline', {
+    status: 503,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 }
 
-/* Same ordering as networkFirst but without the offline.html endgame: handing
-   an HTML body back for a stylesheet request would be its own failure. The
-   network attempt normally lands in the HTTP cache rather than on the wire,
-   so the cost against stale-while-revalidate is a cache lookup, not a
-   round trip. */
+/* Network-first, but don't make the page wait on a slow phone.
+   Jake Archibald's offline cookbook calls this a cache/network race
+   with a timeout: if the network has not answered in under a second
+   and we already have this file, paint the cached copy and let the
+   fresh one land in the cache for the next view. A blank wait was
+   the thing people could see. */
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
 async function networkFirstAsset(event) {
   const request = event.request;
   const cache = await caches.open(SHELL_CACHE);
+  const cached = await cache.match(request);
+
+  const network = fetch(request)
+    .then((response) => {
+      if (isCacheable(response)) cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => null);
 
   try {
-    const response = await fetch(request);
-    if (isCacheable(response)) cache.put(request, response.clone());
-    return response;
+    const response = await withTimeout(network, cached ? 900 : 8000);
+    if (response) return response;
   } catch (err) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    return new Response('', { status: 504, statusText: 'offline' });
+    /* Slow network. The cached stylesheet is good enough to paint. */
   }
+
+  if (cached) return cached;
+  const response = await network;
+  if (response) return response;
+  return new Response('', { status: 504, statusText: 'offline' });
 }
 
 async function staleWhileRevalidate(event) {

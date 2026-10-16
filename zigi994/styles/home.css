@@ -587,6 +587,13 @@
   gap: clamp(var(--s-6), 3vw, var(--s-8)) var(--s-5);
 }
 
+/* web.dev: skip layout and decode for work that is still below the
+   fold. auto remembers the last size so the scrollbar does not jump. */
+.projects > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
 /* About is static, so it can stay unpainted until it is near. The projects
    cannot: their character film and expression reel have to keep running. */
 .about {

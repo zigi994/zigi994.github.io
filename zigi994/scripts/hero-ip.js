@@ -51,6 +51,15 @@
   if (!gl) {
     video.classList.add("is-fallback");
     canvas.remove();
+    const showPlate = () => {
+      if (!video.getAttribute("src") && video.dataset.src) {
+        video.preload = "auto";
+        video.src = video.dataset.src;
+      }
+      video.play().catch(() => {});
+    };
+    if (document.readyState === "complete") showPlate();
+    else window.addEventListener("load", showPlate, { once: true });
     return;
   }
 
@@ -431,10 +440,24 @@ void main() {
   video.setAttribute("playsinline", "");
   video.setAttribute("webkit-playsinline", "");
   const startClip = () => video.play().then(wake).catch(() => draw(null));
-  video.addEventListener("loadeddata", startClip);
+  const armVideo = () => {
+    if (video.getAttribute("src")) {
+      startClip();
+      return;
+    }
+    const file = video.dataset.src;
+    if (!file) return;
+    video.addEventListener("loadeddata", startClip, { once: true });
+    video.preload = "auto";
+    video.src = file;
+    video.load();
+  };
+  if (document.readyState === "complete") armVideo();
+  else window.addEventListener("load", armVideo, { once: true });
   /* iOS still withholds autoplay until a touch when the clip was hidden
      at load. Keep listening until a play() actually resolves. */
   const unlock = () => {
+    armVideo();
     video.play().then(() => {
       wake();
       window.removeEventListener("pointerdown", unlock);

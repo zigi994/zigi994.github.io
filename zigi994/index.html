@@ -15,7 +15,8 @@
 <link rel="preload" href="assets/fonts/cherry-bomb-one.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles/tokens.css">
 <link rel="stylesheet" href="styles/base.css">
-<link rel="stylesheet" href="styles/type-cn.css">
+<link rel="stylesheet" href="styles/type-cn.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="styles/type-cn.css"></noscript>
 <link rel="stylesheet" href="styles/components.css">
 <link rel="stylesheet" href="styles/home.css">
 <link rel="stylesheet" href="styles/transitions.css">
@@ -117,8 +118,8 @@
         </div>
 
         <div class="hero__figure" data-hero-figure>
-          <video class="hero__video" data-hero-video src="assets/ip/hero-ip-dark.mp4"
-                 muted autoplay loop playsinline webkit-playsinline preload="auto"
+          <video class="hero__video" data-hero-video data-src="assets/ip/hero-ip-dark.mp4"
+                 muted loop playsinline webkit-playsinline preload="none"
                  aria-label="狮小团从站立走到镜头前，伸出一只手"></video>
         </div>
 
@@ -129,7 +130,7 @@
 
   <section class="section about" id="about">
     <div class="wash wash--about" aria-hidden="true">
-      <img src="assets/ip/yx/pat-04.png" alt="" width="422" height="237" decoding="async">
+      <img src="assets/ip/yx/pat-04.png" alt="" width="422" height="237" decoding="async" loading="lazy">
     </div>
     <div class="shell about__inner">
       <figure class="about__photo">
@@ -424,7 +425,7 @@
         <li class="project project--brand" id="brand" data-accent="#c45c4a">
           <article class="brand" data-brand>
             <div class="wash wash--brand" aria-hidden="true">
-              <img src="assets/ip/yx/pat-02.png" alt="" width="421" height="237" decoding="async">
+              <img src="assets/ip/yx/pat-02.png" alt="" width="421" height="237" decoding="async" loading="lazy">
             </div>
             <div class="project__meta">
               <span class="num">02</span>
@@ -740,7 +741,7 @@
         <li class="project project--tea" id="tea" data-accent="#c9842a">
           <article class="tea" data-tea>
             <div class="wash wash--tea" aria-hidden="true">
-              <img src="assets/ip/yx/pat-01.png" alt="" width="421" height="236" decoding="async">
+              <img src="assets/ip/yx/pat-01.png" alt="" width="421" height="236" decoding="async" loading="lazy">
             </div>
             <div class="tea__copy">
               <div class="project__meta">
@@ -819,7 +820,7 @@
         <li class="project project--yx" id="shixiaotuan" data-accent="#ec9138">
           <article class="yx" data-yx>
             <div class="wash wash--lion" aria-hidden="true">
-              <img src="assets/ip/yx/pat-03.png" alt="" width="420" height="239" decoding="async">
+              <img src="assets/ip/yx/pat-03.png" alt="" width="420" height="239" decoding="async" loading="lazy">
             </div>
             <div class="yx-hero">
               <div class="yx-hero__copy">
