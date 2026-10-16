@@ -3430,6 +3430,112 @@ body.case-open { overflow: hidden; }
   outline-offset: 3px;
 }
 
+.brand-use {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(36px, 5vw, 64px);
+}
+
+.brand-use__head p {
+  margin: 0.7rem 0 0;
+  max-width: 16em;
+  color: var(--fg-1);
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.brand-use__block {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.brand-use__copy h4 {
+  margin: 0;
+  font-family: "Noto Serif SC", var(--font-cn);
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.brand-use__copy p {
+  margin: 0.4rem 0 0;
+  max-width: 22em;
+  color: var(--fg-1);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.brand-use__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 1.05rem;
+  margin-top: 0.7rem;
+}
+
+.brand-use__tabs button {
+  min-height: 36px;
+  padding: 0.15rem 0;
+  border: 0;
+  background: none;
+  color: var(--fg-2);
+  font-family: var(--font-cn);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.brand-use__tabs button[aria-pressed="true"] {
+  color: var(--fg-0);
+  font-family: "Noto Serif SC", var(--font-cn);
+  font-size: 1.28rem;
+  font-weight: 600;
+}
+
+.brand-use__tabs button:focus-visible {
+  outline: 2px solid var(--fg-0);
+  outline-offset: 4px;
+}
+
+.brand-zoom,
+.brand-paper {
+  margin: 0;
+  max-width: 720px;
+}
+
+.brand-zoom {
+  --fx: 50;
+  --fy: 50;
+  --s: 1;
+  overflow: hidden;
+  background: #e7efe4;
+}
+
+.brand-zoom__shot {
+  transform: translate(calc((50 - var(--fx)) * 1%), calc((50 - var(--fy)) * 1%)) scale(var(--s));
+  transform-origin: calc(var(--fx) * 1%) calc(var(--fy) * 1%);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brand-zoom img,
+.brand-paper img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.brand-paper {
+  background: #d7d3cc;
+}
+
+.brand-paper img.is-swap {
+  animation: paper-in 0.35s ease;
+}
+
+@keyframes paper-in {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
 .brand-shop__head {
   display: flex;
   align-items: baseline;
@@ -3814,7 +3920,9 @@ body.case-open { overflow: hidden; }
   .brand-menu__stage img,
   .brand-menu__row button img,
   .brand-city__sticker,
-  .brand-city__pastes button img { transition: none; animation: none; }
+  .brand-city__pastes button img,
+  .brand-zoom__shot,
+  .brand-paper img { transition: none; animation: none; }
 }
 
 /* Desktop: each part of the brand reads as a spec sheet. The name and
@@ -3829,6 +3937,8 @@ body.case-open { overflow: hidden; }
     padding-top: clamp(28px, 3vw, 40px);
     border-top: 1px solid var(--line);
   }
+
+  .brand > .brand-use { row-gap: clamp(40px, 5vw, 72px); }
 
   .brand > section > * { grid-column: 2; min-width: 0; }
 
