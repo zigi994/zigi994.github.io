@@ -802,61 +802,6 @@ function initBrand() {
     lamp: { src: "assets/ip/yx/street/lamp.jpg?v=5", w: 600, h: 220, line: "两面旗挂在灯下。黑板写着今天的茶。", alt: "店铺灯下的两面旗，旁边黑板写着今日推荐" }
   };
 
-  root.querySelectorAll("[data-brand-zoom]").forEach((fig) => {
-    const block = fig.closest(".brand-use__block");
-    const shot = fig.querySelector(".brand-zoom__shot");
-    const line = block?.querySelector("[data-zoom-line]");
-    const btns = [...(block?.querySelectorAll("[data-zoom]") || [])];
-    const pick = (btn) => {
-      btns.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
-      shot.style.setProperty("--fx", btn.dataset.fx);
-      shot.style.setProperty("--fy", btn.dataset.fy);
-      shot.style.setProperty("--s", btn.dataset.s);
-      if (line && btn.dataset.line) line.textContent = btn.dataset.line;
-    };
-    btns.forEach((btn, i) => {
-      btn.addEventListener("click", () => pick(btn));
-      btn.addEventListener("keydown", (e) => {
-        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-        e.preventDefault();
-        const next = btns[(i + (e.key === "ArrowRight" ? 1 : -1) + btns.length) % btns.length];
-        next.focus();
-        pick(next);
-      });
-    });
-  });
-
-  const papers = {
-    sheet: { src: "assets/ip/yx/brand/use-sheet.jpg", w: 682, h: 484, line: "纸上是一整版。贴纸、圆标和叶子在旁边。", alt: "粤醒茶香海报，旁边是贴纸、圆标和叶子" },
-    bag: { src: "assets/ip/yx/brand/use-bag.jpg", w: 682, h: 512, line: "袋子拎出店门。字还是那几个。", alt: "人拎着印有粤醒茶香和狮小团的纸袋" }
-  };
-  const paperView = root.querySelector("[data-paper-view]");
-  const paperLine = root.querySelector("[data-paper-line]");
-  const paperBtns = [...root.querySelectorAll("[data-paper]")];
-  const pickPaper = (id) => {
-    const info = papers[id];
-    if (!info || !paperView) return;
-    paperBtns.forEach((btn) => btn.setAttribute("aria-pressed", btn.dataset.paper === id ? "true" : "false"));
-    paperView.src = info.src;
-    paperView.width = info.w;
-    paperView.height = info.h;
-    paperView.alt = info.alt;
-    paperView.classList.remove("is-swap");
-    void paperView.offsetWidth;
-    paperView.classList.add("is-swap");
-    if (paperLine) paperLine.textContent = info.line;
-  };
-  paperBtns.forEach((btn, i) => {
-    btn.addEventListener("click", () => pickPaper(btn.dataset.paper));
-    btn.addEventListener("keydown", (e) => {
-      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-      e.preventDefault();
-      const next = paperBtns[(i + (e.key === "ArrowRight" ? 1 : -1) + paperBtns.length) % paperBtns.length];
-      next.focus();
-      pickPaper(next.dataset.paper);
-    });
-  });
-
   const drinks = {
     sign: { src: "assets/ip/yx/brand/drink-sign.png", name: "招牌奶茶", line: "珍珠沉在底下。", alt: "招牌奶茶海报，狮小团靠在一杯珍珠奶茶旁边" },
     jasmine: { src: "assets/ip/yx/brand/drink-jasmine.png", name: "茉莉青提", line: "夏日限定。青提是爽的。", alt: "茉莉青提海报，绿杯子旁边是狮小团和一串青提" },
