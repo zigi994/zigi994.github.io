@@ -15,9 +15,12 @@
      font/icon/json  stale-while-revalidate, keyed to BUILD_ID —
                               instant paint, refreshed in the
                               background, wiped on every deploy
-     assets/*.img cache-first, in a cache that survives version
-                              bumps — the filenames are stable
-                              and the bytes never change
+     images          not intercepted. iOS gives the worker almost
+                              no memory; streaming a multi-megabyte
+                              PNG back to the page drops the
+                              response, so the picture loads on a
+                              laptop and never appears on a phone.
+                              The browser's HTTP cache is enough.
 
    BUILD_ID is rewritten with the commit SHA by the Pages
    workflow before upload; the literal token below is what runs
@@ -27,11 +30,6 @@
 const BUILD_ID = '__BUILD_ID__';
 
 const SHELL_CACHE = 'zigi-shell-' + BUILD_ID;
-
-/* Deliberately independent from BUILD_ID: unchanged images should survive a
-   CSS-only deploy. Bump this version whenever the asset pipeline rewrites a
-   stable image filename or changes the responsive derivative set. */
-const MEDIA_CACHE = 'zigi-media-v3';
 
 /* Resolved from the worker's own URL so the same file works at the
    domain root and from a subdirectory preview. */
@@ -157,7 +155,7 @@ self.addEventListener('activate', (event) => {
       const keys = await caches.keys();
       await Promise.all(
         keys.map((key) => {
-          if (key === SHELL_CACHE || key === MEDIA_CACHE) return null;
+          if (key === SHELL_CACHE) return null;
           /* Scoped to our own prefix so a cache belonging to anything
              else on the origin is left alone. */
           if (!key.startsWith('zigi-')) return null;
@@ -255,21 +253,6 @@ async function staleWhileRevalidate(event) {
   return new Response('', { status: 504, statusText: 'offline' });
 }
 
-async function cacheFirst(event) {
-  const request = event.request;
-  const cache = await caches.open(MEDIA_CACHE);
-  const cached = await cache.match(request);
-  if (cached) return cached;
-
-  try {
-    const response = await fetch(request);
-    if (isCacheable(response)) cache.put(request, response.clone());
-    return response;
-  } catch (err) {
-    return new Response('', { status: 504, statusText: 'offline' });
-  }
-}
-
 self.addEventListener('fetch', (event) => {
   const request = event.request;
 
@@ -294,10 +277,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (isMedia(url)) {
-    event.respondWith(cacheFirst(event));
-    return;
-  }
+  if (isMedia(url)) return;
 
   if (isShellAsset(url)) {
     event.respondWith(

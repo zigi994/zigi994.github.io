@@ -682,6 +682,46 @@ async function initImages() {
       img.addEventListener("error", () => img.classList.add("is-loaded"), { once: true });
     }
   });
+
+  wakeLazyImages();
+}
+
+/* Phones (and some in-app browsers) never start a lazy image that is
+   clipped by the handset glass, faded out in the expression stack, or
+   slid in by the extension reel. Once it is near the screen, ask for it
+   directly. decode() is what actually opens the request — flipping the
+   attribute alone leaves Safari's deferred fetch where it was. */
+function wakeLazyImages() {
+  const wake = (img) => {
+    if (img.dataset.woke) return;
+    img.dataset.woke = "1";
+    img.loading = "eager";
+    if (!img.complete) img.decode?.().catch(() => {});
+  };
+
+  const watch = (imgs, root) => {
+    if (!imgs.length) return;
+    if (!("IntersectionObserver" in window)) {
+      imgs.forEach(wake);
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        wake(entry.target);
+        io.unobserve(entry.target);
+      });
+    }, { root, rootMargin: root ? "320px 0px" : "480px 0px" });
+    imgs.forEach((img) => io.observe(img));
+  };
+
+  document.querySelectorAll(".handset__glass").forEach((glass) => {
+    watch([...glass.querySelectorAll("img[loading='lazy']")], glass);
+  });
+  watch(
+    [...document.querySelectorAll("img[loading='lazy']")].filter((img) => !img.closest(".handset__glass")),
+    null
+  );
 }
 
 /* ------------------------------------------------------------
