@@ -231,10 +231,20 @@ void main() {
     return neutral > 46 && luma > 28 && luma < 252;
   };
 
+  let measureTick = 0;
   const measure = () => {
     if (video.readyState < 2) return;
-    scanCtx.drawImage(video, 0, 0, scanW, scanH);
-    const data = scanCtx.getImageData(0, 0, scanW, scanH).data;
+    /* Reading the frame back every paint stalls the decoder on a phone,
+       and a thrown getImageData used to kill the whole animation loop. */
+    measureTick += 1;
+    if (crop.ready && measureTick % 8 !== 0) return;
+    let data;
+    try {
+      scanCtx.drawImage(video, 0, 0, scanW, scanH);
+      data = scanCtx.getImageData(0, 0, scanW, scanH).data;
+    } catch {
+      return;
+    }
     let minX = scanW;
     let minY = scanH;
     let maxX = 0;
@@ -337,7 +347,11 @@ void main() {
     frameRequest = 0;
     if (!visible || document.hidden) return;
     if (video.paused) video.play().catch(() => {});
-    draw(null);
+    try {
+      draw(null);
+    } catch {
+      /* A bad frame must not cancel the next one. */
+    }
     frameRequest = requestAnimationFrame(tick);
   };
 
@@ -391,11 +405,23 @@ void main() {
   }
 
   video.muted = true;
+  video.defaultMuted = true;
   video.loop = true;
   video.playsInline = true;
-  video.addEventListener("loadeddata", () => {
-    video.play().then(wake).catch(() => draw(null));
-  });
+  video.setAttribute("muted", "");
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  const startClip = () => video.play().then(wake).catch(() => draw(null));
+  video.addEventListener("loadeddata", startClip);
+  /* iOS still withholds autoplay until a touch when the clip was hidden
+     at load. Keep listening until a play() actually resolves. */
+  const unlock = () => {
+    video.play().then(() => {
+      wake();
+      window.removeEventListener("pointerdown", unlock);
+    }).catch(() => {});
+  };
+  window.addEventListener("pointerdown", unlock, { passive: true });
   video.addEventListener("play", wake);
   video.addEventListener("ended", () => {
     video.currentTime = 0;

@@ -135,6 +135,7 @@
 /* The slot stays a standing figure. The clip is cropped into it,
    so a 16:9 plate never becomes the layout. */
 .hero__figure {
+  position: relative;
   grid-area: figure;
   height: min(68vh, 640px);
   width: auto;
@@ -146,11 +147,17 @@
   transform-origin: right bottom;
 }
 
+/* A 1×1, fully transparent video never advances on iOS: the phone
+   decodes one frame and then parks the decoder. The element has to
+   occupy the figure so the clock keeps running. It stays invisible
+   under the keyed canvas; the fallback rule below reveals it. */
 .hero__video {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.02;
   pointer-events: none;
 }
 
