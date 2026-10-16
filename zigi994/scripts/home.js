@@ -793,13 +793,13 @@ function initBrand() {
   });
 
   const places = {
-    stop: { src: "assets/ip/yx/street/stop.jpg", w: 1926, h: 1530, line: "候车的人先看见他。后面是广州塔。", alt: "公交站广告牌上的狮小团，背景是广州塔" },
-    xiguan: { src: "assets/ip/yx/street/xiguan.jpg", w: 1986, h: 1530, line: "旗挂在骑楼边上。陶陶居的灯还亮着。", alt: "西关老街上的竖幅，旁边是陶陶居和红灯笼" },
-    door: { src: "assets/ip/yx/street/door.jpg", w: 1293, h: 1104, line: "进门之前，他端着一杯茶站在木框里。", alt: "茶铺木门上的海报，狮小团端着一杯茶" },
-    box: { src: "assets/ip/yx/street/box.jpg", w: 1203, h: 1104, line: "电箱也贴上同一张脸，路过不用抬头。", alt: "街头电箱上的狮小团，背景画着广州塔和桥" },
-    bus: { src: "assets/ip/yx/street/bus.jpg", w: 1398, h: 1104, line: "车身侧面走过去，字和人一起在路上。", alt: "广州巴士车身上的粤醒茶香和狮小团" },
-    river: { src: "assets/ip/yx/street/river.jpg", w: 1566, h: 918, line: "袋子拿到珠江边，塔还在后面。", alt: "江边举起的茶袋，远处是广州塔和日落" },
-    lamp: { src: "assets/ip/yx/street/lamp.jpg", w: 2349, h: 918, line: "两面旗挂在灯下。黑板写着今天的茶。", alt: "店铺灯下的两面旗，旁边黑板写着今日推荐" }
+    stop: { src: "assets/ip/yx/street/stop.jpg?v=5", w: 512, h: 408, line: "候车的人先看见他。后面是广州塔。", alt: "公交站广告牌上的狮小团，背景是广州塔" },
+    xiguan: { src: "assets/ip/yx/street/xiguan.jpg?v=5", w: 504, h: 408, line: "旗挂在骑楼边上。陶陶居的灯还亮着。", alt: "西关老街上的竖幅，旁边是陶陶居和红灯笼" },
+    door: { src: "assets/ip/yx/street/door.jpg?v=5", w: 345, h: 294, line: "进门之前，他端着一杯茶站在木框里。", alt: "茶铺木门上的海报，狮小团端着一杯茶" },
+    box: { src: "assets/ip/yx/street/box.jpg?v=5", w: 315, h: 294, line: "电箱也贴上同一张脸，路过不用抬头。", alt: "街头电箱上的狮小团，背景画着广州塔和桥" },
+    bus: { src: "assets/ip/yx/street/bus.jpg?v=5", w: 350, h: 294, line: "车身侧面走过去，字和人一起在路上。", alt: "广州巴士车身上的粤醒茶香和狮小团" },
+    river: { src: "assets/ip/yx/street/river.jpg?v=5", w: 416, h: 220, line: "袋子拿到珠江边，塔还在后面。", alt: "江边举起的茶袋，远处是广州塔和日落" },
+    lamp: { src: "assets/ip/yx/street/lamp.jpg?v=5", w: 600, h: 220, line: "两面旗挂在灯下。黑板写着今天的茶。", alt: "店铺灯下的两面旗，旁边黑板写着今日推荐" }
   };
 
   const zones = {
