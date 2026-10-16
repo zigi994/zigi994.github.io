@@ -12,7 +12,11 @@ export function initYxModel(root) {
   const wait = stage.querySelector("[data-yx-wait]");
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: window.innerWidth >= 900
+    });
   } catch (err) {
     if (wait) wait.textContent = "这个浏览器画不出立体模型";
     return;
@@ -83,21 +87,31 @@ export function initYxModel(root) {
   };
 
   const textures = new THREE.TextureLoader();
+  const narrow = window.innerWidth < 900;
   const mapOf = (file, color) => {
     const tex = textures.load(MODEL + file);
     tex.colorSpace = color ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-    tex.anisotropy = 8;
+    tex.anisotropy = narrow ? 1 : 4;
     return tex;
   };
 
-  const material = new THREE.MeshStandardMaterial({
-    map: mapOf("texture_diffuse.png", true),
-    normalMap: mapOf("texture_normal.png", false),
-    roughnessMap: mapOf("texture_roughness.png", false),
-    metalnessMap: mapOf("texture_metallic.png", false),
-    roughness: 0.82,
-    metalness: 0.08
-  });
+  /* The phone only gets the colour map, and a smaller one. The normal,
+     roughness, and metal maps are several megabytes; decoding them is
+     what left the pictures further down the page blank. */
+  const material = narrow
+    ? new THREE.MeshStandardMaterial({
+      map: mapOf("texture_diffuse_m.png", true),
+      roughness: 0.82,
+      metalness: 0.08
+    })
+    : new THREE.MeshStandardMaterial({
+      map: mapOf("texture_diffuse.png", true),
+      normalMap: mapOf("texture_normal.png", false),
+      roughnessMap: mapOf("texture_roughness.png", false),
+      metalnessMap: mapOf("texture_metallic.png", false),
+      roughness: 0.82,
+      metalness: 0.08
+    });
 
   new OBJLoader().load(MODEL + "base.obj", (obj) => {
     obj.traverse((child) => {

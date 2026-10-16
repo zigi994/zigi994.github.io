@@ -373,7 +373,11 @@ function initYx() {
 
   const show = (i) => {
     index = i;
-    shows.forEach((img, n) => img.classList.toggle("is-on", n === i));
+    shows.forEach((img, n) => {
+      const on = n === i;
+      img.classList.toggle("is-on", on);
+      if (on) img.loading = "eager";
+    });
     picks.forEach((btn, n) => {
       const on = n === i;
       btn.classList.toggle("is-on", on);
@@ -399,7 +403,8 @@ function initYx() {
   stage?.addEventListener("mouseenter", () => { held = true; stop(); });
   stage?.addEventListener("mouseleave", () => { held = false; play(); });
   show(0);
-  play();
+  const narrowFaces = window.matchMedia("(max-width: 800px)").matches;
+  if (!narrowFaces) play();
   initYxTurn(root);
 }
 
@@ -408,12 +413,20 @@ function initYxTurn(root) {
   const bootModel = () => {
     import("./yx-model.js").then((mod) => mod.initYxModel(root));
   };
-  if (stage && "IntersectionObserver" in window) {
+  const narrowModel = window.matchMedia("(max-width: 800px)").matches;
+  if (narrowModel && stage) {
+    const wait = stage.querySelector("[data-yx-wait]");
+    if (wait) wait.textContent = "点一下，看他转";
+    stage.addEventListener("pointerdown", () => {
+      if (wait) wait.textContent = "模型还在立起来";
+      bootModel();
+    }, { once: true });
+  } else if (stage && "IntersectionObserver" in window) {
     const models = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       models.disconnect();
       bootModel();
-    }, { rootMargin: "280px" });
+    }, { rootMargin: "120px" });
     models.observe(stage);
   } else if (stage) {
     bootModel();

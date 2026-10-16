@@ -696,7 +696,6 @@ function wakeLazyImages() {
     if (img.dataset.woke) return;
     img.dataset.woke = "1";
     img.loading = "eager";
-    if (!img.complete) img.decode?.().catch(() => {});
   };
 
   const watch = (imgs, root) => {
@@ -711,17 +710,18 @@ function wakeLazyImages() {
         wake(entry.target);
         io.unobserve(entry.target);
       });
-    }, { root, rootMargin: root ? "320px 0px" : "480px 0px" });
+    }, { root, rootMargin: "80px 0px" });
     imgs.forEach((img) => io.observe(img));
   };
 
+  /* Only the two places where Safari will not start a lazy image on
+     its own: inside the phone mockup, and inside the moving reel.
+     Waking every picture on the page made the phone decode them all
+     at once, then drop the ones that did not fit. */
   document.querySelectorAll(".handset__glass").forEach((glass) => {
     watch([...glass.querySelectorAll("img[loading='lazy']")], glass);
   });
-  watch(
-    [...document.querySelectorAll("img[loading='lazy']")].filter((img) => !img.closest(".handset__glass")),
-    null
-  );
+  watch([...document.querySelectorAll(".yx-ext__reel img")], null);
 }
 
 /* ------------------------------------------------------------

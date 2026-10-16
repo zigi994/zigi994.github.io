@@ -21,6 +21,16 @@
      motion is the work on show, and Windows reports "reduce" whenever its
      animation effects are switched off, which left the cover frozen. */
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+  const narrow = window.matchMedia("(max-width: 800px)").matches;
+  /* The phone cannot spare a full-size video texture. Paint the clip
+     into a small canvas and upload that, or later images on the page
+     never get memory to decode. */
+  const videoProxy = narrow ? document.createElement("canvas") : null;
+  if (videoProxy) {
+    videoProxy.width = 640;
+    videoProxy.height = 360;
+  }
+  const videoCtx = videoProxy ? videoProxy.getContext("2d", { alpha: false }) : null;
 
   /* The canvas paints the page ground itself, so it has to be the same
      colour as --ink-0 or the figure sits in a visible box. */
@@ -317,7 +327,11 @@ void main() {
 
   function draw(splat) {
     if (video.readyState < 2) return;
-    measure();
+    if (narrow) {
+      if (!crop.ready) measure();
+    } else {
+      measure();
+    }
     readFigure();
     drawFlow(splat);
     try {
@@ -326,7 +340,12 @@ void main() {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, videoTexture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+      let source = video;
+      if (videoCtx) {
+        videoCtx.drawImage(video, 0, 0, videoProxy.width, videoProxy.height);
+        source = videoProxy;
+      }
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, flowRead.texture);
       const u = drawProgram.uniforms;
@@ -363,7 +382,7 @@ void main() {
   const resize = () => {
     const rect = canvas.getBoundingClientRect();
     aspect = rect.width / Math.max(1, rect.height);
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const dpr = Math.min(window.devicePixelRatio || 1, narrow ? 1 : 1.5);
     const width = Math.max(1, Math.round(rect.width * dpr));
     const height = Math.max(1, Math.round(rect.height * dpr));
     if (canvas.width !== width || canvas.height !== height) {
