@@ -652,6 +652,22 @@
                 </div>
                 <p class="brand-shop__note cn" data-brand-zone-line>点一个地方，画面走到那里。</p>
               </div>
+              <div class="brand-menu" data-brand-menu>
+                <p class="brand-menu__hint cn">柜台上四杯。点一杯，拿到前面来。</p>
+                <div class="brand-menu__stage">
+                  <img data-brand-menu-show src="assets/ip/yx/brand/drink-sign.png" width="315" height="467" alt="招牌奶茶海报，狮小团靠在一杯珍珠奶茶旁边" decoding="async">
+                  <div class="brand-menu__words">
+                    <p class="brand-menu__name cn" data-brand-menu-name>招牌奶茶</p>
+                    <p class="brand-menu__line cn" data-brand-menu-line>珍珠沉在底下。</p>
+                  </div>
+                </div>
+                <div class="brand-menu__row" role="group" aria-label="四杯茶">
+                  <button type="button" data-brand-drink="sign" aria-pressed="true" aria-label="招牌奶茶"><img src="assets/ip/yx/brand/drink-sign.png" alt=""></button>
+                  <button type="button" data-brand-drink="jasmine" aria-pressed="false" aria-label="茉莉青提"><img src="assets/ip/yx/brand/drink-jasmine.png" alt=""></button>
+                  <button type="button" data-brand-drink="mango" aria-pressed="false" aria-label="杨枝甘露"><img src="assets/ip/yx/brand/drink-mango.png" alt=""></button>
+                  <button type="button" data-brand-drink="brown" aria-pressed="false" aria-label="黑糖珍珠鲜奶"><img src="assets/ip/yx/brand/drink-brown.png" alt=""></button>
+                </div>
+              </div>
             </section>
 
             <section class="brand-city" aria-labelledby="brand-city-title">
@@ -661,6 +677,9 @@
               </div>
               <figure class="brand-city__view">
                 <img data-brand-city-view src="assets/ip/yx/street/stop.jpg?v=5" width="512" height="408" alt="公交站广告牌上的狮小团，背景是广州塔" decoding="async">
+                <button type="button" class="brand-city__sticker" data-brand-sticker hidden aria-label="揭下贴着的海报">
+                  <img data-brand-sticker-img alt="" width="315" height="467">
+                </button>
               </figure>
               <div class="brand-city__film" role="list">
                 <button type="button" role="listitem" class="is-on" data-brand-city="stop" aria-pressed="true">车站</button>
@@ -671,6 +690,13 @@
                 <button type="button" role="listitem" data-brand-city="river" aria-pressed="false">江边</button>
                 <button type="button" role="listitem" data-brand-city="lamp" aria-pressed="false">灯下</button>
               </div>
+              <div class="brand-city__pastes" role="group" aria-label="把海报贴到这张街上">
+                <button type="button" data-brand-paste="sign" aria-pressed="false" aria-label="招牌奶茶"><img src="assets/ip/yx/brand/drink-sign.png" alt=""></button>
+                <button type="button" data-brand-paste="jasmine" aria-pressed="false" aria-label="茉莉青提"><img src="assets/ip/yx/brand/drink-jasmine.png" alt=""></button>
+                <button type="button" data-brand-paste="mango" aria-pressed="false" aria-label="杨枝甘露"><img src="assets/ip/yx/brand/drink-mango.png" alt=""></button>
+                <button type="button" data-brand-paste="brown" aria-pressed="false" aria-label="黑糖珍珠鲜奶"><img src="assets/ip/yx/brand/drink-brown.png" alt=""></button>
+              </div>
+              <p class="brand-city__paste-line cn" data-brand-paste-line>点一杯，贴到这张街上。再点一次，揭下来。</p>
             </section>
           </article>
         </li>

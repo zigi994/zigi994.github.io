@@ -802,6 +802,43 @@ function initBrand() {
     lamp: { src: "assets/ip/yx/street/lamp.jpg?v=5", w: 600, h: 220, line: "两面旗挂在灯下。黑板写着今天的茶。", alt: "店铺灯下的两面旗，旁边黑板写着今日推荐" }
   };
 
+  const drinks = {
+    sign: { src: "assets/ip/yx/brand/drink-sign.png", name: "招牌奶茶", line: "珍珠沉在底下。", alt: "招牌奶茶海报，狮小团靠在一杯珍珠奶茶旁边" },
+    jasmine: { src: "assets/ip/yx/brand/drink-jasmine.png", name: "茉莉青提", line: "夏日限定。青提是爽的。", alt: "茉莉青提海报，绿杯子旁边是狮小团和一串青提" },
+    mango: { src: "assets/ip/yx/brand/drink-mango.png", name: "杨枝甘露", line: "芒果铺在奶上。", alt: "杨枝甘露海报，黄杯子旁边是芒果和狮小团" },
+    brown: { src: "assets/ip/yx/brand/drink-brown.png", name: "黑糖珍珠鲜奶", line: "黑糖挂在杯上。", alt: "黑糖珍珠鲜奶海报，狮小团端着小杯子" }
+  };
+  const menuShow = root.querySelector("[data-brand-menu-show]");
+  const menuName = root.querySelector("[data-brand-menu-name]");
+  const menuLine = root.querySelector("[data-brand-menu-line]");
+  const drinkBtns = [...root.querySelectorAll("[data-brand-drink]")];
+  const pickDrink = (id) => {
+    const info = drinks[id];
+    if (!info || !menuShow) return;
+    drinkBtns.forEach((btn) => {
+      const on = btn.dataset.brandDrink === id;
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    menuShow.src = info.src;
+    menuShow.alt = info.alt;
+    menuShow.classList.remove("is-in");
+    void menuShow.offsetWidth;
+    menuShow.classList.add("is-in");
+    if (menuName) menuName.textContent = info.name;
+    if (menuLine) menuLine.textContent = info.line;
+  };
+  drinkBtns.forEach((btn, i) => {
+    btn.addEventListener("click", () => pickDrink(btn.dataset.brandDrink));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const next = drinkBtns[(i + (e.key === "ArrowRight" ? 1 : -1) + drinkBtns.length) % drinkBtns.length];
+      next.focus();
+      pickDrink(next.dataset.brandDrink);
+    });
+  });
+  if (menuShow) menuShow.classList.add("is-in");
+
   const zones = {
     all: { line: "点一个地方，画面走到那里。", fx: 50, fy: 48, zoom: 1 },
     goods: { line: "左边整面货架。玩偶、袋子和杯子。", fx: 16, fy: 58, zoom: 2.05 },
@@ -863,6 +900,45 @@ function initBrand() {
       pickCity(next.dataset.brandCity);
     });
   });
+
+  const sticker = root.querySelector("[data-brand-sticker]");
+  const stickerImg = root.querySelector("[data-brand-sticker-img]");
+  const pasteLine = root.querySelector("[data-brand-paste-line]");
+  const pasteBtns = [...root.querySelectorAll("[data-brand-paste]")];
+  let pasted = "";
+  const paste = (id) => {
+    const info = drinks[id];
+    if (!info || !sticker || !stickerImg) return;
+    pasted = pasted === id ? "" : id;
+    pasteBtns.forEach((btn) => {
+      const on = btn.dataset.brandPaste === pasted;
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    if (!pasted) {
+      sticker.hidden = true;
+      sticker.classList.remove("is-in");
+      if (pasteLine) pasteLine.textContent = "点一杯，贴到这张街上。再点一次，揭下来。";
+      return;
+    }
+    sticker.hidden = false;
+    stickerImg.src = info.src;
+    stickerImg.alt = info.alt;
+    sticker.classList.remove("is-in");
+    void sticker.offsetWidth;
+    sticker.classList.add("is-in");
+    if (pasteLine) pasteLine.textContent = info.name + "。贴在这张上。再点一次，揭下来。";
+  };
+  pasteBtns.forEach((btn, i) => {
+    btn.addEventListener("click", () => paste(btn.dataset.brandPaste));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const next = pasteBtns[(i + (e.key === "ArrowRight" ? 1 : -1) + pasteBtns.length) % pasteBtns.length];
+      next.focus();
+      paste(next.dataset.brandPaste);
+    });
+  });
+  if (sticker) sticker.addEventListener("click", () => { if (pasted) paste(pasted); });
 
   const viBoards = {
     1: { src: "assets/ip/yx/vi/01.jpg", line: "标准标志。竖式和横式各一版。", alt: "01 标准标志" },
